@@ -1,0 +1,31 @@
+{
+    "name": "Some web experiment",
+    "base_directory": "~/experiment/",
+    "interface": "adb",
+    "devices": ["g2", "5x", "6p"],
+    "type": "web",
+    "path": [
+        "https://www.google.com/",
+        "https://github.com/"
+    ],
+    "browser": ["chrome", "opera", "firefox"],
+    "runs": 50,
+    "metrics": {
+        "energy": {
+            "tool": "trepn",
+            "sample_every": 100,
+            "output": "./energy/"
+        },
+        "performance": {
+            "tool": "adb",
+            "sample_every": 100,
+            "output": "./performance/"
+        }
+    },
+    "device_setup_script": "device_setup.py",
+    "device_teardown_script": "device_teardown.py",
+    "experiment_setup_script": "experiment_setup.py",
+    "experiment_teardown_script": "experiment_teardown.py",
+    "experiment_script": "experiment.py",
+    "aggregation": ""
+}
