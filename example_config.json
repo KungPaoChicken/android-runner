@@ -1,31 +1,33 @@
 {
-    "name": "Some web experiment",
-    "base_directory": "~/experiment/",
-    "interface": "adb",
-    "devices": ["g2", "5x", "6p"],
-    "type": "web",
-    "path": [
-        "https://www.google.com/",
-        "https://github.com/"
-    ],
-    "browser": ["chrome", "opera", "firefox"],
-    "runs": 50,
-    "metrics": {
-        "energy": {
-            "tool": "trepn",
-            "sample_every": 100,
-            "output": "./energy/"
-        },
-        "performance": {
-            "tool": "adb",
-            "sample_every": 100,
-            "output": "./performance/"
-        }
+  "name": "Some web experiment",
+  "base_directory": "~/experiment/",
+  "interface": "adb",
+  "devices": ["g2", "5x", "6p"],
+  "runs": 50,
+  "type": "web",
+  "paths": [
+    "https://www.google.com/",
+    "https://github.com/"
+  ],
+  "browsers": ["chrome", "opera", "firefox"],
+  "metrics": {
+    "energy": {
+      "tool": "trepn",
+      "sample_every": 100,
+      "output": "./energy/"
     },
-    "device_setup_script": "device_setup.py",
-    "device_teardown_script": "device_teardown.py",
-    "experiment_setup_script": "experiment_setup.py",
-    "experiment_teardown_script": "experiment_teardown.py",
-    "experiment_script": "experiment.py",
-    "aggregation": ""
+    "performance": {
+      "tool": "adb",
+      "sample_every": 100,
+      "output": "./performance/"
+    }
+  },
+  "scripts": {
+    "device_setup": "device_setup.py",
+    "experiment_setup": "experiment_setup.py",
+    "experiment": "experiment.py",
+    "experiment_teardown": "experiment_teardown.py",
+    "device_teardown": "device_teardown.py"
+  },
+  "aggregation": ""
 }
