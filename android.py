@@ -1,22 +1,7 @@
-import os.path as op
+from pyand import ADB
 
-from adb import adb_commands
-from adb import sign_m2crypto
-from adb import usb_exceptions
+adb = ADB(adb_path='/opt/platform-tools/adb')
 
 
-# KitKat+ devices require authentication
-signer = sign_m2crypto.M2CryptoSigner(
-    op.expanduser('~/.android/adbkey')
-)
-
-
-def connect(device_id):
-    try:
-        return adb_commands.AdbCommands.ConnectDevice(serial=device_id, rsa_keys=[signer])
-    except usb_exceptions.DeviceNotFoundError:
-        raise
-
-# Now we can use Shell, Pull, Push, etc!
-# for i in xrange(10):
-#     print device.Shell('echo %d' % i)
+def devices():
+    return adb.get_devices()
