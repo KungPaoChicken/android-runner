@@ -24,19 +24,17 @@ class ConfigError(Exception):
 
 
 class ConfigParser:
-
     def __init__(self, config_file):
-        # File loader
         self.config = None
         self.config_errors = []
-        # Config file entries
+        # Config file keys
         self.mandatory_keys = ['name', 'devices', 'type', 'runs', 'metrics', 'scripts']
+        # Default values
         self.parsed_config = {
             'interface': 'adb',
             'paths': [],
             'basedir': op.abspath(op.dirname(config_file))
         }
-        print(self.parsed_config['basedir'])
         try:
             self.config = load_json(config_file)
         except (ValueError, IOError):
@@ -63,9 +61,8 @@ class ConfigParser:
     def find_devices(self, devices):
         try:
             ids = load_json('devices.json')
-            for device in devices:
-                if not ids.get(device, None):
-                    self.config_errors.append("Device '%s' not found in devices.json" % device)
+            for device in filter(lambda x: not ids.get(device, None), devices):
+                self.config_errors.append("Error: Device '%s' not found in devices.json" % device)
         except (ValueError, IOError):
             sys.exit(1)
 
@@ -85,10 +82,8 @@ class ConfigParser:
         self.test_imports(p['scripts'])
 
         if len(self.config_errors) > 0:
-            print('\n'.join(self.config_errors))
-            return False
-        self.parsed_config = p
-        return True
+            raise ConfigError(self.config_errors)
+        return p
 
     def run(self):
         pass

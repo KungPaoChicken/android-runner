@@ -17,9 +17,9 @@ def main():
     # Check config file
     parser = ConfigParser(expanduser(sys.argv[1]))
     try:
-        if parser.parse():
-            parsed_config = parser.config
-    except ConfigError:
+        parsed_config = parser.parse()
+    except ConfigError as e:
+        print("".join(e.message))
         pass
 
     # print("Config file is valid")
