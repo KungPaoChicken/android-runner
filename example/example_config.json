@@ -1,24 +1,23 @@
 {
   "name": "Some web experiment",
-  "base_directory": "~/experiment/",
   "interface": "adb",
-  "devices": ["g2", "5x", "6p"],
+  "devices": ["5x"],
   "runs": 50,
-  "type": "web",
+  "type": "apk",
+  "browsers": ["chrome", "opera", "firefox"],
   "paths": [
     "https://www.google.com/",
     "https://github.com/"
   ],
-  "browsers": ["chrome", "opera", "firefox"],
   "metrics": {
     "energy": {
       "tool": "trepn",
-      "sample_every": 100,
+      "sample_rate": 100,
       "output": "./energy/"
     },
     "performance": {
       "tool": "adb",
-      "sample_every": 100,
+      "sample_rate": 100,
       "output": "./performance/"
     }
   },
