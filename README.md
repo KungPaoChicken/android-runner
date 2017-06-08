@@ -1,5 +1,5 @@
-# Android Runner
-A tool to automate the execution of experiments
+# Android Scientist
+A tool to automate experiment execution on Android devices from a computer
 
 ## Install
 This tool is only tested on Ubuntu, but it should work in most linux distributions.
@@ -27,7 +27,7 @@ It may not be always updated.
 Name of the experiment
 
 **type** *string*  
-Type of the experiment. Can be `web` or `apk`
+Type of the experiment. Can be `web` or `native`
 
 **replications** *integer*  
 Number of times an experiment is run.

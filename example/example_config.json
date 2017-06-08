@@ -2,7 +2,7 @@
   "name": "Some web experiment",
   "devices": ["5x"],
   "replications": 50,
-  "type": "apk",
+  "type": "native",
   "browsers": ["chrome", "opera", "firefox"],
   "paths": [
     "https://www.google.com/",
