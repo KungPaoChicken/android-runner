@@ -1,15 +1,14 @@
 {
   "name": "Some web experiment",
-  "interface": "adb",
   "devices": ["5x"],
-  "runs": 50,
+  "replications": 50,
   "type": "apk",
   "browsers": ["chrome", "opera", "firefox"],
   "paths": [
     "https://www.google.com/",
     "https://github.com/"
   ],
-  "metrics": {
+  "measurements": {
     "energy": {
       "tool": "trepn",
       "sample_rate": 100,
@@ -22,11 +21,11 @@
     }
   },
   "scripts": {
-    "device_setup": "device_setup.py",
-    "experiment_setup": "experiment_setup.py",
-    "experiment": "experiment.py",
-    "experiment_teardown": "experiment_teardown.py",
-    "device_teardown": "device_teardown.py"
+    "setup": "setup.py",
+    "before_run": "before_run.py",
+    "interaction": "interaction.py",
+    "after_run": "after_run.py",
+    "teardown": "teardown.py"
   },
   "aggregation": ""
 }
