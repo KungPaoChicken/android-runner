@@ -5,6 +5,11 @@ from imp import find_module
 import json
 
 
+class ConfigError(Exception):
+    """Raised when a config error occurred"""
+    pass
+
+
 def load_json(path):
     try:
         with open(path, 'r') as f:
@@ -19,18 +24,47 @@ def load_json(path):
         raise
 
 
-class ConfigError(Exception):
-    pass
+def get_value(obj, key, mandatory=False, default=None):
+    try:
+        return obj[key]
+    except KeyError:
+        if mandatory:
+            raise ConfigError("Key '%s' does not exist" % key)
+        else:
+            return default
+
+
+def can_be_imported(script):
+    try:
+        find_module(op.splitext(script)[0])
+        return True
+    except ImportError:
+        raise ConfigError("'%s' cannot be imported" % script)
+
+
+def find_device_ids(devices):
+    try:
+        ids = load_json('devices.json')
+        for device in filter(lambda dev: not ids.get(dev, None), devices):
+            raise ConfigError("Device '%s' is not found in devices.json" % device)
+        return [x for x in [ids.get(d, None) for d in devices] if x is not None]
+    except (ValueError, IOError):
+        sys.exit(1)
+
+
+def test_apks(apks):
+    for f in filter(lambda x: not op.isfile(x), apks):
+        raise ConfigError("File '%s' not found" % f)
 
 
 class ConfigParser:
     def __init__(self, config_file):
         self.config = None
-        self.config_errors = []
+        self.errors = []
         # Config file keys
-        self.mandatory_keys = ['name', 'devices', 'type', 'runs', 'metrics', 'scripts']
+        self.mandatory_keys = ['name', 'devices', 'type', 'replications', 'measurements', 'scripts']
         # Default values
-        self.parsed_config = {
+        self.defaults = {
             'interface': 'adb',
             'paths': [],
             'basedir': op.abspath(op.dirname(config_file))
@@ -40,50 +74,30 @@ class ConfigParser:
         except (ValueError, IOError):
             sys.exit(1)
 
-    def get_value(self, key, exception=False):
+    def append_exceptions(self, func, *args, **kwargs):
         try:
-            value = self.config[key]
-        except KeyError:
-            if exception:
-                self.config_errors.append("Error: Key '%s' does not exist" % key)
-                return None
-            else:
-                value = self.parsed_config[key]
-        return value
-
-    def test_imports(self, imports):
-        for k, v in imports.iteritems():
-            try:
-                find_module(op.splitext(v)[0])
-            except ImportError:
-                self.config_errors.append("Error: '%s' cannot be imported" % v)
-
-    def find_devices(self, devices):
-        try:
-            ids = load_json('devices.json')
-            for device in filter(lambda x: not ids.get(device, None), devices):
-                self.config_errors.append("Error: Device '%s' not found in devices.json" % device)
-        except (ValueError, IOError):
-            sys.exit(1)
-
-    def test_apks(self, apks):
-        for f in filter(lambda x: not op.isfile(x), apks):
-            self.config_errors.append("Error: File '%s' not found" % f)
+            return func(*args, **kwargs)
+        except ConfigError as e:
+            self.errors.append(e.message)
 
     def parse(self):
-        p = self.parsed_config
-        p = {k: self.get_value(k) for k, v in p.iteritems()}
-        p.update({k: self.get_value(k, exception=True) for k in self.mandatory_keys})
+        parsed_config = {}
+        e = self.append_exceptions
+        for k in self.mandatory_keys:
+            parsed_config[k] = e(get_value, self.config, k, mandatory=True)
 
-        if p['type'] == 'web':
-            p['browsers'] = self.get_value('browsers')
+        for k, v in self.defaults.items():
+            parsed_config[k] = e(get_value, self.config, k, default=self.defaults[k])
 
-        sys.path.append(p['basedir'])
-        self.test_imports(p['scripts'])
+        if parsed_config['type'] == 'web':
+            parsed_config['browsers'] = e(get_value, self.config, 'browsers', mandatory=True)
 
-        if len(self.config_errors) > 0:
-            raise ConfigError(self.config_errors)
-        return p
+        sys.path.append(parsed_config['basedir'])
+        for _, s in parsed_config['scripts'].items():
+            e(can_be_imported, s)
 
-    def run(self):
-        pass
+        parsed_config['devices'] = e(find_device_ids, parsed_config['devices'])
+
+        if self.errors:
+            raise ConfigError(self.errors)
+        return parsed_config
