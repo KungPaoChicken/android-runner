@@ -1,36 +1,38 @@
+import argparse
 import sys
 from os.path import expanduser
-from config_parser import ConfigParser, ConfigError
-import adb
+from ConfigParser import ConfigParser, ConfigError
+from Experiment import Experiment, NativeExperiment, WebExperiment
 
 
 def main():
-    if len(sys.argv) == 1:
-        print("Usage: android-runner config_file")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file')
+    parser.add_argument('-v', '--verbose')
+    args = vars(parser.parse_args())
+    # Add a verbose option
 
     '''
     Preconditions:
     1. Valid config file
-    2. Devices can be connected
+    2. Devices are connected
     3. Browsers and other tools are available
     '''
 
-    def test_devices(devices):
-        for device in devices:
-            # print(adb.shell(device, 'dumpsys battery'))
-            print(adb.shell(device, 'pm list packages'))
-
-    # Check config file
-    parser = ConfigParser(expanduser(sys.argv[1]))
     try:
+        parser = ConfigParser(expanduser(args['file']))
         parsed_config = parser.parse()
-        print("Config file is valid")
-        test_devices(parsed_config['devices'])
+        print(parsed_config)
+        # print("Config file is valid"
+        experiment = {'native': NativeExperiment(parsed_config),
+                      'web': WebExperiment(parsed_config)
+                      } \
+            .get(parsed_config['type'], Experiment(parsed_config))
+        print('Experiment initiated')
+        experiment.start()
     except ConfigError as e:
         print("There are some errors in the config file:")
         print('\n'.join(['- ' + m for m in e.message]))
-
-    # experiment.run()
 
 
 if __name__ == "__main__":

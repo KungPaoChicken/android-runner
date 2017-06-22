@@ -44,10 +44,10 @@ def can_be_imported(script):
 
 def find_device_ids(devices):
     try:
-        ids = load_json('devices.json')
+        ids = load_json(op.dirname(op.realpath(__file__)) + '/devices.json')
         for device in filter(lambda dev: not ids.get(dev, None), devices):
             raise ConfigError("Device '%s' is not found in devices.json" % device)
-        return [x for x in [ids.get(d, None) for d in devices] if x is not None]
+        return {k: v for k, v in ids.items() if k in devices}
     except (ValueError, IOError):
         sys.exit(1)
 
@@ -82,21 +82,21 @@ class ConfigParser:
 
     def parse(self):
         parsed_config = {}
-        e = self.append_exceptions
+        ae = self.append_exceptions
         for k in self.mandatory_keys:
-            parsed_config[k] = e(get_value, self.config, k, mandatory=True)
+            parsed_config[k] = ae(get_value, self.config, k, mandatory=True)
 
         for k, v in self.defaults.items():
-            parsed_config[k] = e(get_value, self.config, k, default=self.defaults[k])
+            parsed_config[k] = ae(get_value, self.config, k, default=self.defaults[k])
 
         if parsed_config['type'] == 'web':
-            parsed_config['browsers'] = e(get_value, self.config, 'browsers', mandatory=True)
+            parsed_config['browsers'] = ae(get_value, self.config, 'browsers', mandatory=True)
 
         sys.path.append(parsed_config['basedir'])
         for _, s in parsed_config['scripts'].items():
-            e(can_be_imported, s)
+            ae(can_be_imported, s)
 
-        parsed_config['devices'] = e(find_device_ids, parsed_config['devices'])
+        parsed_config['devices'] = ae(find_device_ids, parsed_config['devices'])
 
         if self.errors:
             raise ConfigError(self.errors)
