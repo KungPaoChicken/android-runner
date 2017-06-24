@@ -22,13 +22,13 @@ def main():
     try:
         parser = ConfigParser(expanduser(args['file']))
         parsed_config = parser.parse()
-        print(parsed_config)
         # print("Config file is valid"
-        experiment = {'native': NativeExperiment(parsed_config),
-                      'web': WebExperiment(parsed_config)
-                      } \
-            .get(parsed_config['type'], Experiment(parsed_config))
-        print('Experiment initiated')
+        if parsed_config['type'] == 'native':
+            experiment = NativeExperiment(parsed_config)
+        elif parsed_config['type'] == 'web':
+            experiment = WebExperiment(parsed_config)
+        else:
+            experiment = Experiment(parsed_config)
         experiment.start()
     except ConfigError as e:
         print("There are some errors in the config file:")

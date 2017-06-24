@@ -11,46 +11,48 @@ class AdbError(Exception):
 
 class Adb:
     def __init__(self, devices):
-        # Connectivity check
-        self.devices = devices
-        connect(devices)
+        try:
+            connect(devices)
+            self.devices = {name: {'id': uid} for name, uid in devices.items()}
+        except AdbError as e:
+            raise e
+        self.update_app_list()
 
     def map_devices(self, func, *args, **kwargs):
-        results = []
+        results = {}
         for name, dev in self.devices.items():
             try:
-                adb.set_target_by_name(dev)
-                results.append((name, func(*args, **kwargs)))
+                adb.set_target_by_name(dev['id'])
+                results[name] = func(*args, **kwargs)
             except AdbError as e:
                 print(e.message)
+        return results
+
+    def is_installed(self, apps):
+        results = {}
+        for name, dev in self.devices.items():
+            results[name] = {app: re.search(app, dev['apps']) for app in apps}
         return results
 
     def install(self, apks):
         for apk in apks:
             self.map_devices(install, apk)
-
-    def browser_check(self, browsers):
-        browsers_list = {'chrome': 'com.android.chrome',
-                         'opera': 'com.opera.browser',
-                         'firefox': 'org.mozilla.firefox'
-                         }
-        browsers = map(browsers_list.get, browsers)
-        results = self.map_devices(is_installed, browsers)
-        error_msg = []
-        for device, result in results:
-            not_installed = [b for b, i in result if not i]
-            error_msg = [b + " is not installed on %s" % device for b in not_installed]
-        raise AdbError('\n'.join(error_msg))
+        self.update_app_list()
 
     def shell(self, cmd):
         self.map_devices(shell, cmd)
 
+    def update_app_list(self):
+        for name, dev in self.devices.items():
+            adb.set_target_by_name(dev['id'])
+            self.devices[name]['apps'] = adb.shell_command('pm list packages')
+
 
 def connect(devices):
-    connected_devices = adb.get_devices()
-    if not connected_devices:
+    connected = adb.get_devices()
+    if not connected:
         raise AdbError('No devices are connected')
-    not_connected = filter(lambda (n, i): i not in connected_devices.values(), devices.items())
+    not_connected = filter(lambda (n, uid): uid not in connected.values(), devices.items())
     for name, i in not_connected:
         raise AdbError("Error: Device %s is not connected" % name)
 
@@ -59,14 +61,10 @@ def shell(cmd):
     return adb.shell_command(cmd)
 
 
-def is_installed(names):
-    installed_apps = adb.shell_command('pm list packages')
-    return map(lambda n: (n, re.search(n, installed_apps)), names)
-
-
 def install(apk):
     return adb.install(apk)
 
 
 def uninstall(apk):
+    print(apk)
     return True

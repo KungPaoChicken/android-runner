@@ -1,7 +1,7 @@
 {
   "name": "Some web experiment",
   "devices": ["5x"],
-  "replications": 50,
+  "replications": 5,
   "type": "web",
   "browsers": ["chrome", "opera", "firefox"],
   "paths": [

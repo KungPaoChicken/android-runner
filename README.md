@@ -76,3 +76,6 @@ Below are the supported types:
   executes after a run completes
 - teardown  
   executes once after the last run
+
+**reinstall** *boolean* *Optional*
+If set to true, all apps and tools (browsers, Trepn, ...) will be reinstalled if they exist on the device.
