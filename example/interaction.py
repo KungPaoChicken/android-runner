@@ -1,9 +1,6 @@
 from pyand import ADB
 
 
-def main():
-    print('INTERACTION')
+def main(did, activity):
+    print('interaction: %s %s' % (did, activity))
     pass
-
-if __name__ == "__main__":
-    main()

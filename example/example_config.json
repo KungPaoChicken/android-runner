@@ -1,5 +1,4 @@
 {
-  "name": "Some web experiment",
   "devices": ["5x"],
   "replications": 5,
   "type": "web",
@@ -8,16 +7,11 @@
     "https://www.google.com/",
     "https://github.com/"
   ],
-  "measurements": {
-    "energy": {
-      "tool": "trepn",
-      "sample_rate": 100,
-      "output": "./energy/"
-    },
-    "performance": {
-      "tool": "adb",
-      "sample_rate": 100,
-      "output": "./performance/"
+  "measurements":{
+    "trepn": {
+      "energy": {
+        "sample_interval": 200
+      }
     }
   },
   "scripts": {

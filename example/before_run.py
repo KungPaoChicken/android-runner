@@ -1,9 +1,6 @@
 from pyand import ADB
 
 
-def main():
-    print('BEFORE_RUN')
+def main(did, activity):
+    print('before_run %s %s' % (did, activity))
     pass
-
-if __name__ == "__main__":
-    main()

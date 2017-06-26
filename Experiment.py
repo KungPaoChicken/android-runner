@@ -1,6 +1,5 @@
 import sys
 from os.path import splitext
-from imp import find_module, load_module
 from importlib import import_module
 from adb import Adb, AdbError
 
@@ -13,11 +12,9 @@ class Experiment:
         self.adb = None
         sys.path.append(config['basedir'])
         self.scripts = {k: import_module(splitext(k)[0]) for k in config['scripts'].keys()}
-        # map(lambda (n, m): load_module(n, *m), self.scripts.items())
-        # print(self.scripts['setup'])
 
     def test(self):
-        try:cd 
+        try:
             self.adb = Adb(self.devices)
         except AdbError as e:
             print(e.message)
