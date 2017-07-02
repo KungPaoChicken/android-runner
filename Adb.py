@@ -11,12 +11,8 @@ class AdbError(Exception):
 
 class Adb:
     def __init__(self, devices):
-        try:
-            connect(devices)
-            self.devices = {name: {'id': uid} for name, uid in devices.items()}
-        except AdbError as e:
-            raise e
-        self.update_app_list()
+        connect(devices)
+        self.devices = {name: {'id': uid} for name, uid in devices.items()}
 
     def map_devices(self, func, *args, **kwargs):
         results = {}
@@ -28,24 +24,20 @@ class Adb:
                 print(e.message)
         return results
 
-    def is_installed(self, apps):
+    def check_apps(self, apps):
         results = {}
         for name, dev in self.devices.items():
-            results[name] = {app: re.search(app, dev['apps']) for app in apps}
+            adb.set_target_by_name(dev['id'])
+            app_list = adb.shell_command('pm list packages')
+            results[name] = {app: re.search(app, app_list) for app in apps}
         return results
 
-    def install(self, apks):
-        for apk in apks:
-            self.map_devices(install, apk)
-        self.update_app_list()
+    def install_apps(self, apps):
+        for app in apps:
+            self.map_devices(install, app)
 
     def shell(self, cmd):
-        self.map_devices(shell, cmd)
-
-    def update_app_list(self):
-        for name, dev in self.devices.items():
-            adb.set_target_by_name(dev['id'])
-            self.devices[name]['apps'] = adb.shell_command('pm list packages')
+        self.map_devices(adb.shell_command, cmd)
 
 
 def connect(devices):
@@ -55,10 +47,6 @@ def connect(devices):
     not_connected = filter(lambda (n, uid): uid not in connected.values(), devices.items())
     for name, i in not_connected:
         raise AdbError("Error: Device %s is not connected" % name)
-
-
-def shell(cmd):
-    return adb.shell_command(cmd)
 
 
 def install(apk):

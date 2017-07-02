@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="com.quicinc.preferences.application_package_0">com.himumsaiddad.armyfit</string>
+    <string name="com.quicinc.preferences.application_package_2">nl.negentwee</string>
+    <string name="com.quicinc.preferences.application_package_1">com.android.documentsui</string>
+    <string name="com.quicinc.preferences.application_package_3"></string>
+    <string name="com.quicinc.preferences.application_activity_0">com.himumsaiddad.armyfit.activities.SplashActivity</string>
+    <string name="com.quicinc.preferences.application_activity_2">nl.negentwee.activities.StartupActivity</string>
+    <string name="com.quicinc.preferences.application_activity_3"></string>
+    <string name="com.quicinc.preferences.application_activity_1">com.android.documentsui.LauncherActivity</string>
+</map>

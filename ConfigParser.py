@@ -16,11 +16,9 @@ class ConfigParser:
         self.errors = []
         self.mandatory_keys = ['devices', 'type', 'replications', 'measurements', 'scripts']
         self.defaults = {
-            'interface': 'adb',
             'paths': [],
             'basedir': op.abspath(op.dirname(config_file))
         }
-        self.interface = None
 
         try:
             self.config = load_json(config_file)
@@ -42,14 +40,27 @@ class ConfigParser:
         for k, v in self.defaults.items():
             parsed_config[k] = ae(get_value, self.config, k, default=self.defaults[k])
 
-        if parsed_config['type'] == 'web':
-            parsed_config['browsers'] = ae(get_value, self.config, 'browsers', mandatory=True)
+        dependencies = []
 
-        sys.path.append(parsed_config['basedir'])
-        for _, s in parsed_config['scripts'].items():
-            ae(can_be_imported, s)
+        if self.config['type'] == 'web':
+            dependencies = dependencies + ae(get_value, self.config, 'browsers', mandatory=True)
 
-        parsed_config['devices'] = ae(find_device_ids, parsed_config['devices'])
+        if self.config['measurements']:
+            dependencies = dependencies + self.config['measurements'].keys()
+
+        app_list = {'chrome': 'com.android.chrome',
+                    'opera': 'com.opera.browser',
+                    'firefox': 'org.mozilla.firefox',
+                    'trepn': 'com.quicinc.trepn'
+                    }
+
+        parsed_config['dependencies'] = ae(map_or_fail, dependencies, app_list, "%s is not found in the app list")
+
+        parsed_config['scripts'] = {n: op.join(parsed_config['basedir'], p) for n, p in parsed_config['scripts'].items()}
+        # for _, s in parsed_config['scripts'].items():
+        #     parsed_config = ae(can_be_imported, s)
+
+        parsed_config['devices'] = ae(get_device_ids, parsed_config['devices'])
 
         # parsed_config['measurements'] = []
 
@@ -83,6 +94,7 @@ def get_value(obj, key, mandatory=False, default=None):
 
 
 def can_be_imported(script):
+    # return
     try:
         find_module(op.splitext(script)[0])
         return True
@@ -90,16 +102,20 @@ def can_be_imported(script):
         raise ConfigError("'%s' cannot be imported" % script)
 
 
-def find_device_ids(devices):
+def get_device_ids(names):
     try:
         ids = load_json(op.dirname(op.realpath(__file__)) + '/devices.json')
-        for device in filter(lambda dev: not ids.get(dev, None), devices):
-            raise ConfigError("Device '%s' is not found in devices.json" % device)
-        return {k: v for k, v in ids.items() if k in devices}
+        return map_or_fail(names, ids, "Device %s is not found in devices.json")
     except (ValueError, IOError):
         sys.exit(1)
 
 
+def map_or_fail(keys, dictionary, error_string):
+    for k in filter(lambda d: not dictionary.get(d, None), keys):
+        raise ConfigError(error_string % k)
+    return {k: v for k, v in dictionary.items() if k in keys}
+
+
 def test_apks(apks):
     for f in filter(lambda x: not op.isfile(x), apks):
-        raise ConfigError("File '%s' not found" % f)
+        raise ConfigError("File %s not found" % f)
