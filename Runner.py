@@ -1,5 +1,4 @@
 from imp import load_source
-from Adb import Adb, AdbError
 
 
 class Runner:
@@ -12,14 +11,6 @@ class Runner:
             except ImportError:
                 raise ImportError("Cannot import %s" % v)
 
-    def run(self, name, device_id, current_activity, *args, **kwargs):
-        return self.scripts[name].main(device_id, current_activity, *args, **kwargs)
-
-    def measure(self):
-        pass
-
-
-class WebRunner(Runner):
-    def __init__(self, config):
-        Runner.__init__(self, config)
-        self.browsers = config['browsers']
+    def run(self, device, name, *args, **kwargs):
+        current_activity = device.current_activity()
+        return self.scripts[name].main(device.id, current_activity, *args, **kwargs)
