@@ -2,8 +2,7 @@ from imp import load_source
 
 
 class Runner:
-    def __init__(self, devices, scripts):
-        self.devices = devices
+    def __init__(self, scripts):
         self.scripts = {}
         for k, v in scripts.items():
             try:
