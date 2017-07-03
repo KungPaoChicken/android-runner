@@ -1,6 +1,6 @@
 {
   "devices": ["5x"],
-  "replications": 5,
+  "replications": 1,
   "type": "web",
   "browsers": ["chrome", "opera", "firefox"],
   "paths": [
@@ -12,7 +12,8 @@
       "energy": {
         "sample_interval": 200
       }
-    }
+    },
+    "volta": {}
   },
   "scripts": {
     "setup": "setup.py",
