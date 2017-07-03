@@ -1,4 +1,8 @@
 from Adb import Adb, AdbError
+from pyand import ADB
+import re
+
+adb = ADB(adb_path='D:/Yoyo/Downloads/platform-tools/adb.exe')
 
 
 class Devices:
@@ -28,7 +32,7 @@ class Devices:
     def check_apps(self, apps):
         results = {}
         for name, dev in self._devices.items():
-            adb.set_target_by_name(dev['id'])
+            adb.set_target_by_name(dev)
             app_list = adb.shell_command('pm list packages')
             results[name] = {app: re.search(app, app_list) for app in apps}
         return results

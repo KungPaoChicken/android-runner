@@ -1,7 +1,7 @@
 from pyand import ADB
 import re
 
-adb = ADB(adb_path='/opt/platform-tools/adb')
+adb = ADB(adb_path='D:/Yoyo/Downloads/platform-tools/adb.exe')
 
 
 class AdbError(Exception):
