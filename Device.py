@@ -22,8 +22,8 @@ class Device:
             if Adb.install(self.id, app) == 'Success':
                 self.apps.append(app)
 
-    # https://github.com/appium/appium-adb/blob/e9234db1546411e495a7520e9d29d43d990c617a/lib/tools/apk-utils.js#L84
     def current_activity(self):
+        # https://github.com/appium/appium-adb/blob/e9234db1546411e495a7520e9d29d43d990c617a/lib/tools/apk-utils.js#L84
         windows = Adb.shell(self.id, 'dumpsys window windows')
         for line in windows.split('\n'):
             # https://regex101.com/r/xZ8vF7/1

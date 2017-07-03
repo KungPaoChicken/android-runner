@@ -9,8 +9,8 @@ class Experiment:
     def __init__(self, config_file=None):
         self.replications = 1
         self.devices = None
+        self.measurements = None
         self.scripts = None
-
         if config_file:
             try:
                 config = ConfigParser(config_file).parse()
@@ -23,7 +23,8 @@ class Experiment:
         try:
             self.replications = config['replications']
             self.devices = Devices(config['devices'])
-            self.scripts = Runner(self.devices, config['scripts'])
+            self.measurements = config['measurements']
+            self.scripts = Runner(config['scripts'])
             for device in self.devices:
                 for name, installed in device.is_installed(config['dependencies']).items():
                     if not installed:

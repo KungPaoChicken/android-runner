@@ -45,8 +45,8 @@ class ConfigParser:
         if self.config['type'] == 'web':
             dependencies = dependencies + ae(get_value, self.config, 'browsers', mandatory=True)
 
-        if self.config['measurements']:
-            dependencies = dependencies + self.config['measurements'].keys()
+        # if self.config['measurements']:
+        #     dependencies = dependencies + self.config['measurements'].keys()
 
         app_list = {'chrome': 'com.android.chrome',
                     'opera': 'com.opera.browser',
