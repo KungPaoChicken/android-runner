@@ -12,7 +12,7 @@ class Device:
         self.update_app_list()
 
     def is_installed(self, apps):
-        return {name: app in self.apps for name, app in apps.items()}
+        return {app: app in self.apps for app in apps}
 
     def update_app_list(self):
         self.apps = Adb.list_apps(self.id)

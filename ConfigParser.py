@@ -1,12 +1,12 @@
 import os.path as op
 import sys
 import errno
-from imp import find_module
+import importlib
 import json
 
 
 class ConfigError(Exception):
-    """Raised when a config error occurred"""
+    """Raised when a configuration error occurred"""
     pass
 
 
@@ -14,10 +14,18 @@ class ConfigParser:
     def __init__(self, config_file):
         self.config = None
         self.errors = []
-        self.mandatory_keys = ['devices', 'type', 'replications', 'measurements', 'scripts']
+        self.mandatory_keys = ['devices', 'type']
         self.defaults = {
+            'replications': 1,
             'paths': [],
-            'basedir': op.abspath(op.dirname(config_file))
+            'basedir': op.abspath(op.dirname(config_file)),
+            'measurements': {},
+            'scripts': {'setup': '',
+                        'before_run': '',
+                        'interaction': '',
+                        'after_run': '',
+                        'teardown': ''
+                        }
         }
 
         try:
@@ -32,41 +40,46 @@ class ConfigParser:
             self.errors.append(e.message)
 
     def parse(self):
-        parsed_config = {}
+        parsed = {}
         ae = self.append_exceptions
         for k in self.mandatory_keys:
-            parsed_config[k] = ae(get_value, self.config, k, mandatory=True)
+            parsed[k] = ae(get_value, self.config, k, mandatory=True)
 
         for k, v in self.defaults.items():
-            parsed_config[k] = ae(get_value, self.config, k, default=self.defaults[k])
+            parsed[k] = ae(get_value, self.config, k, default=self.defaults[k])
 
-        dependencies = []
+        parsed['devices'] = ae(get_device_ids, parsed['devices'])
 
-        if self.config['type'] == 'web':
-            dependencies = dependencies + ae(get_value, self.config, 'browsers', mandatory=True)
+        parsed['dependencies'] = []
 
-        # if self.config['measurements']:
-        #     dependencies = dependencies + self.config['measurements'].keys()
+        app_list = {
+            'chrome': 'com.android.chrome',
+            'opera': 'com.opera.browser',
+            'firefox': 'org.mozilla.firefox'
+        }
 
-        app_list = {'chrome': 'com.android.chrome',
-                    'opera': 'com.opera.browser',
-                    'firefox': 'org.mozilla.firefox',
-                    'trepn': 'com.quicinc.trepn'
-                    }
+        if parsed['type'] == 'web':
+            browsers = ae(get_value, self.config, 'browsers', mandatory=True)
+            if not browsers:
+                raise ConfigError("No browsers are given for a Web experiment")
+            parsed['dependencies'] = parsed['dependencies'] + map(lambda b: app_list[b], browsers)
 
-        parsed_config['dependencies'] = ae(map_or_fail, dependencies, app_list, "%s is not found in the app list")
+        if parsed['measurements']:
+            parsed['measurements'] = {k.capitalize(): v for k, v in parsed['measurements'].items()}
+            for tool in parsed['measurements'].keys():
+                tool_module = getattr(importlib.import_module(tool), tool)
+                dep = tool_module.get_dependencies()
+                if dep:
+                    parsed['dependencies'] = parsed['dependencies'] + dep
 
-        parsed_config['scripts'] = {n: op.join(parsed_config['basedir'], p) for n, p in parsed_config['scripts'].items()}
-        # for _, s in parsed_config['scripts'].items():
-        #     parsed_config = ae(can_be_imported, s)
-
-        parsed_config['devices'] = ae(get_device_ids, parsed_config['devices'])
+        parsed['scripts'] = {n: op.join(parsed['basedir'], p) for n, p in
+                                    parsed['scripts'].items()}
 
         # parsed_config['measurements'] = []
 
         if self.errors:
             raise ConfigError(self.errors)
-        return parsed_config
+        return parsed
 
 
 def load_json(path):
@@ -75,12 +88,10 @@ def load_json(path):
             try:
                 return json.loads(f.read())
             except ValueError:
-                print("'%s' is not valid JSON" % path)
-                raise
+                raise ConfigError("%s is not a valid JSON file" % path)
     except IOError as e:
         if e.errno == errno.ENOENT:
-            print("'%s' not found" % path)
-        raise
+            raise ConfigError("%s not found" % path)
 
 
 def get_value(obj, key, mandatory=False, default=None):
@@ -91,15 +102,6 @@ def get_value(obj, key, mandatory=False, default=None):
             raise ConfigError("Mandatory key '%s' is missing" % key)
         else:
             return default
-
-
-def can_be_imported(script):
-    # return
-    try:
-        find_module(op.splitext(script)[0])
-        return True
-    except ImportError:
-        raise ConfigError("'%s' cannot be imported" % script)
 
 
 def get_device_ids(names):
