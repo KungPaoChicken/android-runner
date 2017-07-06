@@ -1,19 +1,19 @@
-# Android Scientist
-A tool to automate experiment execution on Android devices from a computer
+# Android Task runner
+A tool to automate experiment execution on Android devices
 
 ## Install
 This tool is only tested on Ubuntu, but it should work in most linux distributions.
 You'll need:
-- Python 2.7 + easy_install
+- Python 2.7
 - Android Debug Bridge (adb)
-- [pyand](https://github.com/ardevd/pyand)
+- lxml (`sudo apt install python-lxml`)
 
 ## Quick start
 To run an experiment, run:
 ```bash
 python android_runner your_config.json
 ```
-There is an example configuration file in `example/`
+There is an example configuration file in `example/example_config.json`
 
 ## Structure
 ### devices.json
@@ -22,9 +22,6 @@ A JSON config that maps devices names to their ADB ids for easy reference in con
 ## Configuration format
 Below is work-in-progress documentation for the configuration format.
 It may not be always updated.
-
-**name** *string*  
-Name of the experiment
 
 **type** *string*  
 Type of the experiment. Can be `web` or `native`
@@ -46,9 +43,8 @@ The names of browser(s) to use. Currently supported values are `chrome`.
 A JSON object to describe the measurements to perform. Below is an example:
 ```json
   "measurements": {
-    "energy": {
-      "tool": "trepn",
-      "sample_rate": 100,
+    "trepn": {
+      "sample_interval": 100,
       "output": "./energy/"
     }
   }
