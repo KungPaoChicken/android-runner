@@ -44,3 +44,21 @@ def uninstall(device_id, apk):
     adb.set_target_by_name(device_id)
     print('Uninstall stub: ' + apk)
     return True
+
+
+def push(device_id, local, remote):
+    adb.set_target_by_name(device_id)
+    return adb.push_local_file(local, remote)
+
+
+def pull(device_id, remote, local):
+    adb.set_target_by_name(device_id)
+    return adb.get_remote_file(remote, local)
+
+
+def unplug(device_id):
+    return shell(device_id, 'dumpsys battery unplug')
+
+
+def plug(device_id):
+    return shell(device_id, 'dumpsys battery reset')

@@ -1,17 +1,16 @@
 {
   "devices": ["5x"],
-  "replications": 1,
   "type": "web",
-  "browsers": ["chrome", "opera", "firefox"],
+  "replications": 1,
+  "browsers": ["chrome"],
   "paths": [
     "https://www.google.com/",
     "https://github.com/"
   ],
   "measurements":{
     "trepn": {
-      "energy": {
-        "sample_interval": 200
-      }
+      "sample_interval": 500,
+      "data_points": ["battery_power", "mem_usage"]
     },
     "volta": {}
   },

@@ -1,25 +1,69 @@
-from Volta import Measurement
-import xml.etree.cElementTree as cET
+import errno
+import os
+import os.path as op
+import time
+
+import lxml.etree as et
+
 import Adb
+from ConfigParser import load_json
+from Volta import Measurement
+
+
+def makedirs(path):
+    # https://stackoverflow.com/a/5032238
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 class Trepn(Measurement):
-    def __init__(self):
-        super(Trepn, self).__init__()
-        pass
+    DEVICE_PATH = '/sdcard/trepn/'
 
-    def build_config_files(self, device_id):
-        # The XML module are not secure, but the file here are trusted
+    @staticmethod
+    def get_dependencies():
+        return ['com.quicinc.trepn']
+
+    def __init__(self, basedir, config):
+        super(Trepn, self).__init__(basedir, config)
+        # print('Trepn initialized')
+        self.pref_dir = None
+        self.build_preferences(config)
+
+    def build_preferences(self, config):
+        # The XML modules are not secure, but the file here are trusted
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities
+        self.pref_dir = op.join(self.basedir, 'trepn.pref/')
+        makedirs(self.pref_dir)
 
-        # Copy directory -> modify config
-        preferences = cET.parse('trepn/com.quicinc.trepn_preferences.xml').getroot()
-        config_file = '/sdcard/trepn/saved_preferences/some_preferences.pref'
+        preferences_file = et.parse('xmls/preferences.xml')
+        if config['sample_interval']:
+            for i in preferences_file.getroot().iter('int'):
+                if i.get('name') == 'com.quicinc.preferences.general.profiling_interval':
+                    i.set('value', str(config['sample_interval']))
+        preferences_file.write(op.join(self.pref_dir, 'com.quicinc.trepn_preferences.xml'), encoding='utf-8',
+                               xml_declaration=True, standalone=True)
+
+        datapoints_file = et.parse('xmls/data_points.xml')
+        dp_root = datapoints_file.getroot()
+        data_points = load_json('xmls/data_points.json')
+        for dp in config['data_points']:
+            dp = str(data_points[dp])
+            dp_root.append(et.Element('int', {'name': dp, 'value': dp}))
+        datapoints_file.write(op.join(self.pref_dir, 'com.quicinc.preferences.saved_data_points.xml'), encoding='utf-8',
+                              xml_declaration=True, standalone=True)
+
+    def load(self, device_id):
         Adb.shell(device_id, 'am startservice com.quicinc.trepn/.TrepnService')
+        local_pref_dir = self.pref_dir
+        remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
+        Adb.push(device_id, local_pref_dir, remote_pref_dir)
         # There is no way to know if this succeeded
         Adb.shell(device_id,
                   'am broadcast -a com.quicinc.trepn.load_preferences '
-                  '-e com.quicinc.trepn.load_preferences_file "%s"' % config_file)
+                  '-e com.quicinc.trepn.load_preferences_file "%s"' % remote_pref_dir + 'trepn.pref')
 
     def start_measurement(self, device_id):
         super(Trepn, self).start_measurement(device_id)
@@ -30,6 +74,22 @@ class Trepn(Measurement):
         Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.stop_profiling')
 
     def get_results(self, device_id):
-        Adb.shell(device_id, ' am broadcast -a com.quicinc.trepn.export_to_csv '
-                             '-e com.quicinc.trepn.export_db_input_file "<existing_database_name>" '
-                             '-e com.quicinc.trepn.export_csv_output_file "<output_csv_file>"')
+        # Gives the latest result
+        newest_db = Adb.shell(device_id, 'ls -t ' + Trepn.DEVICE_PATH + ' | grep ".db" | head -n1').strip()
+        csv_filename = str(device_id) + '_' + op.splitext(newest_db)[0] + '.csv'
+        if newest_db:
+            Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.export_to_csv '
+                                 '-e com.quicinc.trepn.export_db_input_file "%s" '
+                                 '-e com.quicinc.trepn.export_csv_output_file "%s"' % (newest_db, csv_filename))
+            output_dir = op.join(self.basedir, 'output/trepn/')
+            makedirs(output_dir)
+            # The commands are run asynchronously it seems
+            time.sleep(1)
+            Adb.pull(device_id, op.join(Trepn.DEVICE_PATH, csv_filename), output_dir)
+            time.sleep(1)
+            # Delete the originals
+            Adb.shell(device_id, 'rm ' + op.join(Trepn.DEVICE_PATH, newest_db))
+            Adb.shell(device_id, 'rm ' + op.join(Trepn.DEVICE_PATH, csv_filename))
+
+    def unload(self, device_id):
+        Adb.shell(device_id, 'am stopservice com.quicinc.trepn/.TrepnService')
