@@ -101,3 +101,5 @@ ENV/
 .idea/
 *.apk
 *.pdf
+*.csv
+example/trepn.pref
