@@ -25,7 +25,8 @@ class ConfigParser:
                         'interaction': '',
                         'after_run': '',
                         'teardown': ''
-                        }
+                        },
+            'time_between_run': 0
         }
 
         try:
