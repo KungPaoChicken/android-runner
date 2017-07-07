@@ -52,7 +52,7 @@ class Trepn(Measurement):
         # There is no way to know if this succeeded
         Adb.shell(device_id,
                   'am broadcast -a com.quicinc.trepn.load_preferences '
-                  '-e com.quicinc.trepn.load_preferences_file "%s"' % remote_pref_dir + 'trepn.pref')
+                  '-e com.quicinc.trepn.load_preferences_file "%s"' % op.join(remote_pref_dir, 'trepn.pref'))
 
     def start_measurement(self, device_id):
         super(Trepn, self).start_measurement(device_id)
@@ -64,8 +64,8 @@ class Trepn(Measurement):
 
     def get_results(self, device_id):
         # Gives the latest result
-        newest_db = Adb.shell(device_id, 'ls -t ' + Trepn.DEVICE_PATH + ' | grep ".db" | head -n1').strip()
-        csv_filename = str(device_id) + '_' + op.splitext(newest_db)[0] + '.csv'
+        newest_db = Adb.shell(device_id, 'ls -t %s | grep ".db" | head -n1' % Trepn.DEVICE_PATH).strip()
+        csv_filename = '%s_%s.csv' % (device_id, op.splitext(newest_db)[0])
         if newest_db:
             Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.export_to_csv '
                                  '-e com.quicinc.trepn.export_db_input_file "%s" '
@@ -77,8 +77,8 @@ class Trepn(Measurement):
             Adb.pull(device_id, op.join(Trepn.DEVICE_PATH, csv_filename), output_dir)
             time.sleep(1)
             # Delete the originals
-            Adb.shell(device_id, 'rm ' + op.join(Trepn.DEVICE_PATH, newest_db))
-            Adb.shell(device_id, 'rm ' + op.join(Trepn.DEVICE_PATH, csv_filename))
+            Adb.shell(device_id, 'rm %s' % op.join(Trepn.DEVICE_PATH, newest_db))
+            Adb.shell(device_id, 'rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
 
     def unload(self, device_id):
         Adb.shell(device_id, 'am stopservice com.quicinc.trepn/.TrepnService')

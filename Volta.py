@@ -20,5 +20,5 @@ class Volta(Measurement):
     def get_results(self, device_id):
         output_dir = op.join(self.basedir, 'output/volta/')
         makedirs(output_dir)
-        with open(op.join(output_dir, device_id + '_' + time.strftime('%Y.%m.%d_%H%M%S') + '.txt'), 'w+') as f:
+        with open(op.join(output_dir, '%s_%s.txt' % (device_id, time.strftime('%Y.%m.%d_%H%M%S'))), 'w+') as f:
             f.write(Adb.shell(device_id, 'dumpsys batterystats'))
