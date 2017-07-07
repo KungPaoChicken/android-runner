@@ -449,7 +449,7 @@ class ADB(object):
         """
         if package is None:
             return self.__output
-        cmd = "uninstall %s" % (package if keepdata is True else "-k %s" % package )
+        cmd = "uninstall %s" % (package if keepdata is False else "-k %s" % package )
         self.run_cmd(cmd)
         return self.__output
 
