@@ -62,3 +62,8 @@ def unplug(device_id):
 
 def plug(device_id):
     return shell(device_id, 'dumpsys battery reset')
+
+
+def logcat(device_id, param=""):
+    adb.set_target_by_name(device_id)
+    return adb.get_logcat(lcfilter=param)
