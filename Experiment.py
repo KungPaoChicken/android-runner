@@ -1,4 +1,5 @@
 from importlib import import_module
+from os.path import basename, splitext
 from time import sleep
 from ConfigParser import ConfigParser, ConfigError
 from Devices import Devices
@@ -13,6 +14,7 @@ class Experiment:
         self.type = None
         self.replications = 1
         self.devices = None
+        self.paths = []
         self.measurements = {}
         self.scripts = None
         self.time_between_run = 0
@@ -29,6 +31,7 @@ class Experiment:
             self.type = config['type']
             self.replications = config['replications']
             self.devices = Devices(config['devices'])
+            self.paths = config['paths']
             self.scripts = Runner(config['scripts'])
             self.time_between_run = config['time_between_run']
             for device in self.devices:
@@ -40,7 +43,7 @@ class Experiment:
                 self.measurements[t] = getattr(import_module(t), t)(config['basedir'], c)
             if self.type == 'native':
                 for device in self.devices:
-                    device.install_apps(config['paths'])
+                    device.install_apks(self.paths)
         except ConnectionError as e:
             print(e.message)
             exit(0)
@@ -69,4 +72,4 @@ class Experiment:
             Adb.plug(device.id)
             self.run_measure('unload', device)
             if self.type == 'native':
-                pass
+                device.uninstall_apps([splitext(basename(apk))[0] for apk in self.paths])

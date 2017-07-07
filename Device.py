@@ -1,6 +1,7 @@
+from os.path import basename, splitext
+import re
 import Adb
 from Adb import AdbError
-import re
 
 
 class Device:
@@ -17,10 +18,15 @@ class Device:
     def update_app_list(self):
         self.apps = Adb.list_apps(self.id)
 
-    def install_apps(self, apps):
-        for app in apps:
-            if Adb.install(self.id, app) == 'Success':
-                self.apps.append(app)
+    def install_apks(self, apks):
+        for apk in apks:
+            if Adb.install(self.id, apk) == 'Success':
+                self.apps.append(splitext(basename(apk))[0])
+
+    def uninstall_apps(self, names):
+        for name in names:
+            if Adb.uninstall(self.id, name) == 'Success':
+                self.apps.remove(name)
 
     def current_activity(self):
         # https://github.com/appium/appium-adb/blob/e9234db1546411e495a7520e9d29d43d990c617a/lib/tools/apk-utils.js#L84
