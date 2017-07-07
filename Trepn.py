@@ -1,5 +1,3 @@
-import errno
-import os
 import os.path as op
 import time
 
@@ -7,16 +5,7 @@ import lxml.etree as et
 
 import Adb
 from ConfigParser import load_json
-from Volta import Measurement
-
-
-def makedirs(path):
-    # https://stackoverflow.com/a/5032238
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+from Measurement import Measurement, makedirs
 
 
 class Trepn(Measurement):

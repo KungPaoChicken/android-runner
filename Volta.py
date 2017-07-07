@@ -1,30 +1,7 @@
+import os.path as op
+import time
+from Measurement import Measurement, makedirs
 import Adb
-
-
-class Measurement(object):
-    @staticmethod
-    def get_dependencies():
-        return []
-
-    def __init__(self, basedir, config):
-        self.basedir = basedir
-
-    def load(self, device_id):
-        pass
-
-    def start_measurement(self, device_id):
-        # print('Measurement started')
-        pass
-
-    def stop_measurement(self, device_id):
-        # print('Measurement stopped')
-        pass
-
-    def get_results(self, device_id):
-        pass
-
-    def unload(self, device_id):
-        pass
 
 
 class Volta(Measurement):
@@ -41,4 +18,7 @@ class Volta(Measurement):
         super(Volta, self).stop_measurement(device_id)
 
     def get_results(self, device_id):
-        return Adb.shell(device_id, 'dumpsys batterystats')
+        output_dir = op.join(self.basedir, 'output/volta/')
+        makedirs(output_dir)
+        with open(op.join(output_dir, device_id + '_' + time.strftime('%Y.%m.%d_%H%M%S') + '.txt'), 'w+') as f:
+            f.write(Adb.shell(device_id, 'dumpsys batterystats'))

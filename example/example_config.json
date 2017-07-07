@@ -3,10 +3,10 @@
   "type": "web",
   "replications": 1,
   "browsers": ["chrome"],
-  "paths": [
-    "https://www.google.com/",
-    "https://github.com/"
-  ],
+  "paths": {
+    "google": "https://www.google.com/",
+    "github": "https://github.com/"
+  },
   "measurements":{
     "trepn": {
       "sample_interval": 500,
@@ -21,5 +21,6 @@
     "after_run": "after_run.py",
     "teardown": "teardown.py"
   },
-  "aggregation": ""
+  "aggregation": "",
+  "time_between_run": 500
 }
