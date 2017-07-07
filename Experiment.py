@@ -37,10 +37,12 @@ class Experiment:
             for device in self.devices:
                 for name, installed in device.is_installed(config['dependencies']).items():
                     if not installed:
-                        print('%s is not installed' % name)
+                        print('Required package %s is not installed' % name)
                         exit(0)
+
             for t, c in config['measurements'].items():
                 self.measurements[t] = getattr(import_module(t), t)(config['basedir'], c)
+
             if self.type == 'native':
                 for device in self.devices:
                     device.install_apks(self.paths)
@@ -49,6 +51,7 @@ class Experiment:
             exit(0)
         except AdbError as e:
             print(e.message)
+            exit(0)
 
     def run_measure(self, func, device):
         for m in self.measurements.values():

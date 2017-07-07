@@ -1,4 +1,4 @@
-from os.path import basename, splitext
+from os.path import basename, splitext, isfile
 import re
 import Adb
 from Adb import AdbError
@@ -20,13 +20,25 @@ class Device:
 
     def install_apks(self, apks):
         for apk in apks:
-            if Adb.install(self.id, apk) == 'Success':
+            if not isfile(apk):
+                raise AdbError("%s is not found" % apk)
+        for apk in apks:
+            result = Adb.install(self.id, apk)
+            if 'Success' in result:
                 self.apps.append(splitext(basename(apk))[0])
+            else:
+                raise AdbError(result)
 
     def uninstall_apps(self, names):
         for name in names:
-            if Adb.uninstall(self.id, name) == 'Success':
+            if name not in self.apps:
+                raise AdbError('%s does not exist in the list of apps' % name)
+        for name in names:
+            result = Adb.uninstall(self.id, name)
+            if 'Success' in result:
                 self.apps.remove(name)
+            else:
+                raise AdbError(result)
 
     def current_activity(self):
         # https://github.com/appium/appium-adb/blob/e9234db1546411e495a7520e9d29d43d990c617a/lib/tools/apk-utils.js#L84

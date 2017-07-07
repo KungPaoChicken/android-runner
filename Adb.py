@@ -32,7 +32,7 @@ def shell(device_id, cmd):
 
 
 def list_apps(device_id):
-    return shell(device_id, 'pm list packages')
+    return shell(device_id, 'pm list packages').replace('package:', '').split()
 
 
 def install(device_id, apk):
@@ -42,8 +42,7 @@ def install(device_id, apk):
 
 def uninstall(device_id, name):
     adb.set_target_by_name(device_id)
-    print('Uninstall stub: ' + name)
-    return shell(device_id, 'uninstall %s' % name)
+    return adb.uninstall(package=name, keepdata=False)
 
 
 def push(device_id, local, remote):
