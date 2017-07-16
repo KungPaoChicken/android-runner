@@ -19,12 +19,12 @@ class ConfigParser:
             'replications': 1,
             'paths': [],
             'basedir': op.abspath(op.dirname(config_file)),
-            'measurements': {},
-            'scripts': {'setup': '',
+            'profilers': {},
+            'scripts': {'before_experiment': '',
                         'before_run': '',
                         'interaction': '',
                         'after_run': '',
-                        'teardown': ''
+                        'after_experiment': ''
                         },
             'time_between_run': 0
         }
@@ -65,9 +65,9 @@ class ConfigParser:
                 raise ConfigError("No browsers are given for a Web experiment")
             parsed['dependencies'] = parsed['dependencies'] + map(lambda b: app_list[b], browsers)
 
-        if parsed['measurements']:
-            parsed['measurements'] = {k.capitalize(): v for k, v in parsed['measurements'].items()}
-            for tool in parsed['measurements'].keys():
+        if parsed['profilers']:
+            parsed['profilers'] = {k.capitalize(): v for k, v in parsed['profilers'].items()}
+            for tool in parsed['profilers'].keys():
                 tool_module = getattr(importlib.import_module(tool), tool)
                 dep = tool_module.get_dependencies()
                 if dep:
@@ -76,7 +76,7 @@ class ConfigParser:
         parsed['scripts'] = {n: op.join(parsed['basedir'], p) for n, p in
                                     parsed['scripts'].items()}
 
-        # parsed_config['measurements'] = []
+        # parsed_config['profilers'] = []
 
         if self.errors:
             raise ConfigError(self.errors)

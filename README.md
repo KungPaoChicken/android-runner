@@ -39,10 +39,10 @@ The paths to the APKs/URLs to test with.
 *Dependent on type = web*  
 The names of browser(s) to use. Currently supported values are `chrome`.
 
-**measurements** *JSON* **Unstable**  
-A JSON object to describe the measurements to perform. Below is an example:
+**profilers** *JSON* **Unstable**  
+A JSON object to describe the profilers to be used and their arguments. Below is an example:
 ```json
-  "measurements": {
+  "profilers": {
     "trepn": {
       "sample_interval": 100,
       "output": "./energy/"
@@ -54,15 +54,15 @@ A JSON object to describe the measurements to perform. Below is an example:
 A JSON list of types and paths of scripts to run. Below is an example:
 ```json
 "scripts": {
-  "setup": "setup.py",
+  "before_experiment": "before_experiment.py",
   "before_run": "before_run.py",
   "interaction": "interaction.py",
   "after_run": "after_run.py",
-  "teardown": "teardown.py"
+  "after_experiment": "after_experiment.py"
 }
 ```
 Below are the supported types:
-- setup  
+- before_experiment  
   executes once before the first run
 - before_run  
   executes before every run
@@ -70,7 +70,7 @@ Below are the supported types:
   executes between the start and end of a run
 - after_run  
   executes after a run completes
-- teardown  
+- after_experiment  
   executes once after the last run
 
 **reinstall** *boolean* *Optional*

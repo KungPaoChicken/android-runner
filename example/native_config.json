@@ -1,0 +1,24 @@
+{
+  "devices": ["5x"],
+  "type": "native",
+  "replications": 1,
+  "paths": [
+    "/home/yoyo/android-runner/coolcherrytrees.games.reactor4.apk"
+  ],
+  "profilers":{
+    "trepn": {
+      "sample_interval": 100,
+      "data_points": ["battery_power", "mem_usage"]
+    },
+    "volta": {}
+  },
+  "scripts": {
+    "before_experiment": "before_experiment.py",
+    "before_run": "before_run.py",
+    "interaction": "interaction.py",
+    "after_run": "after_run.py",
+    "after_experiment": "after_experiment.py"
+  },
+  "aggregation": "",
+  "time_between_run": 500
+}

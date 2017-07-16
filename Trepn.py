@@ -5,10 +5,10 @@ import lxml.etree as et
 
 import Adb
 from ConfigParser import load_json
-from Measurement import Measurement, makedirs
+from Profiler import Profiler, makedirs
 
 
-class Trepn(Measurement):
+class Trepn(Profiler):
     DEVICE_PATH = '/sdcard/trepn/'
 
     @staticmethod
@@ -45,6 +45,7 @@ class Trepn(Measurement):
                               xml_declaration=True, standalone=True)
 
     def load(self, device_id):
+        super(Trepn, self).load(device_id)
         Adb.shell(device_id, 'am startservice com.quicinc.trepn/.TrepnService')
         local_pref_dir = self.pref_dir
         remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
@@ -53,17 +54,19 @@ class Trepn(Measurement):
         Adb.shell(device_id,
                   'am broadcast -a com.quicinc.trepn.load_preferences '
                   '-e com.quicinc.trepn.load_preferences_file "%s"' % op.join(remote_pref_dir, 'trepn.pref'))
+        time.sleep(1)   # Sleep because Adb is asynchronous
 
-    def start_measurement(self, device_id):
-        super(Trepn, self).start_measurement(device_id)
+    def start_profiling(self, device_id):
+        super(Trepn, self).start_profiling(device_id)
         Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.start_profiling')
 
-    def stop_measurement(self, device_id):
-        super(Trepn, self).stop_measurement(device_id)
+    def stop_profiling(self, device_id):
+        super(Trepn, self).stop_profiling(device_id)
         Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.stop_profiling')
 
-    def get_results(self, device_id):
+    def collect_results(self, device_id, path=None):
         # Gives the latest result
+        super(Trepn, self).collect_results(device_id)
         newest_db = Adb.shell(device_id, 'ls -t %s | grep ".db" | head -n1' % Trepn.DEVICE_PATH).strip()
         csv_filename = '%s_%s.csv' % (device_id, op.splitext(newest_db)[0])
         if newest_db:
@@ -81,4 +84,5 @@ class Trepn(Measurement):
             Adb.shell(device_id, 'rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
 
     def unload(self, device_id):
+        super(Trepn, self).unload(device_id)
         Adb.shell(device_id, 'am stopservice com.quicinc.trepn/.TrepnService')

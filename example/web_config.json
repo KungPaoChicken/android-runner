@@ -3,24 +3,24 @@
   "type": "web",
   "replications": 1,
   "browsers": ["chrome"],
-  "paths": {
-    "google": "https://www.google.com/",
-    "github": "https://github.com/"
-  },
-  "measurements":{
+  "paths": [
+    "https://github.com/",
+    "https://stackoverflow.com/",
+    "https://google.com/"
+  ],
+  "profilers":{
     "trepn": {
-      "sample_interval": 500,
+      "sample_interval": 100,
       "data_points": ["battery_power", "mem_usage"]
-    },
-    "volta": {}
+    }
   },
   "scripts": {
-    "setup": "setup.py",
+    "before_experiment": "before_experiment.py",
     "before_run": "before_run.py",
     "interaction": "interaction.py",
     "after_run": "after_run.py",
-    "teardown": "teardown.py"
+    "after_experiment": "after_experiment.py"
   },
   "aggregation": "",
-  "time_between_run": 500
+  "time_between_run": 100
 }

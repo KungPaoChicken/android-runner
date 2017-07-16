@@ -1,4 +1,7 @@
 from imp import load_source
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Runner:
@@ -12,4 +15,6 @@ class Runner:
 
     def run(self, device, name, *args, **kwargs):
         current_activity = device.current_activity()
+        logger.debug('%s: Execute %s, current activity "%s"' % (device.id, name, current_activity))
+        logger.info(name)
         return self.scripts[name].main(device.id, current_activity, *args, **kwargs)

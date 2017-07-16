@@ -1,4 +1,8 @@
+import logging
+import os.path as op
 from pyand import ADB
+
+logger = logging.getLogger(__name__)
 
 
 class AdbError(Exception):
@@ -25,6 +29,7 @@ def connect(dev_id):
 def shell(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command(cmd)
+    logger.debug('%s: Result of "%s": \n%s' % (device_id, cmd, result))
     if 'error' in result:
         print(result)
         raise AdbError('Error in shell')
@@ -36,13 +41,40 @@ def list_apps(device_id):
 
 
 def install(device_id, apk):
+    filename = op.basename(apk)
+    logger.info('%s: Installing "%s"' % (device_id, filename))
     adb.set_target_by_name(device_id)
-    return adb.install(apk)
+    result = adb.install(apk)
+    success_or_exception(result,
+                         '%s: "%s" installed' % (device_id, filename),
+                         '%s: Failed to install "%s"' % (device_id, filename)
+                         )
 
 
 def uninstall(device_id, name):
+    logger.info('%s: Uninstalling "%s"' % (device_id, name))
     adb.set_target_by_name(device_id)
-    return adb.uninstall(package=name, keepdata=False)
+    result = adb.uninstall(package=name, keepdata=False)
+    success_or_exception(result,
+                         '%s: "%s" uninstalled' % (device_id, name),
+                         '%s: Failed to uninstall "%s"' % (device_id, name)
+                         )
+
+
+def clear_app_data(device_id, name):
+    adb.set_target_by_name(device_id)
+    success_or_exception(adb.shell_command('pm clear %s' % name),
+                         '%s: Data of "%s" cleared' % (device_id, name),
+                         '%s: Failed to clear data for "%s"' % (device_id, name)
+                         )
+
+
+def success_or_exception(result, success_msg, fail_msg):
+    if 'Success' in result:
+        logger.info(success_msg)
+    else:
+        logger.info(fail_msg + '\nMessage returned:\n%s' % result)
+        raise AdbError(result)
 
 
 def push(device_id, local, remote):
