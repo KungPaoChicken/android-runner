@@ -6,7 +6,10 @@ This tool is only tested on Ubuntu, but it should work in most linux distributio
 You'll need:
 - Python 2.7
 - Android Debug Bridge (adb)
+- Android SDK Tools (monkeyrunner)
+- JDK 8 (NOT JDK 9)
 - lxml (`sudo apt install python-lxml`)
+- adb and monkeyrunner should be in the PATH
 
 ## Quick start
 To run an experiment, run:
