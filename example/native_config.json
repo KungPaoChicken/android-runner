@@ -20,5 +20,9 @@
     "after_experiment": "after_experiment.py"
   },
   "aggregation": "",
-  "time_between_run": 500
+  "time_between_run": 500,
+  "interaction_end_condition": {
+    "timeout": 500,
+    "logcat_event": "this is not possible"
+  }
 }

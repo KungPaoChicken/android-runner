@@ -1,5 +1,8 @@
-from os.path import basename, splitext, isfile
+import os.path as op
 import re
+import subprocess
+from Profiler import makedirs
+import time
 import Adb
 from Adb import AdbError
 
@@ -20,11 +23,11 @@ class Device:
 
     def install_apks(self, apks):
         for apk in apks:
-            if not isfile(apk):
+            if not op.isfile(apk):
                 raise AdbError("%s is not found" % apk)
         for apk in apks:
             Adb.install(self.id, apk)
-            self.apps.append(splitext(basename(apk))[0])
+            self.apps.append(op.splitext(op.basename(apk))[0])
 
     def uninstall_apps(self, names):
         for name in names:
@@ -54,14 +57,18 @@ class Device:
                     return 'null'
         raise AdbError('Could not parse activity from dumpsys')
 
-    def launch(self, name, activity, action='', data=''):
+    def launch(self, package, activity, action='', data_uri='', from_scratch=False):
+        # https://developer.android.com/studio/command-line/adb.html#IntentSpec
         # https://stackoverflow.com/a/3229077
         cmd = "am start"
         if action:
             cmd += " -a %s" % action
-        cmd += " -n % s/%s" % (name, activity)
-        if data:
-            cmd += " -d %s" % data
+        cmd += " -n %s/%s" % (package, activity)
+        if data_uri:
+            cmd += " -d %s" % data_uri
+        # https://android.stackexchange.com/a/113919
+        if from_scratch:
+            cmd += " --activity-clear-task"
         return Adb.shell(self.id, cmd)
 
     def force_stop(self, name):
@@ -69,6 +76,14 @@ class Device:
 
     def clear_app_data(self, name):
         Adb.clear_app_data(self.id, name)
+
+    def logcat_to_file(self, path):
+        makedirs(path)
+        with open(op.join(path, '%s_%s.txt' % (self.id, time.strftime('%Y.%m.%d_%H%M%S'))), 'w+') as f:
+            f.write(Adb.logcat(self.id))
+
+    def logcat_regex(self, regex):
+        return Adb.logcat(self.id, regex=regex)
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.id)

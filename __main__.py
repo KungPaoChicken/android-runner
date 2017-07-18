@@ -1,11 +1,10 @@
 import argparse
-from os.path import expanduser
-# from Experiment import Experiment
+import logging
+import os.path as op
+import sys
 from WebExperiment import WebExperiment
 from ConfigParser import ConfigError
 from Adb import ConnectionError, AdbError
-import logging
-import sys
 
 # %(levelname)s: %(name)s: %(message)s
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(name)s: %(message)s')
@@ -20,7 +19,7 @@ def main():
     # args['verbose']
 
     try:
-        experiment = WebExperiment(config_file=expanduser(args['file']))
+        experiment = WebExperiment(config_file=op.expanduser(args['file']))
         experiment.start()
     except ConfigError as e:
         print("There are some errors in the config file:")

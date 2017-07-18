@@ -1,10 +1,33 @@
-from importlib import import_module
 import logging
-from time import sleep
+import signal
+import multiprocessing
+import time
+
 from ConfigParser import ConfigParser
+from util import Scripts, Profilers
 from Devices import Devices
-from Runner import Runner
-import json
+
+
+class TimeoutError(Exception):
+    pass
+
+
+# https://stackoverflow.com/a/22348885
+class timeout:
+    def __init__(self, seconds):
+        self.seconds = float(seconds)
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError()
+
+    def __enter__(self):
+        if self.seconds != 0:
+            signal.signal(signal.SIGALRM, self.handle_timeout)
+            signal.setitimer(signal.ITIMER_REAL, self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        if self.seconds != 0:
+            signal.alarm(0)
 
 
 class Experiment(object):
@@ -14,14 +37,14 @@ class Experiment(object):
         self.replications = 1
         self.devices = None
         self.paths = []
-        self.profilers = {}
+        self.profilers = None
         self.scripts = None
         self.time_between_run = 0
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.timeout = 0
+        self.logcat_event = None
         if config_file:
             config = ConfigParser(config_file).parse()
-            # Check pprint docs
-            self.logger.debug('Parsed config:\n%s' % json.dumps(config, indent=2))
             self.setup(config)
 
     def check_dependencies(self, dependencies):
@@ -34,30 +57,26 @@ class Experiment(object):
         if error:
             exit(0)
 
-    def load_profilers(self, profilers):
-        for t, c in profilers.items():
-            self.profilers[t] = getattr(import_module(t), t)(self.basedir, c)
-
     def setup(self, config):
         self.basedir = config['basedir']
         self.type = config['type']
         self.replications = config['replications']
         self.devices = Devices(config['devices'])
         self.paths = config['paths']
-        self.scripts = Runner(config['scripts'])
+        self.scripts = Scripts(config['scripts'])
         self.time_between_run = config['time_between_run']
         self.paths = config['paths']
+        if config.get('interaction_end_condition', None):
+            end_condition = config['interaction_end_condition']
+            self.timeout = end_condition.get('timeout', 0) / 1000
+            self.logcat_event = end_condition.get('logcat_event', None)
 
         self.check_dependencies(config['dependencies'])
-        self.load_profilers(config['profilers'])
-
-    def profilers_run(self, func, device):
-        for m in self.profilers.values():
-            getattr(m, func)(device.id)
+        self.profilers = Profilers(self.basedir, config['profilers'])
 
     def before_experiment(self, device):
         self.logger.info('Device: %s' % device)
-        self.profilers_run('load', device)
+        self.profilers.run('load', device)
         self.scripts.run(device, 'before_experiment')
         device.unplug()
 
@@ -68,11 +87,14 @@ class Experiment(object):
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
         self.scripts.run(device, 'before_run')
 
+    def interaction(self, device, path, run):
+        self.scripts.run(device, 'interaction')
+
     def after_run(self, device, path, run):
         self.scripts.run(device, 'after_run')
-        self.profilers_run('collect_results', device)
+        self.profilers.run('collect_results', device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
-        sleep(self.time_between_run / 1000.0)
+        time.sleep(self.time_between_run / 1000.0)
 
     def after_last_run(self, device, path):
         pass
@@ -81,19 +103,51 @@ class Experiment(object):
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run(device, 'after_experiment')
         device.plug()
-        self.profilers_run('unload', device)
+        self.profilers.run('unload', device)
+
+    def mp_interaction(self, device, path, run, queue):
+        self.interaction(device, path, run)
+        queue.put('interaction')
+
+    def mp_logcat_regex(self, device, regex, queue):
+        # https://stackoverflow.com/a/21936682
+        # pyadb uses subprocess.communicate(), therefore it blocks
+        device.logcat_regex(regex)
+        queue.put('logcat')
+
+    def interaction_select(self, device, path, run):
+        # https://stackoverflow.com/a/6286343
+        with timeout(seconds=self.timeout):
+            processes = []
+            try:
+                queue = multiprocessing.Queue()
+                if self.logcat_event:
+                    processes.append(multiprocessing.Process(target=self.mp_logcat_regex,
+                                                             args=(device, self.logcat_event, queue)))
+                processes.append(multiprocessing.Process(target=self.mp_interaction,
+                                                         args=(device, path, run, queue)))
+                for p in processes:
+                    p.start()
+                result = queue.get()
+            except TimeoutError:
+                self.logger.debug('Interaction function timeout (%sms)' % self.timeout)
+                result = 'timeout'
+            finally:
+                for p in processes:
+                    p.terminate()
+            return result
 
     def start(self):
         for device in self.devices:
             self.before_experiment(device)
             for path in self.paths:
                 self.before_first_run(device, path)
-                for i in range(self.replications):
-                    self.before_run(device, path, i)
-                    self.profilers_run('start_profiling', device)
-                    self.scripts.run(device, 'interaction')
-                    self.profilers_run('stop_profiling', device)
-                    self.after_run(device, path, i)
+                for run in range(self.replications):
+                    self.before_run(device, path, run)
+                    self.profilers.run('start_profiling', device)
+                    self.interaction_select(device, path, run)
+                    self.profilers.run('stop_profiling', device)
+                    self.after_run(device, path, run)
                 self.after_last_run(device, path)
             self.logger.info('Experiment completed, start cleanup')
             self.after_experiment(device)

@@ -3,6 +3,7 @@ import sys
 import errno
 import importlib
 import json
+import logging
 
 
 class ConfigError(Exception):
@@ -12,6 +13,7 @@ class ConfigError(Exception):
 
 class ConfigParser:
     def __init__(self, config_file):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.config = None
         self.errors = []
         self.mandatory_keys = ['devices', 'type']
@@ -76,10 +78,10 @@ class ConfigParser:
         parsed['scripts'] = {n: op.join(parsed['basedir'], p) for n, p in
                                     parsed['scripts'].items()}
 
-        # parsed_config['profilers'] = []
-
         if self.errors:
             raise ConfigError(self.errors)
+
+        self.logger.debug('Parsed config:\n%s' % json.dumps(parsed, indent=2))
         return parsed
 
 

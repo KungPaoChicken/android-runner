@@ -95,6 +95,11 @@ def plug(device_id):
     return shell(device_id, 'dumpsys battery reset')
 
 
-def logcat(device_id, param=""):
+def logcat(device_id, regex=None):
+    # https://developer.android.com/studio/command-line/logcat.html#Syntax
+    # -d prints to screen and exits
+    params = '-d'
+    if regex is not None:
+        params += ' -e %s' % regex
     adb.set_target_by_name(device_id)
-    return adb.get_logcat(lcfilter=param)
+    return adb.get_logcat(lcfilter=params)
