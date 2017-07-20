@@ -4,19 +4,19 @@ import time
 import lxml.etree as et
 
 import Adb
-from ConfigParser import load_json
-from Profiler import Profiler, makedirs
+from util import load_json, makedirs
+from Profiler import Profiler
 
 
 class Trepn(Profiler):
     DEVICE_PATH = '/sdcard/trepn/'
 
     @staticmethod
-    def get_dependencies():
+    def dependencies():
         return ['com.quicinc.trepn']
 
-    def __init__(self, basedir, config):
-        super(Trepn, self).__init__(basedir, config)
+    def __init__(self, config_dir, config):
+        super(Trepn, self).__init__(config_dir, config)
         # print('Trepn initialized')
         self.pref_dir = None
         self.build_preferences(config)
@@ -24,7 +24,7 @@ class Trepn(Profiler):
     def build_preferences(self, config):
         # The XML modules are not secure, but the file here are trusted
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities
-        self.pref_dir = op.join(self.basedir, 'trepn.pref/')
+        self.pref_dir = op.join(self.config_dir, 'trepn.pref/')
         makedirs(self.pref_dir)
 
         preferences_file = et.parse('xmls/preferences.xml')
@@ -73,7 +73,7 @@ class Trepn(Profiler):
             Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.export_to_csv '
                                  '-e com.quicinc.trepn.export_db_input_file "%s" '
                                  '-e com.quicinc.trepn.export_csv_output_file "%s"' % (newest_db, csv_filename))
-            output_dir = op.join(self.basedir, 'output/trepn/')
+            output_dir = op.join(self.config_dir, 'output/trepn/')
             makedirs(output_dir)
             # The commands are run asynchronously it seems
             time.sleep(1)

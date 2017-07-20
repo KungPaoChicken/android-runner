@@ -3,8 +3,9 @@ import logging
 import os.path as op
 import sys
 from WebExperiment import WebExperiment
-from ConfigParser import ConfigError
+from util import ConfigError
 from Adb import ConnectionError, AdbError
+from ExperimentBuilder import ExperimentBuilder
 
 # %(levelname)s: %(name)s: %(message)s
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(name)s: %(message)s')
@@ -19,11 +20,10 @@ def main():
     # args['verbose']
 
     try:
-        experiment = WebExperiment(config_file=op.expanduser(args['file']))
+        experiment = ExperimentBuilder.from_json(op.expanduser(args['file']))
         experiment.start()
     except ConfigError as e:
-        print("There are some errors in the config file:")
-        print('\n'.join(['- ' + m for m in e.message]))
+        print(e.message)
     except ConnectionError as e:
         print(e.message)
         exit(0)

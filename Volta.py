@@ -1,12 +1,13 @@
 import os.path as op
 import time
-from Profiler import Profiler, makedirs
+from util import makedirs
+from Profiler import Profiler
 import Adb
 
 
 class Volta(Profiler):
-    def __init__(self, basedir, config):
-        super(Volta, self).__init__(basedir, config)
+    def __init__(self, config_dir, config):
+        super(Volta, self).__init__(config_dir, config)
         # print('Volta initialized')
 
     def start_profiling(self, device_id):
@@ -19,7 +20,7 @@ class Volta(Profiler):
 
     def collect_results(self, device_id, path=None):
         super(Volta, self).collect_results(device_id)
-        output_dir = op.join(self.basedir, 'output/volta/')
+        output_dir = op.join(self.config_dir, 'output/volta/')
         makedirs(output_dir)
         with open(op.join(output_dir, '%s_%s.txt' % (device_id, time.strftime('%Y.%m.%d_%H%M%S'))), 'w+') as f:
             f.write(Adb.shell(device_id, 'dumpsys batterystats'))

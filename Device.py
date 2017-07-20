@@ -1,7 +1,6 @@
 import os.path as op
 import re
-import subprocess
-from Profiler import makedirs
+from util import makedirs
 import time
 import Adb
 from Adb import AdbError

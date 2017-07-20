@@ -5,11 +5,11 @@ import logging
 
 class Profiler(object):
     @staticmethod
-    def get_dependencies():
+    def dependencies():
         return []
 
-    def __init__(self, basedir, config):
-        self.basedir = basedir
+    def __init__(self, config_dir, config):
+        self.config_dir = config_dir
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def load(self, device_id):
@@ -31,12 +31,3 @@ class Profiler(object):
     def unload(self, device_id):
         self.logger.debug('%s: Cleanup' % device_id)
         self.logger.info('Cleanup')
-
-
-def makedirs(path):
-    # https://stackoverflow.com/a/5032238
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise

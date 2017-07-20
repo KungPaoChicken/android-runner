@@ -18,12 +18,12 @@ class ConnectionError(Exception):
 adb = ADB(adb_path='/opt/platform-tools/adb')
 
 
-def connect(dev_id):
+def connect(device_id):
     device_list = adb.get_devices()
     if not device_list:
         raise ConnectionError('No devices are connected')
-    if dev_id not in device_list.values():
-        raise ConnectionError('Error: Device %s is not connected' % dev_id)
+    if device_id not in device_list.values():
+        raise ConnectionError('Error: Device %s is not connected' % device_id)
 
 
 def shell(device_id, cmd):

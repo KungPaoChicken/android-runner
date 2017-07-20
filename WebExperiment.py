@@ -3,8 +3,9 @@ from Experiment import Experiment
 
 
 class WebExperiment(Experiment):
-    def __init__(self, config_file=None):
-        super(WebExperiment, self).__init__(config_file)
+    def __init__(self, config):
+        super(WebExperiment, self).__init__(config)
+        # LOAD AND TEST BROWSER DEPENDENCIES
         # https://stackoverflow.com/a/28151563
         self.browser = 'com.android.chrome'
         self.main_activity = 'com.google.android.apps.chrome.Main'

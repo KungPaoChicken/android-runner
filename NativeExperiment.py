@@ -3,6 +3,10 @@ from Experiment import Experiment
 
 
 class NativeExperiment(Experiment):
+    def __init__(self, config):
+        super(NativeExperiment, self).__init__(config)
+        # TEST APK PATHS
+
     def before_experiment(self, device):
         super(NativeExperiment, self).before_experiment(device)
         for device in self.devices:
