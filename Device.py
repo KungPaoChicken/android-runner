@@ -43,31 +43,45 @@ class Device:
         Adb.plug(self.id)
 
     def current_activity(self):
-        # https://github.com/appium/appium-adb/blob/e9234db1546411e495a7520e9d29d43d990c617a/lib/tools/apk-utils.js#L84
-        windows = Adb.shell(self.id, 'dumpsys window windows')
+        # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
+        windows = Adb.shell(self.id, 'dumpsys window windows | grep -E "mCurrentFocus|mFocusedApp"')
+        null_re = r'mFocusedApp=null'
+        current_focus_re = r'mCurrentFocus.+\s([^\s\/\}]+)\/[^\s\/\}]+(\.[^\s\/\}]+)}'
+        focused_app_re = r'mFocusedApp.+Record\{.*\s([^\s\/\}]+)\/([^\s\/\}]+)(\s[^\s\/\}]+)*\}'
         for line in windows.split('\n'):
             # https://regex101.com/r/xZ8vF7/1
-            match = re.search(r'mFocusedApp.+Record{.*\s([^\s/\}]+)/([^\s/\},]+),?(\s[^\s/\}]+)*\}', line)
+            current_focus = re.search(current_focus_re, line)
+            focused_app = re.search(focused_app_re, line)
+            match = None
+            found_null = False
+            if current_focus:
+                match = current_focus
+            elif focused_app and not match:
+                match = focused_app
+            elif re.search(null_re, line):
+                found_null = True
             if match:
                 return match.group(1).strip()
+            elif found_null:
+                return None
             else:
-                match = re.search(r'^mFocusedApp=null$', line)
-                if match:
-                    return 'null'
-        raise AdbError('Could not parse activity from dumpsys')
+                raise AdbError('Could not parse activity from dumpsys')
 
-    def launch(self, package, activity, action='', data_uri='', from_scratch=False):
+    def launch(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
+        # https://developer.android.com/studio/command-line/adb.html#am
         # https://developer.android.com/studio/command-line/adb.html#IntentSpec
         # https://stackoverflow.com/a/3229077
-        cmd = "am start"
+        cmd = 'am start'
+        if force_stop:
+            cmd += ' -S'
         if action:
-            cmd += " -a %s" % action
-        cmd += " -n %s/%s" % (package, activity)
+            cmd += ' -a %s' % action
+        cmd += ' -n %s/%s' % (package, activity)
         if data_uri:
-            cmd += " -d %s" % data_uri
+            cmd += ' -d %s' % data_uri
         # https://android.stackexchange.com/a/113919
         if from_scratch:
-            cmd += " --activity-clear-task"
+            cmd += ' --activity-clear-task'
         return Adb.shell(self.id, cmd)
 
     def force_stop(self, name):
