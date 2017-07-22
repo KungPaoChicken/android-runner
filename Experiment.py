@@ -26,6 +26,8 @@ class Experiment(object):
     def prepare(self, device):
         self.profilers.load(device)
         device.unplug()
+        import time
+        time.sleep(5)
 
     def cleanup(self, device):
         device.plug()
@@ -35,18 +37,18 @@ class Experiment(object):
         for device in self.devices:
             try:
                 self.prepare(device)
-                # self.before_experiment(device)
-                # for path in self.paths:
-                #     self.before_first_run(device, path)
-                #     for run in range(self.replications):
-                #         self.before_run(device, path, run)
-                #         self.profilers.start_profiling(device)
-                #         self.interaction(device, path, run)
-                #         self.profilers.stop_profiling(device)
-                #         self.after_run(device, path, run)
-                #     self.after_last_run(device, path)
-                # self.logger.info('Experiment completed, start cleanup')
-                # self.after_experiment(device)
+                self.before_experiment(device)
+                for path in self.paths:
+                    self.before_first_run(device, path)
+                    for run in range(self.replications):
+                        self.before_run(device, path, run)
+                        self.profilers.start_profiling(device)
+                        self.interaction(device, path, run)
+                        self.profilers.stop_profiling(device)
+                        self.after_run(device, path, run)
+                    self.after_last_run(device, path)
+                self.logger.info('Experiment completed, start cleanup')
+                self.after_experiment(device)
             except:
                 # LOG
                 raise
@@ -55,21 +57,21 @@ class Experiment(object):
 
     def before_experiment(self, device):
         self.logger.info('Device: %s' % device)
-        self.scripts.run(device, 'before_experiment')
+        self.scripts.run(device, 'before_experiment', device.current_activity())
 
     def before_first_run(self, device, path):
         pass
 
     def before_run(self, device, path, run):
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
-        self.scripts.run(device, 'before_run')
+        self.scripts.run(device, 'before_run', device.current_activity())
 
     def interaction(self, device, path, run):
-        self.scripts.run(device, 'interaction')
+        self.scripts.run(device, 'interaction', device.current_activity())
 
     def after_run(self, device, path, run):
-        self.scripts.run(device, 'after_run')
-        self.profilers.run('collect_results', device)
+        self.scripts.run(device, 'after_run', device.current_activity())
+        self.profilers.collect_results(device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
         time.sleep(self.time_between_run / 1000.0)
 
@@ -77,5 +79,6 @@ class Experiment(object):
         pass
 
     def after_experiment(self, device):
+        print(self.__class__.__name__)
         self.logger.info('Experiment completed, start cleanup')
-        self.scripts.run(device, 'after_experiment')
+        self.scripts.run(device, 'after_experiment', device.current_activity())

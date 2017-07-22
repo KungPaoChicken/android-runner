@@ -2,7 +2,6 @@ import argparse
 import logging
 import os.path as op
 import sys
-from WebExperiment import WebExperiment
 from util import ConfigError
 from Adb import ConnectionError, AdbError
 from ExperimentBuilder import ExperimentBuilder

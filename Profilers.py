@@ -27,6 +27,10 @@ class Profilers(object):
         for p in self.profilers:
             p.stop_profiling(device.id)
 
+    def collect_results(self, device, path=None):
+        for p in self.profilers:
+            p.collect_results(device.id, path)
+
     def unload(self, device):
         for p in self.profilers:
             p.unload(device.id)
