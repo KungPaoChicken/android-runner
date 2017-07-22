@@ -4,7 +4,6 @@
   "replications": 1,
   "browsers": ["chrome"],
   "paths": [
-    "https://github.com/",
     "https://stackoverflow.com/",
     "https://google.com/"
   ],
@@ -17,10 +16,21 @@
   "scripts": {
     "before_experiment": "before_experiment.py",
     "before_run": "before_run.py",
-    "interaction": "interaction.py",
+    "interaction": [
+      {
+        "type": "python",
+        "path": "interaction.py",
+        "timeout": 500,
+        "logcat_regex": "this is not possible"
+      },
+      {
+        "type": "monkeyrunner",
+        "path": "monkey.py"
+      }
+    ],
     "after_run": "after_run.py",
     "after_experiment": "after_experiment.py"
   },
   "aggregation": "",
-  "time_between_run": 100
+  "time_between_run": 500
 }

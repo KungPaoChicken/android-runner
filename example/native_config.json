@@ -1,11 +1,9 @@
 {
   "type": "native",
-  "devices": [
-    "5x"
-  ],
-  "replications": 1,
+  "devices": ["5x"],
+  "replications": 2,
   "paths": [
-    "/home/yoyo/android-runner/coolcherrytrees.games.reactor4.apk"
+    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
   ],
   "profilers": {
     "trepn": {
@@ -16,18 +14,22 @@
       ]
     },
     "volta": {}
-  },
+ },
   "scripts": {
     "before_experiment": "before_experiment.py",
     "before_run": "before_run.py",
-    "interaction": {
-      "python": {
-        "name": "interaction.py",
+    "interaction": [
+      {
+        "type": "python",
+        "path": "interaction.py",
         "timeout": 500,
         "logcat_regex": "this is not possible"
       },
-      "monkeyrunner": "monkey_interaction.py"
-    },
+      {
+        "type": "monkeyrunner",
+        "path": "monkey.py"
+      }
+    ],
     "after_run": "after_run.py",
     "after_experiment": "after_experiment.py"
   },
