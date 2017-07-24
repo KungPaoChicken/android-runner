@@ -8,7 +8,6 @@ import Adb
 class Volta(Profiler):
     def __init__(self, config_dir, config):
         super(Volta, self).__init__(config_dir, config)
-        # print('Volta initialized')
 
     def start_profiling(self, device_id):
         super(Volta, self).start_profiling(device_id)

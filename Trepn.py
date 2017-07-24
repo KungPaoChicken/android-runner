@@ -17,27 +17,26 @@ class Trepn(Profiler):
 
     def __init__(self, config_dir, config):
         super(Trepn, self).__init__(config_dir, config)
-        # print('Trepn initialized')
         self.pref_dir = None
         self.build_preferences(config)
 
     def build_preferences(self, config):
-        # The XML modules are not secure, but the file here are trusted
+        # lxml is not the most secure parser, it is up to the user for valid configurations
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities
         self.pref_dir = op.join(self.config_dir, 'trepn.pref/')
         makedirs(self.pref_dir)
 
-        preferences_file = et.parse('xmls/preferences.xml')
-        if config['sample_interval']:
+        preferences_file = et.parse('trepn/preferences.xml')
+        if 'sample_interval' in config:
             for i in preferences_file.getroot().iter('int'):
                 if i.get('name') == 'com.quicinc.preferences.general.profiling_interval':
                     i.set('value', str(config['sample_interval']))
         preferences_file.write(op.join(self.pref_dir, 'com.quicinc.trepn_preferences.xml'), encoding='utf-8',
                                xml_declaration=True, standalone=True)
 
-        datapoints_file = et.parse('xmls/data_points.xml')
+        datapoints_file = et.parse('trepn/data_points.xml')
         dp_root = datapoints_file.getroot()
-        data_points = load_json('xmls/data_points.json')
+        data_points = load_json('trepn/data_points.json')
         for dp in config['data_points']:
             dp = str(data_points[dp])
             dp_root.append(et.Element('int', {'name': dp, 'value': dp}))
