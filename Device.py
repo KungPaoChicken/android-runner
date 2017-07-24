@@ -2,12 +2,14 @@ import os.path as op
 import re
 from util import makedirs
 import time
+import logging
 import Adb
 from Adb import AdbError
 
 
 class Device:
     def __init__(self, name, device_id):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.name = name
         self.id = device_id
         self.apps = []
@@ -56,15 +58,19 @@ class Device:
             found_null = False
             if current_focus:
                 match = current_focus
-            elif focused_app and not match:
+            elif focused_app and match is None:
                 match = focused_app
             elif re.search(null_re, line):
                 found_null = True
             if match:
-                return match.group(1).strip()
+                result = match.group(1).strip()
+                self.logger.info('Current activity: %s' % result)
+                return result
             elif found_null:
+                self.logger.info('Current activity: null')
                 return None
             else:
+                self.logger.error('Raw results form dumpsys window windows: \n%s' % windows)
                 raise AdbError('Could not parse activity from dumpsys')
 
     def launch(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
