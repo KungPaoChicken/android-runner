@@ -6,7 +6,6 @@ from util import ConfigError
 class NativeExperiment(Experiment):
     def __init__(self, config):
         super(NativeExperiment, self).__init__(config)
-        # TEST APK PATHS
         for apk in config.get('paths', []):
             if not op.isfile(apk):
                 raise ConfigError('File %s not found' % apk)
