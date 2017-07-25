@@ -3,6 +3,7 @@ import logging
 import os.path as op
 import sys
 from ExperimentBuilder import ExperimentBuilder
+import traceback
 
 
 def main():
@@ -19,6 +20,7 @@ def main():
         experiment = ExperimentBuilder.from_json(op.expanduser(args['file']))
         experiment.start()
     except Exception, e:
+        print(traceback.format_exc())
         logger.error('%s: %s' % (e.__class__.__name__, e.message))
 
 
