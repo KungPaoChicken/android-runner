@@ -5,7 +5,7 @@ import os.path as op
 
 class Devices:
     def __init__(self, names):
-        mapping_file = load_json(op.join(op.realpath(__file__), 'devices.json'))
+        mapping_file = load_json(op.join(op.dirname(op.realpath(__file__)), 'devices.json'))
         self._device_map = {n: mapping_file.get(n, None) for n in names}
         for name, device_id in self._device_map:
             if not device_id:
