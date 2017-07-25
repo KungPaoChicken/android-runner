@@ -57,7 +57,8 @@ def load_json(path):
     except IOError as e:
         if e.errno == errno.ENOENT:
             raise FileNotFoundError(path)
-        raise
+        else:
+            raise e
 
 
 def map_or_fail(keys, dictionary, error_string):
