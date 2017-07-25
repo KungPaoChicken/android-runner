@@ -53,10 +53,11 @@ def load_json(path):
             try:
                 return json.loads(f.read(), object_pairs_hook=OrderedDict)
             except ValueError:
-                raise FileFormatError()
+                raise FileFormatError(path)
     except IOError as e:
         if e.errno == errno.ENOENT:
-            raise FileNotFoundError()
+            raise FileNotFoundError(path)
+        raise
 
 
 def map_or_fail(keys, dictionary, error_string):
