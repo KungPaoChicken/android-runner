@@ -7,7 +7,7 @@ class Devices:
     def __init__(self, names):
         mapping_file = load_json(op.join(op.dirname(op.realpath(__file__)), 'devices.json'))
         self._device_map = {n: mapping_file.get(n, None) for n in names}
-        for name, device_id in self._device_map:
+        for name, device_id in self._device_map.items():
             if not device_id:
                 raise ConfigError(name)
         self._devices = [Device(name, device_id) for name, device_id in self._device_map.items()]
