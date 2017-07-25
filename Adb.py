@@ -15,7 +15,7 @@ class ConnectionError(Exception):
     pass
 
 
-adb = ADB(adb_path='/opt/platform-tools/adb')
+adb = ADB()
 
 
 def connect(device_id):
