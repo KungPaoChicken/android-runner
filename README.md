@@ -1,15 +1,14 @@
 # Android Task runner
-A tool to automate experiment execution on Android devices
+Automated experiment execution on Android devices
 
 ## Install
-This tool is only tested on Ubuntu, but it should work in most linux distributions.
+This tool is only tested on Ubuntu, but it should work in other linux distributions.
 You'll need:
 - Python 2.7
-- Android Debug Bridge (adb)
-- Android SDK Tools (monkeyrunner)
-- JDK 8 (NOT JDK 9)
+- Android Debug Bridge (`sudo apt install android-tools-adb`)
+- Android SDK Tools (`sudo apt install monkeyrunner`)
+- JDK 8 (NOT JDK 9) (`sudo apt install openjdk-8-jre`)
 - lxml (`sudo apt install python-lxml`)
-- adb and monkeyrunner should be in the PATH
 
 ## Quick start
 To run an experiment, run:
@@ -22,14 +21,13 @@ There is an example configuration file in `example/example_config.json`
 ### devices.json
 A JSON config that maps devices names to their ADB ids for easy reference in config files.
 
-## Configuration format
-Below is work-in-progress documentation for the configuration format.
-It may not be always updated.
+### Experiment Configuration
+Below is a reference to the fields for the experiment configuration. It is not always updated.
 
 **type** *string*  
 Type of the experiment. Can be `web` or `native`
 
-**replications** *integer*  
+**replications** *positive integer*  
 Number of times an experiment is run.
 
 **devices** *Array\<String\>*  
@@ -42,13 +40,12 @@ The paths to the APKs/URLs to test with.
 *Dependent on type = web*  
 The names of browser(s) to use. Currently supported values are `chrome`.
 
-**profilers** *JSON* **Unstable**  
+**profilers** *JSON*   
 A JSON object to describe the profilers to be used and their arguments. Below is an example:
 ```json
   "profilers": {
     "trepn": {
-      "sample_interval": 100,
-      "output": "./energy/"
+      "sample_interval": 100
     }
   }
 ```
@@ -76,5 +73,11 @@ Below are the supported types:
 - after_experiment  
   executes once after the last run
 
-**reinstall** *boolean* *Optional*
-If set to true, all apps and tools (browsers, Trepn, ...) will be reinstalled if they exist on the device.
+## FAQ
+### Devices have no permissions (udev requires plugdev group membership)
+This happens when the user calling adb is not in the plugdev group
+#### Fix
+`sudo usermod -aG plugdev $LOGNAME`
+#### References
+https://developer.android.com/studio/run/device.html
+http://www.janosgyerik.com/adding-udev-rules-for-usb-debugging-android-devices/
