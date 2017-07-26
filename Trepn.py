@@ -37,7 +37,7 @@ class Trepn(Profiler):
 
         datapoints_file = et.parse(op.join(current_dir, 'trepn/data_points.xml'))
         dp_root = datapoints_file.getroot()
-        data_points = load_json('trepn/data_points.json')
+        data_points = load_json(op.join(current_dir, 'trepn/data_points.json'))
         for dp in config['data_points']:
             dp = str(data_points[dp])
             dp_root.append(et.Element('int', {'name': dp, 'value': dp}))
