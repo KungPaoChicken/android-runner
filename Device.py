@@ -48,30 +48,30 @@ class Device:
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
         windows = Adb.shell(self.id, 'dumpsys window windows | grep -E "mCurrentFocus|mFocusedApp"')
         null_re = r'mFocusedApp=null'
+        # https://regex101.com/r/xZ8vF7/1
         current_focus_re = r'mCurrentFocus.+\s([^\s\/\}]+)\/[^\s\/\}]+(\.[^\s\/\}]+)}'
-        focused_app_re = r'mFocusedApp.+Record\{.*\s([^\s\/\}]+)\/([^\s\/\}]+)(\s[^\s\/\}]+)*\}'
+        focused_app_re = r'mFocusedApp.+Record\{.*\s([^\s\/\}]+)\/([^\s\/\}\,]+)(\s[^\s\/\}]+)*\}'
+        match = None
+        found_null = False
         for line in windows.split('\n'):
-            # https://regex101.com/r/xZ8vF7/1
             current_focus = re.search(current_focus_re, line)
             focused_app = re.search(focused_app_re, line)
-            match = None
-            found_null = False
             if current_focus:
                 match = current_focus
             elif focused_app and match is None:
                 match = focused_app
             elif re.search(null_re, line):
                 found_null = True
-            if match:
-                result = match.group(1).strip()
-                self.logger.info('Current activity: %s' % result)
-                return result
-            elif found_null:
-                self.logger.info('Current activity: null')
-                return None
-            else:
-                self.logger.error('Raw results form dumpsys window windows: \n%s' % windows)
-                raise AdbError('Could not parse activity from dumpsys')
+        if match:
+            result = match.group(1).strip()
+            self.logger.debug('Current activity: %s' % result)
+            return result
+        elif found_null:
+            self.logger.debug('Current activity: null')
+            return None
+        else:
+            self.logger.error('Results from dumpsys window windows: \n%s' % windows)
+            raise AdbError('Could not parse activity from dumpsys')
 
     def launch(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
         # https://developer.android.com/studio/command-line/adb.html#am
