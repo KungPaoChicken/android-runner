@@ -46,7 +46,7 @@ class Device:
 
     def current_activity(self):
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
-        windows = Adb.shell(self.id, 'dumpsys window windows | grep -E "mCurrentFocus|mFocusedApp"')
+        windows = Adb.shell(self.id, 'dumpsys window windows')
         null_re = r'mFocusedApp=null'
         # https://regex101.com/r/xZ8vF7/1
         current_focus_re = r'mCurrentFocus.+\s([^\s\/\}]+)\/[^\s\/\}]+(\.[^\s\/\}]+)}'
