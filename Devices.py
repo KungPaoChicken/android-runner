@@ -1,10 +1,14 @@
 from Device import Device
 from util import load_json, ConfigError
 import os.path as op
+# This is basically a singleton
+# https://stackoverflow.com/a/10936915
+import Adb
 
 
 class Devices:
-    def __init__(self, names):
+    def __init__(self, names, adb_path='adb'):
+        Adb.setup(adb_path)
         mapping_file = load_json(op.join(op.dirname(op.realpath(__file__)), 'devices.json'))
         self._device_map = {n: mapping_file.get(n, None) for n in names}
         for name, device_id in self._device_map.items():

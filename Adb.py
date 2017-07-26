@@ -14,25 +14,33 @@ class ConnectionError(Exception):
     """Raised when there's an connection error"""
     pass
 
+adb = None
 
-adb = ADB()
+
+def setup(path='adb'):
+    global adb
+    adb = ADB(adb_path=path)
+    # Accessing class private variables to avoid another print of the same error message
+    # https://stackoverflow.com/a/1301369
+    if adb._ADB__error:
+        raise AdbError('adb path is incorrect')
 
 
 def connect(device_id):
     device_list = adb.get_devices()
     if not device_list:
         raise ConnectionError('No devices are connected')
+    logger.debug('Device list:\n%s' % device_list)
     if device_id not in device_list.values():
-        raise ConnectionError('Error: Device %s is not connected' % device_id)
+        raise ConnectionError('%s: Device can not connected' % device_id)
 
 
 def shell(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command(cmd)
-    logger.debug('%s: Result of "%s": \n%s' % (device_id, cmd, result))
+    logger.debug('%s: "%s" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
-        print(result)
-        raise AdbError('Error in shell')
+        raise AdbError(result)
     return result
 
 
@@ -51,10 +59,12 @@ def install(device_id, apk):
                          )
 
 
-def uninstall(device_id, name):
+def uninstall(device_id, name, keep_data=False):
     logger.info('%s: Uninstalling "%s"' % (device_id, name))
     adb.set_target_by_name(device_id)
-    result = adb.uninstall(package=name, keepdata=False)
+    # Flips the keep_data flag as it is incorrectly implemented in the pyand library
+    keep_data = not keep_data
+    result = adb.uninstall(package=name, keepdata=keep_data)
     success_or_exception(result,
                          '%s: "%s" uninstalled' % (device_id, name),
                          '%s: Failed to uninstall "%s"' % (device_id, name)
@@ -77,14 +87,23 @@ def success_or_exception(result, success_msg, fail_msg):
         raise AdbError(result)
 
 
+# Same with push_local_file(), but with the quotes removed
+# adb doesn't want quotes for some reason
 def push(device_id, local, remote):
     adb.set_target_by_name(device_id)
-    return adb.push_local_file(local, remote)
+    adb.run_cmd('push %s %s' % (local, remote))
+    return adb.__output
 
 
+# Same with get_remote_file(), but with the quotes removed
+# adb doesn't want quotes for some reason
 def pull(device_id, remote, local):
     adb.set_target_by_name(device_id)
-    return adb.get_remote_file(remote, local)
+    adb.run_cmd('pull %s %s' % (remote, local))
+    if "bytes in" in adb.__error:
+        adb.__output = adb.__error
+        adb.__error = None
+    return adb.__output
 
 
 def unplug(device_id):
