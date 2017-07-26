@@ -47,7 +47,6 @@ class Experiment(object):
                         self.profilers.stop_profiling(device)
                         self.after_run(device, path, run)
                     self.after_last_run(device, path)
-                self.logger.info('Experiment completed, start cleanup')
                 self.after_experiment(device)
             except Exception, e:
                 self.logger.error(e.message)
@@ -79,6 +78,5 @@ class Experiment(object):
         pass
 
     def after_experiment(self, device):
-        print(self.__class__.__name__)
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run(device, 'after_experiment', device.current_activity())
