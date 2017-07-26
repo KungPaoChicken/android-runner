@@ -1,7 +1,6 @@
 import logging
 import time
 
-
 import Tests
 from util import ConfigError, Scripts
 from Devices import Devices
@@ -15,11 +14,13 @@ class Experiment(object):
         self.config_dir = config['config_dir']
         if 'devices' not in config:
             raise ConfigError('"device" is required in the configuration')
-        self.devices = Devices(config['devices'], adb_path=config.get('adb_path', 'adb'))
+        adb_path = config.get('adb_path', 'adb')
+        self.devices = Devices(config['devices'], adb_path=adb_path)
         self.replications = Tests.is_integer(config.get('replications', 1))
         self.paths = config.get('paths', [])
         self.profilers = Profilers(self.config_dir, config.get('profilers', {}))
-        self.scripts = Scripts(self.config_dir, config.get('scripts', {}))
+        monkeyrunner_path = config.get('monkeyrunner_path', 'monkeyrunner')
+        self.scripts = Scripts(self.config_dir, config.get('scripts', {}), monkeyrunner_path=monkeyrunner_path)
         self.time_between_run = Tests.is_integer(config.get('time_between_run', 0))
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
 

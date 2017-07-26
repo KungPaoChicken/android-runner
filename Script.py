@@ -16,10 +16,11 @@ class Script(object):
             self.logcat_event = Tests.is_string(logcat_regex)
 
     def execute_script(self, device_id, current_activity):
-        raise NotImplementedError()
+        self.logger.info(self.filename)
 
     def mp_run(self, device_id, current_activity, queue):
-        self.execute_script(device_id, current_activity)
+        output = self.execute_script(device_id, current_activity)
+        self.logger.debug('%s returned %s' % (self.filename, output))
         queue.put('script')
 
     def mp_logcat_regex(self, device, regex, queue):

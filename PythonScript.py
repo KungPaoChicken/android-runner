@@ -8,11 +8,11 @@ class PythonScript(Script):
         super(PythonScript, self).__init__(path, timeout, logcat_regex)
         try:
             self.module = load_source(op.splitext(op.basename(path))[0], op.join(path))
-            self.logger.info('Imported %s' % path)
+            self.logger.debug('Imported %s' % path)
         except ImportError:
             self.logger.error('Cannot import %s' % path)
             raise ImportError("Cannot import %s" % path)
 
     def execute_script(self, device_id, current_activity):
-        out = self.module.main(device_id, current_activity)
-        self.logger.info('%s returned %s' % (self.filename, out))
+        super(PythonScript, self).execute_script(device_id, current_activity)
+        return self.module.main(device_id, current_activity)

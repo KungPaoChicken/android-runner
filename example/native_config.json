@@ -1,4 +1,6 @@
 {
+  "adb_path": "/opt/platform-tools/adb",
+  "monkeyrunner_path": "/opt/platform-tools/bin/monkeyrunner",
   "type": "native",
   "devices": ["5x"],
   "replications": 2,
