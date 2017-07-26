@@ -322,9 +322,8 @@ class ADB(object):
         Pulls a remote file
         adb pull remote local
         """
-        self.run_cmd('pull %s %s' % (remote, local))
-        # self.run_cmd('pull \"%s\" \"%s\"' % (remote, local))
-        if self.__error and "bytes in" in self.__error:
+        self.run_cmd('pull \"%s\" \"%s\"' % (remote, local))
+        if "bytes in" in self.__error:
             self.__output = self.__error
             self.__error = None
         return self.__output
@@ -334,9 +333,7 @@ class ADB(object):
         Push a local file
         adb push local remote
         """
-        # New version with the quotes removed, for some reason adb don't want quotes
-        self.run_cmd('push %s %s' % (local, remote))
-        # self.run_cmd('push \"%s\" \"%s\"' % (local, remote))
+        self.run_cmd('push \"%s\" \"%s\"' % (local, remote))
         return self.__output
 
     def shell_command(self,cmd):
@@ -449,7 +446,7 @@ class ADB(object):
         """
         if package is None:
             return self.__output
-        cmd = "uninstall %s" % (package if keepdata is False else "-k %s" % package )
+        cmd = "uninstall %s" % (package if keepdata is True else "-k %s" % package )
         self.run_cmd(cmd)
         return self.__output
 
