@@ -16,21 +16,26 @@ class Profilers(object):
         return list(chain.from_iterable([p.dependencies() for p in self.profilers]))
 
     def load(self, device):
+        self.logger.info('Loading')
         for p in self.profilers:
             p.load(device.id)
 
     def start_profiling(self, device):
+        self.logger.info('Start profiling')
         for p in self.profilers:
             p.start_profiling(device.id)
 
     def stop_profiling(self, device):
+        self.logger.info('Stop profiling')
         for p in self.profilers:
             p.stop_profiling(device.id)
 
     def collect_results(self, device, path=None):
+        self.logger.info('Collecting results')
         for p in self.profilers:
             p.collect_results(device.id, path)
 
     def unload(self, device):
+        self.logger.info('Unloading')
         for p in self.profilers:
             p.unload(device.id)
