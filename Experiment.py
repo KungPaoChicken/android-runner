@@ -49,8 +49,8 @@ class Experiment(object):
                     self.after_last_run(device, path)
                 self.logger.info('Experiment completed, start cleanup')
                 self.after_experiment(device)
-            except:
-                # LOG
+            except Exception, e:
+                self.logger.error(e.message)
                 raise
             finally:
                 self.cleanup(device)
