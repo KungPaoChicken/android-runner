@@ -2,9 +2,10 @@ import logging
 import time
 
 import Tests
-from util import ConfigError, Scripts
+from util import ConfigError
 from Devices import Devices
 from Profilers import Profilers
+from Scripts import Scripts
 
 
 class Experiment(object):
