@@ -1,6 +1,6 @@
 import logging
 import os.path as op
-# from util import ConfigError # Cyclic dependencies
+# from util import ConfigError # Circular dependencies
 
 
 def valid_files(paths):
@@ -22,10 +22,11 @@ def is_string(string):
     return string
 
 
-# DOUBLE CHECK
 def check_dependencies(devices, dependencies):
     for device in devices:
-        for name, installed in device.is_installed(dependencies).items():
-            if not installed:
-                logging.error('Required package %s is not installed' % name)
-                raise ConfigError('Required package %s is not installed' % name)
+        installed_apps = device.is_installed(dependencies)
+        not_installed_apps = [name for name, installed in installed_apps.items() if not installed]
+        if not_installed_apps:
+            for name in not_installed_apps:
+                logging.error('%s: Required package %s is not installed' % (device.id, name))
+            raise ConfigError('Required packages %s are not installed on %s' % (not_installed_apps, device))
