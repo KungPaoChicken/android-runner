@@ -34,8 +34,5 @@ class NativeExperiment(Experiment):
         super(NativeExperiment, self).after_run(device, path, run)
         device.force_stop('coolcherrytrees.games.reactor4')
 
-    def after_last_run(self, device, path):
-        pass
-
     def after_experiment(self, device):
         super(NativeExperiment, self).after_experiment(device)
