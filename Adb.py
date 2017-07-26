@@ -50,7 +50,7 @@ def list_apps(device_id):
 
 def install(device_id, apk):
     filename = op.basename(apk)
-    logger.info('%s: Installing "%s"' % (device_id, filename))
+    logger.debug('%s: Installing "%s"' % (device_id, filename))
     adb.set_target_by_name(device_id)
     result = adb.install(apk)
     success_or_exception(result,
@@ -60,7 +60,7 @@ def install(device_id, apk):
 
 
 def uninstall(device_id, name, keep_data=False):
-    logger.info('%s: Uninstalling "%s"' % (device_id, name))
+    logger.debug('%s: Uninstalling "%s"' % (device_id, name))
     adb.set_target_by_name(device_id)
     # Flips the keep_data flag as it is incorrectly implemented in the pyand library
     keep_data = not keep_data
@@ -92,7 +92,8 @@ def success_or_exception(result, success_msg, fail_msg):
 def push(device_id, local, remote):
     adb.set_target_by_name(device_id)
     adb.run_cmd('push %s %s' % (local, remote))
-    return adb.__output
+    # WARNING: Accessing class private variables
+    return adb._ADB__output
 
 
 # Same with get_remote_file(), but with the quotes removed
@@ -100,10 +101,11 @@ def push(device_id, local, remote):
 def pull(device_id, remote, local):
     adb.set_target_by_name(device_id)
     adb.run_cmd('pull %s %s' % (remote, local))
-    if "bytes in" in adb.__error:
-        adb.__output = adb.__error
-        adb.__error = None
-    return adb.__output
+    # WARNING: Accessing class private variables
+    if adb._ADB__error and "bytes in" in adb._ADB__error:
+        adb._ADB__output = adb._ADB__error
+        adb._ADB__error = None
+    return adb._ADB__output
 
 
 def unplug(device_id):
