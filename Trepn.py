@@ -54,7 +54,7 @@ class Trepn(Profiler):
         Adb.shell(device_id,
                   'am broadcast -a com.quicinc.trepn.load_preferences '
                   '-e com.quicinc.trepn.load_preferences_file "%s"' % op.join(remote_pref_dir, 'trepn.pref'))
-        time.sleep(1)   # Sleep because Adb is asynchronous
+        time.sleep(1)   # adb returns instantly, while the command takes time
 
     def start_profiling(self, device_id):
         super(Trepn, self).start_profiling(device_id)
@@ -73,12 +73,11 @@ class Trepn(Profiler):
             Adb.shell(device_id, 'am broadcast -a com.quicinc.trepn.export_to_csv '
                                  '-e com.quicinc.trepn.export_db_input_file "%s" '
                                  '-e com.quicinc.trepn.export_csv_output_file "%s"' % (newest_db, csv_filename))
+            time.sleep(1)   # adb returns instantly, while the command takes time
             output_dir = op.join(self.config_dir, 'output/trepn/')
             makedirs(output_dir)
-            # The commands are run asynchronously it seems
-            time.sleep(1)
             Adb.pull(device_id, op.join(Trepn.DEVICE_PATH, csv_filename), output_dir)
-            time.sleep(1)
+            time.sleep(1)   # adb returns instantly, while the command takes time
             # Delete the originals
             Adb.shell(device_id, 'rm %s' % op.join(Trepn.DEVICE_PATH, newest_db))
             Adb.shell(device_id, 'rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
