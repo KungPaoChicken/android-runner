@@ -75,9 +75,9 @@ Below are the supported types:
 
 ## FAQ
 ### Devices have no permissions (udev requires plugdev group membership)
-This happens when the user calling adb is not in the plugdev group
+This happens when the user calling adb is not in the plugdev group.
 #### Fix
 `sudo usermod -aG plugdev $LOGNAME`
 #### References
-https://developer.android.com/studio/run/device.html
+https://developer.android.com/studio/run/device.html  
 http://www.janosgyerik.com/adding-udev-rules-for-usb-debugging-android-devices/
