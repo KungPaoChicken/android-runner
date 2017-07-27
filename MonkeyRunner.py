@@ -13,7 +13,7 @@ class MonkeyRunner(Script):
         if not op.isfile(path):
             raise ImportError('%s is not a file' % path)
         self.monkeyrunner = monkeyrunner_path
-        self.logger.info('Script path: %s' % self.path)
+        self.logger.debug('Script path: %s' % self.path)
         self.config_path = config_path
 
     def execute_script(self, device_id, current_activity):
