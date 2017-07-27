@@ -1,6 +1,6 @@
 import logging
 import os.path as op
-from util import load_json
+import util
 from Experiment import Experiment
 from WebExperiment import WebExperiment
 from NativeExperiment import NativeExperiment
@@ -15,7 +15,7 @@ class ExperimentBuilder(object):
     @staticmethod
     def from_json(path):
         logger.info(path)
-        config = load_json(path)
+        config = util.load_json(path)
         experiment_type = config['type']
         config['config_dir'] = op.abspath(op.dirname(path))
         if experiment_type == 'native':
