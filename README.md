@@ -10,6 +10,8 @@ You'll need:
 - JDK 8 (NOT JDK 9) (`sudo apt install openjdk-8-jre`)
 - lxml (`sudo apt install python-lxml`)
 
+Note: It is important that monkeyrunner shares the same adb the experiment is using. Otherwise, there will be an adb restart and output may be tainted by the notification.
+
 ## Quick start
 To run an experiment, run:
 ```bash
