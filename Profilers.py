@@ -18,24 +18,24 @@ class Profilers(object):
     def load(self, device):
         self.logger.info('Loading')
         for p in self.profilers:
-            p.load(device.id)
+            p.load(device)
 
     def start_profiling(self, device):
         self.logger.info('Start profiling')
         for p in self.profilers:
-            p.start_profiling(device.id)
+            p.start_profiling(device)
 
     def stop_profiling(self, device):
         self.logger.info('Stop profiling')
         for p in self.profilers:
-            p.stop_profiling(device.id)
+            p.stop_profiling(device)
 
     def collect_results(self, device, path=None):
         self.logger.info('Collecting results')
         for p in self.profilers:
-            p.collect_results(device.id, path)
+            p.collect_results(device, path)
 
     def unload(self, device):
         self.logger.info('Unloading')
         for p in self.profilers:
-            p.unload(device.id)
+            p.unload(device)
