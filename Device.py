@@ -39,10 +39,10 @@ class Device:
             self.apps.remove(name)
 
     def unplug(self):
-        Adb.unplug(self.id)
+        return Adb.shell(self.id, 'dumpsys battery unplug')
 
     def plug(self):
-        Adb.plug(self.id)
+        return Adb.shell(self.id, 'dumpsys battery reset')
 
     def current_activity(self):
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
@@ -103,6 +103,15 @@ class Device:
 
     def logcat_regex(self, regex):
         return Adb.logcat(self.id, regex=regex)
+
+    def push(self, local, remote):
+        return Adb.push(self.id, local, remote)
+
+    def pull(self, remote, local):
+        return Adb.pull(self.id, remote, local)
+
+    def shell(self, cmd):
+        return Adb.shell(self.id, cmd)
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.id)

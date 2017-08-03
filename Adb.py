@@ -41,7 +41,7 @@ def shell(device_id, cmd):
     logger.debug('%s: "%s" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
         raise AdbError(result)
-    return result
+    return result.rstrip()
 
 
 def list_apps(device_id):
@@ -106,14 +106,6 @@ def pull(device_id, remote, local):
         adb._ADB__output = adb._ADB__error
         adb._ADB__error = None
     return adb._ADB__output
-
-
-def unplug(device_id):
-    return shell(device_id, 'dumpsys battery unplug')
-
-
-def plug(device_id):
-    return shell(device_id, 'dumpsys battery reset')
 
 
 def logcat(device_id, regex=None):
