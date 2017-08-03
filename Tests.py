@@ -1,6 +1,6 @@
 import logging
 import os.path as op
-# from util import ConfigError # Circular dependencies
+from util import ConfigError
 
 
 def valid_files(paths):
