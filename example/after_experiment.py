@@ -1,7 +1,5 @@
-from pyand import ADB
+import Adb
 
 
-def main(did, activity):
-    # print('teardown\t%s\t%s' % (did, activity))
+def main(device_id, activity):
     pass
-

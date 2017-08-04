@@ -4,7 +4,6 @@
   "replications": 1,
   "browsers": ["chrome"],
   "paths": [
-    "https://stackoverflow.com/",
     "https://google.com/"
   ],
   "profilers":{
@@ -21,7 +20,7 @@
         "type": "python",
         "path": "interaction.py",
         "timeout": 500,
-        "logcat_regex": "this is not possible"
+        "logcat_regex": "some keyword"
       },
       {
         "type": "monkeyrunner",

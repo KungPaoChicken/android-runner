@@ -1,18 +1,15 @@
 {
-  "adb_path": "/opt/platform-tools/adb",
-  "monkeyrunner_path": "/opt/platform-tools/bin/monkeyrunner",
   "type": "native",
   "devices": ["5x"],
   "replications": 2,
   "paths": [
-    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
+    "/home/yoyo/example/coolcherrytrees.games.reactor4.apk"
   ],
   "profilers": {
     "trepn": {
       "sample_interval": 100,
       "data_points": [
-        "battery_power",
-        "mem_usage"
+        "battery_power", "mem_usage"
       ]
     },
     "volta": {}
@@ -25,7 +22,7 @@
         "type": "python",
         "path": "interaction.py",
         "timeout": 500,
-        "logcat_regex": "this is not possible"
+        "logcat_regex": "some keyword"
       },
       {
         "type": "monkeyrunner",

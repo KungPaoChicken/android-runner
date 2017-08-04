@@ -1,6 +1,4 @@
 # https://developer.android.com/studio/test/monkeyrunner/index.html#SampleProgram
-
-# Imports the monkeyrunner modules used by this program
 from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
 import sys
 import os
@@ -17,7 +15,7 @@ def makedirs(path):
         if e.errno != errno.EEXIST:
             raise
 
-print(sys.argv)
+print('monkeyrunner called with: ' % sys.argv)
 
 if len(sys.argv) < 4:
     print('Not sufficient amount of arguments')

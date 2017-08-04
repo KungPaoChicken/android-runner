@@ -1,8 +1,5 @@
-from pyand import ADB
-from time import sleep
+import Adb
 
 
-def main(did, activity):
-    # print('interaction\t%s\t%s' % (did, activity))
-    # sleep(1)
+def main(device_id, activity):
     pass
