@@ -28,8 +28,6 @@ class Experiment(object):
     def prepare(self, device):
         self.profilers.load(device)
         device.unplug()
-        import time
-        time.sleep(5)
 
     def cleanup(self, device):
         device.plug()
