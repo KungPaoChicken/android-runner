@@ -2,16 +2,19 @@ import logging
 import multiprocessing as mp
 import os.path as op
 import signal
+from util import FileNotFoundError
 
 import Tests
 
 
 class Script(object):
-    def __init__(self, path, timeout, logcat_regex=None):
+    def __init__(self, path, timeout=0, logcat_regex=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.path = path
         self.filename = op.basename(path)
-        self.timeout = Tests.is_integer(timeout) / 1000
+        if not op.isfile(path):
+                raise FileNotFoundError(self.filename)
+        self.timeout = float(Tests.is_integer(timeout)) / 1000
         self.logcat_event = logcat_regex
         if logcat_regex is not None:
             self.logcat_event = Tests.is_string(logcat_regex)
@@ -36,7 +39,7 @@ class Script(object):
             processes = []
             try:
                 queue = mp.Queue()
-                if self.logcat_event:
+                if self.logcat_event is not None:
                     processes.append(mp.Process(target=self.mp_logcat_regex,
                                                 args=(device, self.logcat_event, queue)))
                 processes.append(mp.Process(target=self.mp_run,
