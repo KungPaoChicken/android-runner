@@ -9,7 +9,8 @@ class ConfigError(Exception):
 
 
 class FileNotFoundError(Exception):
-    pass
+    def __init__(self, filename):
+        Exception.__init__(self, '[Errno %s] %s: \'%s\'' % (errno.ENOENT, os.strerror(errno.ENOENT), filename))
 
 
 class FileFormatError(Exception):
