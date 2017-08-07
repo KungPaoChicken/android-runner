@@ -24,7 +24,7 @@ class MonkeyRunner(Script):
             cmdp = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             output, error = cmdp.communicate()
             return_code = cmdp.wait()
-            if error:
+            if return_code != 0:
                 raise MonkeyRunnerError(error)
             return return_code
         except OSError, e:

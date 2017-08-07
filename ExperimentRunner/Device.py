@@ -1,10 +1,11 @@
+import logging
 import os.path as op
 import re
-from util import makedirs
 import time
-import logging
+
 import Adb
 from Adb import AdbError
+from util import makedirs
 
 
 class Device:

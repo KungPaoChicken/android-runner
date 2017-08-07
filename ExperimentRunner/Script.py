@@ -1,7 +1,8 @@
 import logging
+import multiprocessing as mp
 import os.path as op
 import signal
-import multiprocessing as mp
+
 import Tests
 
 

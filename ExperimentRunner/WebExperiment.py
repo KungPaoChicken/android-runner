@@ -1,6 +1,7 @@
 from time import sleep
-from Experiment import Experiment
+
 import Tests
+from Experiment import Experiment
 
 
 class WebExperiment(Experiment):

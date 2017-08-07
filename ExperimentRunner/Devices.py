@@ -1,9 +1,10 @@
-from Device import Device
-from util import load_json, ConfigError
 import os.path as op
+
 # This is basically a singleton
 # https://stackoverflow.com/a/10936915
 import Adb
+from Device import Device
+from util import load_json, ConfigError
 
 
 class Devices:
