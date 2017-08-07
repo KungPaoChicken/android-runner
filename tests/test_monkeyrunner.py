@@ -17,29 +17,31 @@ class TestMonkeyRunner(unittest.TestCase):
         self.monkey = '/opt/platform-tools/bin/monkeyrunner'
         self.device = FakeDevice('fake_id')
         self.current_activity = 'fake_activity'
+        self.file = tempfile.NamedTemporaryFile()
+        self.file.write('\n'.join(['from time import sleep',
+                                   'sleep(1)\n'])
+                        )
+        self.file.flush()
+
+    def tearDown(self):
+        self.file.close()
 
     def test_monkeynotfound(self):
         with self.assertRaises(FileNotFoundError):
             with tempfile.NamedTemporaryFile() as temp:
                 MonkeyRunner(temp.name, '', monkeyrunner_path='fake_monkeyrunner')
 
+    def test_monkey(self):
+        self.assertEqual(MonkeyRunner(self.file.name, '', monkeyrunner_path=self.monkey)
+                         .run(self.device, self.current_activity), 'script')
+
     def test_timeout(self):
-        with tempfile.NamedTemporaryFile() as temp:
-            temp.write('\n'.join(['from time import sleep',
-                                  'sleep(1)\n'])
-                       )
-            temp.flush()
-            self.assertEqual(MonkeyRunner(temp.name, '', timeout=100, monkeyrunner_path=self.monkey)
-                             .run(self.device, self.current_activity), 'timeout')
+        self.assertEqual(MonkeyRunner(self.file.name, '', timeout=100, monkeyrunner_path=self.monkey)
+                         .run(self.device, self.current_activity), 'timeout')
 
     def test_logcat(self):
-        with tempfile.NamedTemporaryFile() as temp:
-            temp.write('\n'.join(['from time import sleep',
-                                  '    sleep(1)\n'])
-                       )
-            temp.flush()
-            self.assertEqual(MonkeyRunner(temp.name, '', logcat_regex='', monkeyrunner_path=self.monkey)
-                             .run(self.device, self.current_activity), 'logcat')
+        self.assertEqual(MonkeyRunner(self.file.name, '', logcat_regex='', monkeyrunner_path=self.monkey)
+                         .run(self.device, self.current_activity), 'logcat')
 
 
 if __name__ == '__main__':
