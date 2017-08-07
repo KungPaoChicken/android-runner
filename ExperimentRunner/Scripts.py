@@ -24,7 +24,7 @@ class Scripts(object):
                     self.scripts[name].append(PythonScript(path, timeout, logcat_regex))
                 elif s['type'] == 'monkeyrunner':
                     self.scripts[name].append(
-                        MonkeyRunner(path, timeout, logcat_regex, config_dir, monkeyrunner_path=monkeyrunner_path))
+                        MonkeyRunner(path, config_dir, timeout, logcat_regex, monkeyrunner_path=monkeyrunner_path))
                 else:
                     raise ConfigError('Unknown script type')
 
