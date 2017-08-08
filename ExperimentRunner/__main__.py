@@ -2,12 +2,11 @@ import argparse
 import logging
 import os.path as op
 import sys
-from ExperimentBuilder import ExperimentBuilder
+from ExperimentFactory import ExperimentFactory
 import traceback
 
 
 def main():
-    # %(levelname)s: %(name)s: %(message)s
     parser = argparse.ArgumentParser()
     parser.add_argument('file')
     parser.add_argument('-v', '--verbose', action='store_true')
@@ -17,7 +16,7 @@ def main():
     logger = logging.getLogger(__name__)
 
     try:
-        experiment = ExperimentBuilder.from_json(op.expanduser(args['file']))
+        experiment = ExperimentFactory.from_json(op.expanduser(args['file']))
         experiment.start()
     except Exception, e:
         print(traceback.format_exc())

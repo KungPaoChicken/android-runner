@@ -9,7 +9,7 @@ from WebExperiment import WebExperiment
 logger = logging.getLogger('ExperimentBuilder')
 
 
-class ExperimentBuilder(object):
+class ExperimentFactory(object):
     def __init__(self):
         pass
 
