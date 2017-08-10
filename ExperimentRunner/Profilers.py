@@ -9,7 +9,11 @@ class Profilers(object):
         self.profilers = []
         for name, params in config.items():
             name = name.capitalize()
-            self.profilers.append(getattr(import_module(name), name)(config_dir, params))
+            try:
+                self.profilers.append(getattr(import_module(name), name)(config_dir, params))
+            except ImportError:
+                self.logger.error('Cannot import %s' % name)
+                raise
 
     def dependencies(self):
         # https://stackoverflow.com/a/953097
