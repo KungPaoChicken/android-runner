@@ -103,3 +103,4 @@ ENV/
 *.pdf
 example/trepn.pref
 example/output
+example/logs
