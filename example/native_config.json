@@ -3,7 +3,7 @@
   "devices": ["5x"],
   "replications": 2,
   "paths": [
-    "/home/yoyo/example/coolcherrytrees.games.reactor4.apk"
+    "/path/to/application.apk"
   ],
   "profilers": {
     "trepn": {
