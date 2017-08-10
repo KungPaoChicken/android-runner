@@ -1,4 +1,5 @@
 import os.path as op
+from config import ROOT_DIR
 
 # This is basically a singleton
 # https://stackoverflow.com/a/10936915
@@ -10,7 +11,7 @@ from util import load_json, ConfigError
 class Devices:
     def __init__(self, names, adb_path='adb'):
         Adb.setup(adb_path)
-        mapping_file = load_json(op.join(op.dirname(op.realpath(__file__)), 'devices.json'))
+        mapping_file = load_json(op.join(ROOT_DIR, 'devices.json'))
         self._device_map = {n: mapping_file.get(n, None) for n in names}
         for name, device_id in self._device_map.items():
             if not device_id:
