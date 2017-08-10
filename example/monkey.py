@@ -15,12 +15,12 @@ def makedirs(path):
         if e.errno != errno.EEXIST:
             raise
 
-print('monkeyrunner called with: ' % sys.argv)
-
 if len(sys.argv) < 4:
     print('Not sufficient amount of arguments')
     print('Usage: monkey.py device_regex current_activity save_path')
     sys.exit(1)
+
+print('monkeyrunner called with: %s' % sys.argv)
 
 device_id = sys.argv[1]
 current_activity = sys.argv[2]
