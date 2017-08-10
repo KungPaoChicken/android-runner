@@ -14,7 +14,7 @@ def main():
     args = vars(parser.parse_args())
 
     config_path = op.abspath(args['file'])
-    log_path = op.join(op.dirname(config_path), 'log/')
+    log_path = op.join(op.dirname(config_path), 'logs/')
     log_filename = op.join(log_path, '%s.log' % time.strftime('%Y.%m.%d_%H%M%S'))
     makedirs(log_path)
 
@@ -38,7 +38,6 @@ def main():
         experiment.start()
     except Exception, e:
         logger.error('%s: %s' % (e.__class__.__name__, e.message))
-        raise
 
 
 if __name__ == "__main__":
