@@ -25,5 +25,5 @@ class MonkeyRunner(Script):
         output, error = cmdp.communicate()
         return_code = cmdp.wait()
         if return_code != 0:
-            raise MonkeyRunnerError(error)
+            raise MonkeyRunnerError(output)
         return return_code

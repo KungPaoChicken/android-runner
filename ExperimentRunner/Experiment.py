@@ -49,8 +49,7 @@ class Experiment(object):
                     self.after_last_run(device, path)
                 self.after_experiment(device)
             except Exception, e:
-                self.logger.error(e.message)
-                raise
+                self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
             finally:
                 self.cleanup(device)
 

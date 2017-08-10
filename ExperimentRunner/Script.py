@@ -3,8 +3,11 @@ import multiprocessing as mp
 import os.path as op
 import signal
 from util import FileNotFoundError
-
 import Tests
+
+
+class ScriptError(Exception):
+    pass
 
 
 class Script(object):
@@ -23,8 +26,12 @@ class Script(object):
         self.logger.info(self.filename)
 
     def mp_run(self, device_id, current_activity, queue):
-        output = self.execute_script(device_id, current_activity)
-        self.logger.debug('%s returned %s' % (self.filename, output))
+        try:
+            output = self.execute_script(device_id, current_activity)
+            self.logger.debug('%s returned %s' % (self.filename, output))
+        except Exception, e:
+            import traceback
+            queue.put((e, traceback.format_exc()))
         queue.put('script')
 
     def mp_logcat_regex(self, device, regex, queue):
@@ -39,14 +46,21 @@ class Script(object):
             processes = []
             try:
                 queue = mp.Queue()
+                processes.append(mp.Process(target=self.mp_run,
+                                            args=(device.id, current_activity, queue)))
                 if self.logcat_event is not None:
                     processes.append(mp.Process(target=self.mp_logcat_regex,
                                                 args=(device, self.logcat_event, queue)))
-                processes.append(mp.Process(target=self.mp_run,
-                                            args=(device.id, current_activity, queue)))
                 for p in processes:
                     p.start()
                 result = queue.get()
+                if isinstance(result, tuple):
+                    name = result[0].__class__.__name__
+                    message = str(result[0])
+                    trace = result[1]
+                    log_message = '%s in %s: %s\n%s' % (name, self.filename, message, trace)
+                    # self.logger.error(log_message)
+                    raise ScriptError(log_message)
             except TimeoutError:
                 self.logger.debug('Interaction function timeout (%sms)' % self.timeout)
                 result = 'timeout'
