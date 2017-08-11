@@ -48,12 +48,21 @@ def list_apps(device_id):
     return shell(device_id, 'pm list packages').replace('package:', '').split()
 
 
-def install(device_id, apk):
+def install(device_id, apk, replace=True, all_permissions=True):
     filename = op.basename(apk)
     logger.debug('%s: Installing "%s"' % (device_id, filename))
     adb.set_target_by_name(device_id)
-    result = adb.install(apk)
-    success_or_exception(result,
+    cmd = 'install'
+    if replace:
+        cmd += ' -r'
+    if all_permissions:
+        cmd += ' -g'
+    adb.run_cmd('%s %s' % (cmd, apk))
+    # WARNING: Accessing class private variables
+    if adb._ADB__error and "bytes in" in adb._ADB__error:
+        adb._ADB__output = adb._ADB__error
+        adb._ADB__error = None
+    success_or_exception(adb._ADB__output,
                          '%s: "%s" installed' % (device_id, filename),
                          '%s: Failed to install "%s"' % (device_id, filename)
                          )
