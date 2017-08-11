@@ -48,7 +48,7 @@ class Trepn(Profiler):
         super(Trepn, self).load(device)
         device.push(self.pref_dir, self.remote_pref_dir)
         # There is no way to know if the following succeeded
-        device.launch('com.quicinc.trepn', 'com.quicinc.trepn.uesrinterface.main.TrepnActivity')
+        device.launch('com.quicinc.trepn', '.userinterface.main.TrepnActivity')
         time.sleep(5)  # am start returns instantly
         # Trepn needs to be started for this to work
         device.shell('am broadcast -a com.quicinc.trepn.load_preferences '
