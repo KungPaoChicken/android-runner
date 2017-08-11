@@ -5,6 +5,7 @@
 "app_state": 203,
 "screen_state": 204,
 "battery_remaining": 205,
+"battery_status": 206,
 "bluetooth_state": 207,
 "gps_state": 208,
 "battery_temp": 209,
