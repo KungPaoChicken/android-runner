@@ -13,8 +13,8 @@ def main():
     parser.add_argument('file')
     args = vars(parser.parse_args())
 
-    config_path = op.abspath(args['file'])
-    log_path = op.join(op.dirname(config_path), 'logs/')
+    config_dir = op.abspath(args['file'])
+    log_path = op.join(op.dirname(config_dir), 'logs/')
     log_filename = op.join(log_path, '%s.log' % time.strftime('%Y.%m.%d_%H%M%S'))
     makedirs(log_path)
 
@@ -34,7 +34,7 @@ def main():
     sys.path.append(op.join(ROOT_DIR, 'ExperimentRunner'))
 
     try:
-        experiment = ExperimentFactory.from_json(config_path)
+        experiment = ExperimentFactory.from_json(config_dir)
         experiment.start()
     except Exception, e:
         logger.error('%s: %s' % (e.__class__.__name__, e.message))
