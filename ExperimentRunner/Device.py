@@ -17,6 +17,12 @@ class Device:
         Adb.connect(device_id)
         self.update_app_list()
 
+    def get_version(self):
+        return Adb.shell(self.id, 'getprop ro.build.version.release')
+
+    def get_api_level(self):
+        return Adb.shell(self.id, 'getprop ro.build.version.sdk')
+
     def is_installed(self, apps):
         return {app: app in self.apps for app in apps}
 
@@ -40,10 +46,20 @@ class Device:
             self.apps.remove(name)
 
     def unplug(self):
-        return Adb.shell(self.id, 'dumpsys battery unplug')
+        # 4.4.3+
+        Adb.shell(self.id, 'dumpsys battery set usb 0')
+        Adb.shell(self.id, 'dumpsys battery set ac 0')
+        Adb.shell(self.id, 'dumpsys battery set wireless 0')
+        # API level 23+ (Android 6.0+)
+        # Adb.shell(self.id, 'dumpsys battery unplug')
 
     def plug(self):
-        return Adb.shell(self.id, 'dumpsys battery reset')
+        # 4.4.3+
+        Adb.shell(self.id, 'dumpsys battery set usb 1')
+        Adb.shell(self.id, 'dumpsys battery set ac 1')
+        Adb.shell(self.id, 'dumpsys battery set wireless 1')
+        # API level 23+ (Android 6.0+)
+        # Adb.shell(self.id, 'dumpsys battery reset')
 
     def current_activity(self):
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
