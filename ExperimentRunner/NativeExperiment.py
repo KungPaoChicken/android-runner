@@ -12,8 +12,7 @@ class NativeExperiment(Experiment):
 
     def prepare(self, device):
         super(NativeExperiment, self).prepare(device)
-        for device in self.devices:
-            device.install_apks(self.paths)
+        device.install_apks(self.paths)
 
     def cleanup(self, device):
         super(NativeExperiment, self).cleanup(device)
