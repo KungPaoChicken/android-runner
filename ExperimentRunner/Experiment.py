@@ -26,6 +26,7 @@ class Experiment(object):
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
 
     def prepare(self, device):
+        self.logger.info('Device: %s' % device)
         self.profilers.load(device)
         device.unplug()
 
@@ -54,7 +55,6 @@ class Experiment(object):
                 self.cleanup(device)
 
     def before_experiment(self, device):
-        self.logger.info('Device: %s' % device)
         self.scripts.run(device, 'before_experiment', device.current_activity())
 
     def before_first_run(self, device, path):
