@@ -46,13 +46,18 @@ class Trepn(Profiler):
 
     def load(self, device):
         super(Trepn, self).load(device)
-        device.shell('am startservice com.quicinc.trepn/.TrepnService')
         device.push(self.pref_dir, self.remote_pref_dir)
         # There is no way to know if the following succeeded
+        device.launch('com.quicinc.trepn', 'com.quicinc.trepn.uesrinterface.main.TrepnActivity')
+        time.sleep(5)  # am start returns instantly
+        # Trepn needs to be started for this to work
         device.shell('am broadcast -a com.quicinc.trepn.load_preferences '
                      '-e com.quicinc.trepn.load_preferences_file "%s"'
                      % op.join(self.remote_pref_dir, 'trepn.pref'))
-        time.sleep(1)  # adb returns instantly, while the command takes time
+        time.sleep(1)  # am broadcast returns instantly
+        device.force_stop('com.quicinc.trepn')
+        time.sleep(2)  # am force-stop returns instantly
+        device.shell('am startservice com.quicinc.trepn/.TrepnService')
 
     def start_profiling(self, device):
         super(Trepn, self).start_profiling(device)
@@ -65,7 +70,7 @@ class Trepn(Profiler):
     def collect_results(self, device, path=None):
         # Gives the latest result
         super(Trepn, self).collect_results(device)
-        newest_db = device.shell('ls -t %s | grep ".db" | head -n1' % Trepn.DEVICE_PATH).strip()
+        newest_db = device.shell('ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()[-1]
         csv_filename = '%s_%s.csv' % (device.id, op.splitext(newest_db)[0])
         if newest_db:
             device.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
