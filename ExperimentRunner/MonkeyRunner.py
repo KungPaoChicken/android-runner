@@ -1,6 +1,4 @@
 from Script import Script
-import os.path as op
-from util import FileNotFoundError
 import subprocess
 
 
@@ -11,8 +9,6 @@ class MonkeyRunnerError(Exception):
 class MonkeyRunner(Script):
     def __init__(self, path, config_dir, timeout=0, logcat_regex=None, monkeyrunner_path='monkeyrunner'):
         super(MonkeyRunner, self).__init__(path, timeout, logcat_regex)
-        if not op.isfile(monkeyrunner_path):
-            raise FileNotFoundError(op.basename(monkeyrunner_path))
         self.monkeyrunner = monkeyrunner_path
         self.logger.debug('Script path: %s' % self.path)
         self.config_dir = config_dir
