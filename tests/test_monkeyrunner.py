@@ -26,11 +26,6 @@ class TestMonkeyRunner(unittest.TestCase):
     def tearDown(self):
         self.file.close()
 
-    def test_monkeynotfound(self):
-        with self.assertRaises(FileNotFoundError):
-            with tempfile.NamedTemporaryFile() as temp:
-                MonkeyRunner(temp.name, '', monkeyrunner_path='fake_monkeyrunner')
-
     def test_monkey(self):
         self.assertEqual(MonkeyRunner(self.file.name, '', monkeyrunner_path=self.monkey)
                          .run(self.device, self.current_activity), 'script')
