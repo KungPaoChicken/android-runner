@@ -59,13 +59,9 @@ def install(device_id, apk, replace=True, all_permissions=True):
         cmd += ' -g'
     adb.run_cmd('%s %s' % (cmd, apk))
     # WARNING: Accessing class private variables
-    if adb._ADB__error and "bytes in" in adb._ADB__error:
-        adb._ADB__output = adb._ADB__error
-        adb._ADB__error = None
-    success_or_exception(adb._ADB__output,
-                         '%s: "%s" installed' % (device_id, filename),
-                         '%s: Failed to install "%s"' % (device_id, filename)
-                         )
+    output = adb.__output
+    logger.debug('install returned: %s' % output)
+    return output
 
 
 def uninstall(device_id, name, keep_data=False):
