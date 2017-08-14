@@ -131,4 +131,4 @@ class Device:
         return Adb.shell(self.id, cmd)
 
     def __str__(self):
-        return '%s (%s)' % (self.name, self.id)
+        return '%s (%s, Android %s, API level %s)' % (self.name, self.id, self.get_version(), self.get_api_level())

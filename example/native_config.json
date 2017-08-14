@@ -1,9 +1,11 @@
 {
+  "adb_path": "/opt/platform-tools/adb",
+  "monkeyrunner_path": "/opt/platform-tools/bin/monkeyrunner",
   "type": "native",
   "devices": ["5x"],
   "replications": 2,
   "paths": [
-    "/path/to/application.apk"
+    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
   ],
   "profilers": {
     "trepn": {

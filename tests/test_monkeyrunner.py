@@ -14,7 +14,7 @@ class FakeDevice(object):
 
 class TestMonkeyRunner(unittest.TestCase):
     def setUp(self):
-        self.monkey = 'monkeyrunner'
+        self.monkey = '/opt/platform-tools/bin/monkeyrunner'
         self.device = FakeDevice('fake_id')
         self.current_activity = 'fake_activity'
         self.file = tempfile.NamedTemporaryFile()
