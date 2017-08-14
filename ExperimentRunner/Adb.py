@@ -59,7 +59,7 @@ def install(device_id, apk, replace=True, all_permissions=True):
         cmd += ' -g'
     adb.run_cmd('%s %s' % (cmd, apk))
     # WARNING: Accessing class private variables
-    output = adb.__output
+    output = adb._ADB__output
     logger.debug('install returned: %s' % output)
     return output
 
