@@ -17,14 +17,14 @@ def makedirs(path):
 
 if len(sys.argv) < 4:
     print('Not sufficient amount of arguments')
-    print('Usage: monkey.py device_regex current_activity config_dir')
+    print('Usage: monkey.py device_regex current_activity output_dir')
     sys.exit(1)
 
 print('monkeyrunner called with: %s' % sys.argv)
 
 device_id = sys.argv[1]
 current_activity = sys.argv[2]
-config_dir = sys.argv[3]
+output_dir = sys.argv[3]
 
 timeout = 10
 
@@ -50,7 +50,7 @@ device = MonkeyRunner.waitForConnection(timeout, sys.argv[1])
 # Presses the Menu button
 # device.press('KEYCODE_MENU', MonkeyDevice.DOWN_AND_UP)
 
-output_dir = op.join(config_dir, 'output/screenshots/')
+output_dir = op.join(output_dir, 'screenshots/')
 makedirs(output_dir)
 filename = '%s_%s.png' % (device_id, time.strftime('%Y.%m.%d_%H%M%S'))
 # Takes a screenshot and writes the screenshot to a file

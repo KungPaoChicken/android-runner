@@ -18,7 +18,6 @@ class ExperimentFactory(object):
         logger.info(path)
         config = util.load_json(path)
         experiment_type = config['type']
-        config['config_dir'] = op.abspath(op.dirname(path))
         if experiment_type == 'native':
             return NativeExperiment(config)
         elif experiment_type == 'web':

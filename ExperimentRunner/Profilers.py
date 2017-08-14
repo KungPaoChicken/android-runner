@@ -4,13 +4,13 @@ from itertools import chain
 
 
 class Profilers(object):
-    def __init__(self, config_dir, config):
+    def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.profilers = []
         for name, params in config.items():
             name = name.capitalize()
             try:
-                self.profilers.append(getattr(import_module(name), name)(config_dir, params))
+                self.profilers.append(getattr(import_module(name), name)(params))
             except ImportError:
                 self.logger.error('Cannot import %s' % name)
                 raise

@@ -5,6 +5,7 @@ import lxml.etree as et
 
 from util import load_json, makedirs
 from Profiler import Profiler
+import paths
 
 
 class Trepn(Profiler):
@@ -14,31 +15,31 @@ class Trepn(Profiler):
     def dependencies():
         return ['com.quicinc.trepn']
 
-    def __init__(self, config_dir, config):
-        super(Trepn, self).__init__(config_dir, config)
+    def __init__(self, config):
+        super(Trepn, self).__init__(config)
         self.pref_dir = None
         self.remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
         self.build_preferences(config)
 
-    def build_preferences(self, config):
+    def build_preferences(self, params):
         current_dir = op.dirname(op.realpath(__file__))
         # lxml is not the most secure parser, it is up to the user for valid configurations
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities
-        self.pref_dir = op.join(self.config_dir, 'trepn.pref/')
+        self.pref_dir = op.join(paths.OUTPUT_DIR, 'trepn.pref/')
         makedirs(self.pref_dir)
 
         preferences_file = et.parse(op.join(current_dir, 'trepn/preferences.xml'))
-        if 'sample_interval' in config:
+        if 'sample_interval' in params:
             for i in preferences_file.getroot().iter('int'):
                 if i.get('name') == 'com.quicinc.preferences.general.profiling_interval':
-                    i.set('value', str(config['sample_interval']))
+                    i.set('value', str(params['sample_interval']))
         preferences_file.write(op.join(self.pref_dir, 'com.quicinc.trepn_preferences.xml'), encoding='utf-8',
                                xml_declaration=True, standalone=True)
 
         datapoints_file = et.parse(op.join(current_dir, 'trepn/data_points.xml'))
         dp_root = datapoints_file.getroot()
         data_points = load_json(op.join(current_dir, 'trepn/data_points.json'))
-        for dp in config['data_points']:
+        for dp in params['data_points']:
             dp = str(data_points[dp])
             dp_root.append(et.Element('int', {'name': dp, 'value': dp}))
         datapoints_file.write(op.join(self.pref_dir, 'com.quicinc.preferences.saved_data_points.xml'), encoding='utf-8',
@@ -77,7 +78,7 @@ class Trepn(Profiler):
                          '-e com.quicinc.trepn.export_db_input_file "%s" '
                          '-e com.quicinc.trepn.export_csv_output_file "%s"' % (newest_db, csv_filename))
             time.sleep(1)  # adb returns instantly, while the command takes time
-            output_dir = op.join(self.config_dir, 'output/trepn/')
+            output_dir = op.join(paths.OUTPUT_DIR, 'trepn/')
             makedirs(output_dir)
             device.pull(op.join(Trepn.DEVICE_PATH, csv_filename), output_dir)
             time.sleep(1)  # adb returns instantly, while the command takes time

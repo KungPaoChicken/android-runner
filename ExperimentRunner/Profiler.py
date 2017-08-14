@@ -8,8 +8,7 @@ class Profiler(object):
     def dependencies():
         return []
 
-    def __init__(self, config_dir, config):
-        self.config_dir = config_dir
+    def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug('Initialized')
 

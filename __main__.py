@@ -5,7 +5,7 @@ import os.path as op
 import sys
 from ExperimentRunner.ExperimentFactory import ExperimentFactory
 from ExperimentRunner.util import makedirs
-from config import ROOT_DIR
+import paths
 
 
 def main():
@@ -13,10 +13,12 @@ def main():
     parser.add_argument('file')
     args = vars(parser.parse_args())
 
-    config_dir = op.abspath(args['file'])
-    log_path = op.join(op.dirname(config_dir), 'logs/')
-    log_filename = op.join(log_path, '%s.log' % time.strftime('%Y.%m.%d_%H%M%S'))
-    makedirs(log_path)
+    config_file = op.abspath(args['file'])
+    paths.CONFIG_DIR = op.dirname(config_file)
+    log_dir = op.join(paths.CONFIG_DIR, 'output/%s/' % time.strftime('%Y.%m.%d_%H%M%S'))
+    makedirs(log_dir)
+    paths.OUTPUT_DIR = log_dir
+    log_filename = op.join(log_dir, 'experiment.log')
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -31,10 +33,10 @@ def main():
     stdout_logger.setFormatter(logging.Formatter('%(name)s: %(message)s'))
     logger.addHandler(stdout_logger)
 
-    sys.path.append(op.join(ROOT_DIR, 'ExperimentRunner'))
+    sys.path.append(op.join(paths.ROOT_DIR, 'ExperimentRunner'))
 
     try:
-        experiment = ExperimentFactory.from_json(config_dir)
+        experiment = ExperimentFactory.from_json(config_file)
         experiment.start()
     except Exception, e:
         logger.error('%s: %s' % (e.__class__.__name__, e.message))

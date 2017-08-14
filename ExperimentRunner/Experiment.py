@@ -12,16 +12,15 @@ class Experiment(object):
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.basedir = None
-        self.config_dir = config['config_dir']
         if 'devices' not in config:
             raise ConfigError('"device" is required in the configuration')
         adb_path = config.get('adb_path', 'adb')
         self.devices = Devices(config['devices'], adb_path=adb_path)
         self.replications = Tests.is_integer(config.get('replications', 1))
         self.paths = config.get('paths', [])
-        self.profilers = Profilers(self.config_dir, config.get('profilers', {}))
+        self.profilers = Profilers(config.get('profilers', {}))
         monkeyrunner_path = config.get('monkeyrunner_path', 'monkeyrunner')
-        self.scripts = Scripts(self.config_dir, config.get('scripts', {}), monkeyrunner_path=monkeyrunner_path)
+        self.scripts = Scripts(config.get('scripts', {}), monkeyrunner_path=monkeyrunner_path)
         self.time_between_run = Tests.is_integer(config.get('time_between_run', 0))
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
 

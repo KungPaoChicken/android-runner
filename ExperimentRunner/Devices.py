@@ -1,5 +1,5 @@
 import os.path as op
-from config import ROOT_DIR
+from paths import ROOT_DIR
 
 # This is basically a singleton
 # https://stackoverflow.com/a/10936915
