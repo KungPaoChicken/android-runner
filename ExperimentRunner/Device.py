@@ -13,9 +13,7 @@ class Device:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.name = name
         self.id = device_id
-        self.apps = []
         Adb.connect(device_id)
-        self.update_app_list()
 
     def get_version(self):
         return Adb.shell(self.id, 'getprop ro.build.version.release')
@@ -24,10 +22,11 @@ class Device:
         return Adb.shell(self.id, 'getprop ro.build.version.sdk')
 
     def is_installed(self, apps):
-        return {app: app in self.apps for app in apps}
+        app_list = self.get_app_list()
+        return {app: app in app_list for app in apps}
 
-    def update_app_list(self):
-        self.apps = Adb.list_apps(self.id)
+    def get_app_list(self):
+        return Adb.list_apps(self.id)
 
     def install_apks(self, apks):
         for apk in apks:
@@ -35,15 +34,13 @@ class Device:
                 raise AdbError("%s is not found" % apk)
         for apk in apks:
             Adb.install(self.id, apk)
-            self.apps.append(op.splitext(op.basename(apk))[0])
 
     def uninstall_apps(self, names):
-        for name in names:
-            if name not in self.apps:
-                raise AdbError('%s does not exist in the list of apps' % name)
+        not_installed = {app: installed for app, installed in self.is_installed(names) if not installed}
+        if not_installed:
+                raise AdbError('%s does not exist in the list of apps' % ", ".join(not_installed.keys()))
         for name in names:
             Adb.uninstall(self.id, name)
-            self.apps.remove(name)
 
     def unplug(self):
         if self.get_api_level() < 23:
