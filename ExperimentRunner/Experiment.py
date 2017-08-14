@@ -1,11 +1,13 @@
 import logging
+import os.path as op
 import time
 
+import paths
 import Tests
 from Devices import Devices
 from Profilers import Profilers
 from Scripts import Scripts
-from util import ConfigError
+from util import ConfigError, makedirs
 
 
 class Experiment(object):
@@ -23,6 +25,7 @@ class Experiment(object):
         self.scripts = Scripts(config.get('scripts', {}), monkeyrunner_path=monkeyrunner_path)
         self.time_between_run = Tests.is_integer(config.get('time_between_run', 0))
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
+        self.output_root = paths.OUTPUT_DIR
 
     def prepare(self, device):
         self.logger.info('Device: %s' % device)
@@ -36,6 +39,8 @@ class Experiment(object):
     def start(self):
         for device in self.devices:
             try:
+                paths.OUTPUT_DIR = op.join(self.output_root, device.name)
+                makedirs(paths.OUTPUT_DIR)
                 self.prepare(device)
                 self.before_experiment(device)
                 for path in self.paths:

@@ -1,6 +1,7 @@
 import os.path as op
 from Experiment import Experiment
-from util import ConfigError
+from util import ConfigError, makedirs, slugify
+import paths
 
 
 class NativeExperiment(Experiment):
@@ -23,7 +24,10 @@ class NativeExperiment(Experiment):
 
     def before_first_run(self, device, path):
         super(NativeExperiment, self).before_first_run(device, path)
-        self.logger.info('APK: %s' % op.basename(path))
+        filename = op.basename(path)
+        paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(filename))
+        makedirs(paths.OUTPUT_DIR)
+        self.logger.info('APK: %s' % filename)
 
     def before_run(self, device, path, run):
         super(NativeExperiment, self).before_run(device, path, run)
