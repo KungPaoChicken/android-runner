@@ -46,20 +46,22 @@ class Device:
             self.apps.remove(name)
 
     def unplug(self):
-        # 4.4.3+
-        Adb.shell(self.id, 'dumpsys battery set usb 0')
-        Adb.shell(self.id, 'dumpsys battery set ac 0')
-        Adb.shell(self.id, 'dumpsys battery set wireless 0')
-        # API level 23+ (Android 6.0+)
-        # Adb.shell(self.id, 'dumpsys battery unplug')
+        if self.get_api_level() < 23:
+            # API level < 23, 4.4.3+ tested, WARNING: hardcoding
+            Adb.shell(self.id, 'dumpsys battery set usb 0')
+            # Adb.shell(self.id, 'dumpsys battery set ac 0')
+            # Adb.shell(self.id, 'dumpsys battery set wireless 0')
+        else:
+            # API level 23+ (Android 6.0+)
+            Adb.shell(self.id, 'dumpsys battery unplug')
 
     def plug(self):
-        # 4.4.3+
-        Adb.shell(self.id, 'dumpsys battery set usb 1')
-        Adb.shell(self.id, 'dumpsys battery set ac 1')
-        Adb.shell(self.id, 'dumpsys battery set wireless 1')
+        if self.get_api_level() < 23:
+            # API level < 23, 4.4.3+ tested, WARNING: hardcoding
+            # reset only restarts auto-update
+            Adb.shell(self.id, 'dumpsys battery set usb 1')
         # API level 23+ (Android 6.0+)
-        # Adb.shell(self.id, 'dumpsys battery reset')
+        Adb.shell(self.id, 'dumpsys battery reset')
 
     def current_activity(self):
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
