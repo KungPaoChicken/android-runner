@@ -48,7 +48,7 @@ def list_apps(device_id):
     return shell(device_id, 'pm list packages').replace('package:', '').split()
 
 
-def install(device_id, apk, replace=True, all_permissions=True):
+def install(device_id, apk, replace=True, all_permissions=False):
     filename = op.basename(apk)
     logger.debug('%s: Installing "%s"' % (device_id, filename))
     adb.set_target_by_name(device_id)
