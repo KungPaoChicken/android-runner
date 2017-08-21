@@ -2,8 +2,8 @@ import logging
 import os.path as op
 
 from util import ConfigError
-from PythonScript import PythonScript
-from MonkeyRunner import MonkeyRunner
+from Python2 import Python2
+from MonkeyReplay import MonkeyReplay
 import paths
 
 
@@ -15,20 +15,20 @@ class Scripts(object):
             self.scripts[name] = []
             if isinstance(script, basestring):
                 path = op.join(paths.CONFIG_DIR, script)
-                self.scripts[name].append(PythonScript(path))
+                self.scripts[name].append(Python2(path))
                 continue
             for s in script:
                 path = op.join(paths.CONFIG_DIR, s['path'])
                 timeout = s.get('timeout', 0)
                 logcat_regex = s.get('logcat_regex', None)
-                if s['type'] == 'python':
-                    self.scripts[name].append(PythonScript(path, timeout, logcat_regex))
-                elif s['type'] == 'monkeyrunner':
+                if s['type'] == 'python2':
+                    self.scripts[name].append(Python2(path, timeout, logcat_regex))
+                elif s['type'] == 'monkeyreplay':
                     self.scripts[name].append(
-                        MonkeyRunner(path, timeout, logcat_regex, monkeyrunner_path=monkeyrunner_path))
+                        MonkeyReplay(path, timeout, logcat_regex, monkeyrunner_path=monkeyrunner_path))
                 else:
                     raise ConfigError('Unknown script type')
 
-    def run(self, device, name, current_activity):
+    def run(self, name, device):
         for script in self.scripts[name]:
-            script.run(device, current_activity)
+            script.run(device)

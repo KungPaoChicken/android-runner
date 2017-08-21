@@ -22,35 +22,33 @@ class Script(object):
         if logcat_regex is not None:
             self.logcat_event = Tests.is_string(logcat_regex)
 
-    def execute_script(self, device_id, current_activity):
+    def execute_script(self, device):
         self.logger.info(self.filename)
 
-    def mp_run(self, device_id, current_activity, queue):
+    def mp_run(self, queue, device):
         try:
-            output = self.execute_script(device_id, current_activity)
+            output = self.execute_script(device)
             self.logger.debug('%s returned %s' % (self.filename, output))
         except Exception, e:
             import traceback
             queue.put((e, traceback.format_exc()))
         queue.put('script')
 
-    def mp_logcat_regex(self, device, regex, queue):
+    def mp_logcat_regex(self, queue, device, regex):
         # https://stackoverflow.com/a/21936682
         # pyadb uses subprocess.communicate(), therefore it blocks
         device.logcat_regex(regex)
         queue.put('logcat')
 
-    def run(self, device, current_activity):
+    def run(self, device):
         # https://stackoverflow.com/a/6286343
         with script_timeout(seconds=self.timeout):
             processes = []
             try:
                 queue = mp.Queue()
-                processes.append(mp.Process(target=self.mp_run,
-                                            args=(device.id, current_activity, queue)))
+                processes.append(mp.Process(target=self.mp_run, args=(queue, device)))
                 if self.logcat_event is not None:
-                    processes.append(mp.Process(target=self.mp_logcat_regex,
-                                                args=(device, self.logcat_event, queue)))
+                    processes.append(mp.Process(target=self.mp_logcat_regex, args=(queue, device, self.logcat_event)))
                 for p in processes:
                     p.start()
                 result = queue.get()

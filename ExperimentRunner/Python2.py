@@ -3,9 +3,9 @@ from imp import load_source
 from Script import Script
 
 
-class PythonScript(Script):
+class Python2(Script):
     def __init__(self, path, timeout=0, logcat_regex=None):
-        super(PythonScript, self).__init__(path, timeout, logcat_regex)
+        super(Python2, self).__init__(path, timeout, logcat_regex)
         try:
             self.module = load_source(op.splitext(op.basename(path))[0], op.join(path))
             self.logger.debug('Imported %s' % path)
@@ -13,6 +13,6 @@ class PythonScript(Script):
             self.logger.error('Cannot import %s' % path)
             raise ImportError("Cannot import %s" % path)
 
-    def execute_script(self, device_id, current_activity):
-        super(PythonScript, self).execute_script(device_id, current_activity)
-        return self.module.main(device_id, current_activity)
+    def execute_script(self, device):
+        super(Python2, self).execute_script(device)
+        return self.module.main(device.id, device.current_activity())
