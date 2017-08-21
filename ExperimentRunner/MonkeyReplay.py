@@ -21,7 +21,7 @@ class MonkeyReplay(Script):
         args = {
             'monkey': self.monkeyrunner,
             'plugins': ['jyson-1.0.2.jar'],
-            'program': 'MonkeyReplay/replayLogic.py',
+            'program': 'MonkeyPlayer/replayLogic.py',
             'replay': self.path,
         }
         args['plugins'] = ' '.join(['-plugin %s' % p for p in args['plugins']])
