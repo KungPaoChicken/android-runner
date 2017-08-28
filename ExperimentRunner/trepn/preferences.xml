@@ -3,12 +3,12 @@
     <boolean name="com.quicinc.preferences.show_average_per_application_cpu_usage" value="true" />
     <boolean name="com.quicinc.preferences.help.graph_split_view" value="true" />
     <int name="com.quicinc.preferences.general.averaging_interval" value="1" />
-    <boolean name="com.quicinc.preferences.help.preset_cpu_load_overlay" value="true" />
-    <boolean name="com.quicinc.preferences.help.preset_cpu_frequency_overlay" value="true" />
+    <boolean name="com.quicinc.preferences.help.preset_cpu_load_overlay" value="false" />
+    <boolean name="com.quicinc.preferences.help.preset_cpu_frequency_overlay" value="false" />
     <int name="com.quicinc.preferences.general.overlay_transparency" value="80" />
     <string name="com.quicinc.preferences.general.storage">Database</string>
     <int name="com.quicinc.preferences.general.overlay_stats_interval" value="60" />
-    <boolean name="com.quicinc.preferences.general.show_deltas" value="false" />
+    <boolean name="com.quicinc.preferences.general.show_deltas" value="true" />
     <string name="com.quicinc.preferences.battery_power_source_selection">Estimate Power Consumption</string>
     <boolean name="com.quicinc.preferences.help.all_dialogs_disabled" value="false" />
     <boolean name="com.quicinc.preferences.eula_accepted_v2" value="true" />

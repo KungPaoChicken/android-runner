@@ -28,19 +28,13 @@ class Device:
     def get_app_list(self):
         return Adb.list_apps(self.id)
 
-    def install_apks(self, apks):
-        for apk in apks:
-            if not op.isfile(apk):
-                raise AdbError("%s is not found" % apk)
-        for apk in apks:
-            Adb.install(self.id, apk)
+    def install(self, apk):
+        if not op.isfile(apk):
+            raise AdbError("%s is not found" % apk)
+        Adb.install(self.id, apk)
 
-    def uninstall_apps(self, names):
-        not_installed = {app: installed for app, installed in self.is_installed(names) if not installed}
-        if not_installed:
-                raise AdbError('%s does not exist in the list of apps' % ", ".join(not_installed.keys()))
-        for name in names:
-            Adb.uninstall(self.id, name)
+    def uninstall(self, name):
+        Adb.uninstall(self.id, name)
 
     def unplug(self):
         if self.get_api_level() < 23:
@@ -89,7 +83,15 @@ class Device:
             self.logger.error('Results from dumpsys window windows: \n%s' % windows)
             raise AdbError('Could not parse activity from dumpsys')
 
-    def launch(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
+    def launch_package(self, package):
+        """Launches a package by name without activity, returns instantly"""
+        # https://stackoverflow.com/a/25398877
+        result = Adb.shell(self.id, 'monkey -p {} 1'.format(package))
+        if 'monkey aborted' in result:
+            raise AdbError('Could not launch "{}"'.format(package))
+
+    def launch_activity(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
+        """Launches an activity using 'am start', returns instantly"""
         # https://developer.android.com/studio/command-line/adb.html#am
         # https://developer.android.com/studio/command-line/adb.html#IntentSpec
         # https://stackoverflow.com/a/3229077

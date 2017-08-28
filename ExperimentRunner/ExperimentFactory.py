@@ -1,4 +1,6 @@
 import logging
+import shutil
+import paths
 import os.path as op
 
 import util
@@ -6,7 +8,7 @@ from Experiment import Experiment
 from NativeExperiment import NativeExperiment
 from WebExperiment import WebExperiment
 
-logger = logging.getLogger('ExperimentBuilder')
+logger = logging.getLogger('ExperimentFactory')
 
 
 class ExperimentFactory(object):
@@ -16,6 +18,7 @@ class ExperimentFactory(object):
     @staticmethod
     def from_json(path):
         logger.info(path)
+        shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
         experiment_type = config['type']
         if experiment_type == 'native':

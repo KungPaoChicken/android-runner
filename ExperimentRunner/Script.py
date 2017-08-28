@@ -16,7 +16,7 @@ class Script(object):
         self.path = path
         self.filename = op.basename(path)
         if not op.isfile(path):
-                raise FileNotFoundError(self.filename)
+            raise FileNotFoundError(self.filename)
         self.timeout = float(Tests.is_integer(timeout)) / 1000
         self.logcat_event = logcat_regex
         if logcat_regex is not None:

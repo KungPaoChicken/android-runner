@@ -34,12 +34,13 @@ class Experiment(object):
 
     def cleanup(self, device):
         device.plug()
+        self.profilers.stop_profiling(device)
         self.profilers.unload(device)
 
     def start(self):
         for device in self.devices:
             try:
-                paths.OUTPUT_DIR = op.join(self.output_root, device.name)
+                paths.OUTPUT_DIR = op.join(self.output_root, 'data/', device.name)
                 makedirs(paths.OUTPUT_DIR)
                 self.prepare(device)
                 self.before_experiment(device)
@@ -47,13 +48,15 @@ class Experiment(object):
                     self.before_first_run(device, path)
                     for run in range(self.replications):
                         self.before_run(device, path, run)
-                        self.profilers.start_profiling(device)
+                        self.start_profiling(device, path, run)
                         self.interaction(device, path, run)
-                        self.profilers.stop_profiling(device)
+                        self.stop_profiling(device, path, run)
                         self.after_run(device, path, run)
                     self.after_last_run(device, path)
                 self.after_experiment(device)
             except Exception, e:
+                import traceback
+                print(traceback.format_exc())
                 self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
             finally:
                 self.cleanup(device)
@@ -68,8 +71,14 @@ class Experiment(object):
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
         self.scripts.run('before_run', device)
 
+    def start_profiling(self, device, path, run):
+        self.profilers.start_profiling(device)
+
     def interaction(self, device, path, run):
         self.scripts.run('interaction', device)
+
+    def stop_profiling(self, device, path, run):
+        self.profilers.stop_profiling(device)
 
     def after_run(self, device, path, run):
         self.scripts.run('after_run', device)

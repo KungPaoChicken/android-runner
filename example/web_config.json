@@ -1,15 +1,17 @@
 {
-  "devices": ["5x"],
+  "adb_path": "/opt/platform-tools/adb",
+  "monkeyrunner_path": "/opt/platform-tools/bin/monkeyrunner",
   "type": "web",
+  "devices": ["5x"],
   "replications": 1,
   "browsers": ["chrome"],
   "paths": [
     "https://google.com/"
   ],
   "profilers":{
-    "trepn": {
-      "sample_interval": 100,
-      "data_points": ["battery_power", "mem_usage"]
+    "android": {
+      "sample_interval": 200,
+      "data_points": ["cpu", "mem"]
     }
   },
   "scripts": {
@@ -17,19 +19,19 @@
     "before_run": "before_run.py",
     "interaction": [
       {
-        "type": "python",
+        "type": "python2",
         "path": "interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"
       },
       {
-        "type": "monkeyrunner",
-        "path": "monkey.py"
+        "type": "monkeyreplay",
+        "path": "monkey.txt"
       }
     ],
     "after_run": "after_run.py",
-    "after_experiment": "after_experiment.py"
+    "after_experiment": "after_experiment.py",
+    "aggregation": "aggregation.py"
   },
-  "aggregation": "",
   "time_between_run": 500
 }
