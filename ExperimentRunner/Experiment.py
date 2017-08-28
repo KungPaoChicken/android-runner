@@ -60,28 +60,29 @@ class Experiment(object):
                 self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
             finally:
                 self.cleanup(device)
+        self.scripts.run('aggregation', None, self.output_root)
 
     def before_experiment(self, device):
-        self.scripts.run('before_experiment', device)
+        self.scripts.run('before_experiment', device, device.id, device.current_activity())
 
     def before_first_run(self, device, path):
         pass
 
     def before_run(self, device, path, run):
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
-        self.scripts.run('before_run', device)
+        self.scripts.run('before_run', device, device.id, device.current_activity())
 
     def start_profiling(self, device, path, run):
         self.profilers.start_profiling(device)
 
     def interaction(self, device, path, run):
-        self.scripts.run('interaction', device)
+        self.scripts.run('interaction', device, device.id, device.current_activity())
 
     def stop_profiling(self, device, path, run):
         self.profilers.stop_profiling(device)
 
     def after_run(self, device, path, run):
-        self.scripts.run('after_run', device)
+        self.scripts.run('after_run', device, device.id, device.current_activity())
         self.profilers.collect_results(device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
         time.sleep(self.time_between_run / 1000.0)
@@ -91,4 +92,4 @@ class Experiment(object):
 
     def after_experiment(self, device):
         self.logger.info('Experiment completed, start cleanup')
-        self.scripts.run('after_experiment', device)
+        self.scripts.run('after_experiment', device, device.id, device.current_activity())

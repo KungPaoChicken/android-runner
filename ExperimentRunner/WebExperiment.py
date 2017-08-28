@@ -26,8 +26,10 @@ class WebExperiment(Experiment):
         device.launch_activity(self.browser, self.main_activity, data_uri=path,
                                action='android.intent.action.VIEW', from_scratch=True, force_stop=True)
         time.sleep(5)
+        self.scripts.run('after_launch', device, device.id, device.current_activity())
 
     def after_run(self, device, path, run):
-        super(WebExperiment, self).after_run(device, path, run)
+        self.scripts.run('before_close', device, device.id, device.current_activity())
         device.force_stop(self.browser)
         time.sleep(3)
+        super(WebExperiment, self).after_run(device, path, run)

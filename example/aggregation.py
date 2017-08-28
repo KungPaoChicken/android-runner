@@ -2,8 +2,7 @@ import sys
 
 
 def main(output_root):
-    print(output_root)
-    pass
+    print('Output root: {}'.format(output_root))
 
 
 if __name__ == '__main__':

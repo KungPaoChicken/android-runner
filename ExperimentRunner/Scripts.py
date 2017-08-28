@@ -29,6 +29,7 @@ class Scripts(object):
                 else:
                     raise ConfigError('Unknown script type')
 
-    def run(self, name, device):
-        for script in self.scripts[name]:
-            script.run(device)
+    def run(self, name, device, *args, **kwargs):
+        self.logger.debug('Running hook {} on device {}\nargs: {}\nkwargs: {}'.format(name, device, args, kwargs))
+        for script in self.scripts.get(name, []):
+            script.run(device, *args, **kwargs)

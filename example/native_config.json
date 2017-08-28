@@ -1,6 +1,4 @@
 {
-  "adb_path": "/opt/platform-tools/adb",
-  "monkeyrunner_path": "/opt/platform-tools/bin/monkeyrunner",
   "type": "native",
   "devices": ["5x"],
   "replications": 2,
@@ -20,6 +18,7 @@
   "scripts": {
     "before_experiment": "before_experiment.py",
     "before_run": "before_run.py",
+    "after_launch": "after_launch.py",
     "interaction": [
       {
         "type": "python2",
@@ -32,6 +31,7 @@
         "path": "monkey.txt"
       }
     ],
+    "before_close": "before_close.py",
     "after_run": "after_run.py",
     "after_experiment": "after_experiment.py",
     "aggregation": "aggregation.py"

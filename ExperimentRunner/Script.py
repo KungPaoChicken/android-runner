@@ -22,12 +22,12 @@ class Script(object):
         if logcat_regex is not None:
             self.logcat_event = Tests.is_string(logcat_regex)
 
-    def execute_script(self, device):
+    def execute_script(self, *args, **kwargs):
         self.logger.info(self.filename)
 
-    def mp_run(self, queue, device):
+    def mp_run(self, queue, *args, **kwargs):
         try:
-            output = self.execute_script(device)
+            output = self.execute_script(*args, **kwargs)
             self.logger.debug('%s returned %s' % (self.filename, output))
         except Exception, e:
             import traceback
@@ -40,14 +40,14 @@ class Script(object):
         device.logcat_regex(regex)
         queue.put('logcat')
 
-    def run(self, device):
+    def run(self, device, *args, **kwargs):
         # https://stackoverflow.com/a/6286343
         with script_timeout(seconds=self.timeout):
             processes = []
             try:
                 queue = mp.Queue()
-                processes.append(mp.Process(target=self.mp_run, args=(queue, device)))
-                if self.logcat_event is not None:
+                processes.append(mp.Process(target=self.mp_run, args=(queue,) + args, kwargs=kwargs))
+                if self.logcat_event is not None and device is not None:
                     processes.append(mp.Process(target=self.mp_logcat_regex, args=(queue, device, self.logcat_event)))
                 for p in processes:
                     p.start()

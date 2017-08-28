@@ -32,13 +32,15 @@ class NativeExperiment(Experiment):
     def before_run(self, device, path, run):
         super(NativeExperiment, self).before_run(device, path, run)
         device.launch_package(self.package)
+        self.scripts.run('after_launch', device, device.id, device.current_activity())
 
     def start_profiling(self, device, path, run):
         self.profilers.start_profiling(device, app=self.package)
 
     def after_run(self, device, path, run):
-        super(NativeExperiment, self).after_run(device, path, run)
+        self.scripts.run('before_close', device, device.id, device.current_activity())
         device.force_stop(self.package)
+        super(NativeExperiment, self).after_run(device, path, run)
 
     def after_last_run(self, device, path):
         super(NativeExperiment, self).after_last_run(device, path)
