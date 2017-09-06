@@ -22,6 +22,7 @@ class Trepn(Profiler):
         self.build_preferences(config)
 
     def build_preferences(self, params):
+        """Build the XML files to setup Trepn and the data points"""
         current_dir = op.dirname(op.realpath(__file__))
         # lxml is not the most secure parser, it is up to the user for valid configurations
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities

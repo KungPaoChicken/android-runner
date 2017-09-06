@@ -23,9 +23,11 @@ class Script(object):
             self.logcat_event = Tests.is_string(logcat_regex)
 
     def execute_script(self, *args, **kwargs):
+        """The method that is extended to execute the script"""
         self.logger.info(self.filename)
 
     def mp_run(self, queue, *args, **kwargs):
+        """The multiprocessing wrapper of execute_script()"""
         try:
             output = self.execute_script(*args, **kwargs)
             self.logger.debug('%s returned %s' % (self.filename, output))
@@ -35,12 +37,14 @@ class Script(object):
         queue.put('script')
 
     def mp_logcat_regex(self, queue, device, regex):
+        """The multiprocessing wrapper of Device.logcat_regex()"""
         # https://stackoverflow.com/a/21936682
         # pyadb uses subprocess.communicate(), therefore it blocks
         device.logcat_regex(regex)
         queue.put('logcat')
 
     def run(self, device, *args, **kwargs):
+        """Execute the script with respect to the termination conditions"""
         # https://stackoverflow.com/a/6286343
         with script_timeout(seconds=self.timeout):
             processes = []

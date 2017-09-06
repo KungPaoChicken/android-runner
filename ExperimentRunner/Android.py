@@ -24,11 +24,11 @@ class Android(Profiler):
         self.data = [['datetime'] + self.data_points]
 
     def get_cpu_usage(self, device):
-        # Get CPU usage in percentage
+        """Get CPU usage in percentage"""
         return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
 
     def get_mem_usage(self, device, app):
-        # Get memory usage in KB for app, if app is None system usage is taken
+        """Get memory usage in KB for app, if app is None system usage is used"""
         if not app:
             return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
         else:
@@ -44,6 +44,7 @@ class Android(Profiler):
         self.get_data(device, app)
 
     def get_data(self, device, app):
+        """Runs the profiling methods every self.interval seconds in a separate thread"""
         start = timeit.default_timer()
         device_time = device.shell('date -u')
         row = [device_time]

@@ -19,6 +19,7 @@ class FileFormatError(Exception):
 
 
 def load_json(path):
+    """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
     try:
         with open(path, 'r') as f:
             try:
@@ -33,6 +34,7 @@ def load_json(path):
 
 
 def makedirs(path):
+    """Create a directory on path if it does not exist"""
     # https://stackoverflow.com/a/5032238
     try:
         os.makedirs(path)

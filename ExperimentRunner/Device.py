@@ -16,27 +16,33 @@ class Device:
         Adb.connect(device_id)
 
     def get_version(self):
+        """Returns the Android version"""
         return Adb.shell(self.id, 'getprop ro.build.version.release')
 
     def get_api_level(self):
+        """Returns the Android API level as a number"""
         return Adb.shell(self.id, 'getprop ro.build.version.sdk')
 
     def is_installed(self, apps):
-        app_list = self.get_app_list()
-        return {app: app in app_list for app in apps}
+        """Returns a boolean if a package is installed"""
+        return {app: app in self.get_app_list() for app in apps}
 
     def get_app_list(self):
+        """Returns a list of installed packages on the system"""
         return Adb.list_apps(self.id)
 
     def install(self, apk):
+        """Check if the file exists, and then install the package"""
         if not op.isfile(apk):
             raise AdbError("%s is not found" % apk)
         Adb.install(self.id, apk)
 
     def uninstall(self, name):
+        """Uninstalls the package on the device"""
         Adb.uninstall(self.id, name)
 
     def unplug(self):
+        """Fakes the device to think it is unplugged, so the Doze mode can be activated"""
         if self.get_api_level() < 23:
             # API level < 23, 4.4.3+ tested, WARNING: hardcoding
             Adb.shell(self.id, 'dumpsys battery set usb 0')
@@ -47,6 +53,7 @@ class Device:
             Adb.shell(self.id, 'dumpsys battery unplug')
 
     def plug(self):
+        """Reset the power status of the device"""
         if self.get_api_level() < 23:
             # API level < 23, 4.4.3+ tested, WARNING: hardcoding
             # reset only restarts auto-update
@@ -55,6 +62,7 @@ class Device:
         Adb.shell(self.id, 'dumpsys battery reset')
 
     def current_activity(self):
+        """Returns the current focused activity on the system"""
         # https://github.com/aldonin/appium-adb/blob/7b4ed3e7e2b384333bb85f8a2952a3083873a90e/lib/adb.js#L1278
         windows = Adb.shell(self.id, 'dumpsys window windows')
         null_re = r'mFocusedApp=null'
@@ -109,12 +117,15 @@ class Device:
         return Adb.shell(self.id, cmd)
 
     def force_stop(self, name):
+        """Force stop an app by package name"""
         Adb.shell(self.id, 'am force-stop %s' % name)
 
     def clear_app_data(self, name):
+        """Clears the data of an app by package name"""
         Adb.clear_app_data(self.id, name)
 
     def logcat_to_file(self, path):
+        """Dumps the last x lines of logcat into a file specified by path"""
         makedirs(path)
         with open(op.join(path, '%s_%s.txt' % (self.id, time.strftime('%Y.%m.%d_%H%M%S'))), 'w+') as f:
             f.write(Adb.logcat(self.id))
@@ -123,12 +134,15 @@ class Device:
         return Adb.logcat(self.id, regex=regex)
 
     def push(self, local, remote):
+        """Pushes a file from the computer to the device"""
         return Adb.push(self.id, local, remote)
 
     def pull(self, remote, local):
+        """Pulls a file from the device to the computer"""
         return Adb.pull(self.id, remote, local)
 
     def shell(self, cmd):
+        """Runs the device shell with command specified by cmd"""
         return Adb.shell(self.id, cmd)
 
     def __str__(self):

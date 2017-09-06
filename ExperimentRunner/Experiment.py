@@ -28,16 +28,19 @@ class Experiment(object):
         self.output_root = paths.OUTPUT_DIR
 
     def prepare(self, device):
+        """Prepare the device for experiment"""
         self.logger.info('Device: %s' % device)
         self.profilers.load(device)
         device.unplug()
 
     def cleanup(self, device):
+        """Cleans up the changes on the devices"""
         device.plug()
         self.profilers.stop_profiling(device)
         self.profilers.unload(device)
 
     def start(self):
+        """Runs the experiment"""
         for device in self.devices:
             try:
                 paths.OUTPUT_DIR = op.join(self.output_root, 'data/', device.name)
@@ -63,12 +66,15 @@ class Experiment(object):
         self.scripts.run('aggregation', None, self.output_root)
 
     def before_experiment(self, device):
+        """Hook executed before the start of experiment"""
         self.scripts.run('before_experiment', device, device.id, device.current_activity())
 
     def before_first_run(self, device, path):
+        """Hook executed before the first run for a subject"""
         pass
 
     def before_run(self, device, path, run):
+        """Hook executed before a run"""
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
         self.scripts.run('before_run', device, device.id, device.current_activity())
 
@@ -76,20 +82,24 @@ class Experiment(object):
         self.profilers.start_profiling(device)
 
     def interaction(self, device, path, run):
+        """Interactions on the device to be profiled"""
         self.scripts.run('interaction', device, device.id, device.current_activity())
 
     def stop_profiling(self, device, path, run):
         self.profilers.stop_profiling(device)
 
     def after_run(self, device, path, run):
+        """Hook executed after a run"""
         self.scripts.run('after_run', device, device.id, device.current_activity())
         self.profilers.collect_results(device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
         time.sleep(self.time_between_run / 1000.0)
 
     def after_last_run(self, device, path):
+        """Hook executed after the last run of a subject"""
         pass
 
     def after_experiment(self, device):
+        """Hook executed after the end of experiment"""
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run('after_experiment', device, device.id, device.current_activity())

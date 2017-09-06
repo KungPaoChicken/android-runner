@@ -16,6 +16,7 @@ class MonkeyReplay(Script):
         # TODO: Check if monkeyrunner jyson and the player files exist
 
     def execute_script(self, *args, **kwargs):
+        """Calls the monkeyrunner process with the player"""
         super(MonkeyReplay, self).execute_script(*args, **kwargs)
         # https://docs.python.org/2/library/subprocess.html
         args = {

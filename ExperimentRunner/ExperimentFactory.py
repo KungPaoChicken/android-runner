@@ -17,6 +17,7 @@ class ExperimentFactory(object):
 
     @staticmethod
     def from_json(path):
+        """Returns an Experiment object from a JSON configuration"""
         logger.info(path)
         shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
