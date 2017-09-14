@@ -30,7 +30,8 @@ class Android(Profiler):
     def get_mem_usage(self, device, app):
         """Get memory usage in KB for app, if app is None system usage is used"""
         if not app:
-            return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
+            # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
+            return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL:'.format(app))
             if 'No process found' in result:
