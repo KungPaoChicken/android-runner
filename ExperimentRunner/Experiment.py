@@ -50,11 +50,7 @@ class Experiment(object):
                 for path in self.paths:
                     self.before_first_run(device, path)
                     for run in range(self.replications):
-                        self.before_run(device, path, run)
-                        self.start_profiling(device, path, run)
-                        self.interaction(device, path, run)
-                        self.stop_profiling(device, path, run)
-                        self.after_run(device, path, run)
+                        self.run(device, path, run)
                     self.after_last_run(device, path)
                 self.after_experiment(device)
             except Exception, e:
@@ -64,6 +60,13 @@ class Experiment(object):
             finally:
                 self.cleanup(device)
         self.scripts.run('aggregation', None, self.output_root)
+
+    def run(self, device, path, run):
+        self.before_run(device, path, run)
+        self.start_profiling(device, path, run)
+        self.interaction(device, path, run)
+        self.stop_profiling(device, path, run)
+        self.after_run(device, path, run)
 
     def before_experiment(self, device):
         """Hook executed before the start of experiment"""

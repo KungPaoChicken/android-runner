@@ -11,9 +11,18 @@ class WebExperiment(Experiment):
     def __init__(self, config):
         super(WebExperiment, self).__init__(config)
         # https://stackoverflow.com/a/28151563
+        self.browsers = config.get('browsers', ['chrome'])
         self.browser = 'com.android.chrome'
         self.main_activity = 'com.google.android.apps.chrome.Main'
         Tests.check_dependencies(self.devices, [self.browser])
+
+    def run(self, device, path, run):
+        # for browser in self.browsers:
+        self.before_run(device, path, run)
+        self.start_profiling(device, path, run)
+        self.interaction(device, path, run)
+        self.stop_profiling(device, path, run)
+        self.after_run(device, path, run)
 
     def before_first_run(self, device, path):
         super(WebExperiment, self).before_first_run(device, path)
