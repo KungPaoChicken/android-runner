@@ -1,17 +1,17 @@
-import time
 import os.path as op
+import time
 
-from Experiment import Experiment
 import Tests
 import paths
+from Experiment import Experiment
+from BrowserFactory import BrowserFactory
 from util import makedirs, slugify
 
 
 class WebExperiment(Experiment):
     def __init__(self, config):
         super(WebExperiment, self).__init__(config)
-        # https://stackoverflow.com/a/28151563
-        self.browsers = config.get('browsers', ['chrome'])
+        self.browsers = [BrowserFactory.get_browser(b)(config) for b in config.get('browsers', ['chrome'])]
         self.browser = 'com.android.chrome'
         self.main_activity = 'com.google.android.apps.chrome.Main'
         Tests.check_dependencies(self.devices, [self.browser])
