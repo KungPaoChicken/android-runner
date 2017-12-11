@@ -2,9 +2,11 @@
   "type": "web",
   "devices": ["5x"],
   "replications": 1,
-  "browsers": ["chrome"],
+  "browsers": ["firefox", "opera"],
   "paths": [
-    "https://google.com/"
+    "https://google.com/",
+    "https://wikipedia.org/",
+    "https://apple.com/"
   ],
   "profilers":{
     "android": {
@@ -22,10 +24,6 @@
         "path": "interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"
-      },
-      {
-        "type": "monkeyreplay",
-        "path": "monkey.txt"
       }
     ],
     "before_close": "before_close.py",
@@ -33,5 +31,5 @@
     "after_experiment": "after_experiment.py",
     "aggregation": "aggregation.py"
   },
-  "time_between_run": 500
+  "time_between_run": 100
 }

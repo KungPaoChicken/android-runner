@@ -68,41 +68,41 @@ class Experiment(object):
         self.stop_profiling(device, path, run)
         self.after_run(device, path, run)
 
-    def before_experiment(self, device):
+    def before_experiment(self, device, *args, **kwargs):
         """Hook executed before the start of experiment"""
         self.scripts.run('before_experiment', device, device.id, device.current_activity())
 
-    def before_first_run(self, device, path):
+    def before_first_run(self, device, path, *args, **kwargs):
         """Hook executed before the first run for a subject"""
         pass
 
-    def before_run(self, device, path, run):
+    def before_run(self, device, path, run, *args, **kwargs):
         """Hook executed before a run"""
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
         self.scripts.run('before_run', device, device.id, device.current_activity())
 
-    def start_profiling(self, device, path, run):
+    def start_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.start_profiling(device)
 
-    def interaction(self, device, path, run):
+    def interaction(self, device, path, run, *args, **kwargs):
         """Interactions on the device to be profiled"""
         self.scripts.run('interaction', device, device.id, device.current_activity())
 
-    def stop_profiling(self, device, path, run):
+    def stop_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.stop_profiling(device)
 
-    def after_run(self, device, path, run):
+    def after_run(self, device, path, run, *args, **kwargs):
         """Hook executed after a run"""
         self.scripts.run('after_run', device, device.id, device.current_activity())
         self.profilers.collect_results(device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
         time.sleep(self.time_between_run / 1000.0)
 
-    def after_last_run(self, device, path):
+    def after_last_run(self, device, path, *args, **kwargs):
         """Hook executed after the last run of a subject"""
         pass
 
-    def after_experiment(self, device):
+    def after_experiment(self, device, *args, **kwargs):
         """Hook executed after the end of experiment"""
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run('after_experiment', device, device.id, device.current_activity())

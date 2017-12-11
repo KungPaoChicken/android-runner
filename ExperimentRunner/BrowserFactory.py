@@ -5,9 +5,9 @@ class BrowserFactory(object):
     @staticmethod
     def get_browser(name):
         if name == "chrome":
-            return Chrome
+            return Chrome.Chrome
         if name == "firefox":
-            return Firefox
+            return Firefox.Firefox
         if name == "opera":
-            return Opera
+            return Opera.Opera
         return Exception("No Browser found")

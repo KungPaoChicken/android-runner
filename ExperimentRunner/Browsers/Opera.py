@@ -1,4 +1,4 @@
-import Browser
+from Browser import Browser
 
 
 class Opera(Browser):

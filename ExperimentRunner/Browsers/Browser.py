@@ -3,20 +3,14 @@ import logging
 
 class Browser(object):
     # https://stackoverflow.com/a/1151260
-    @property
-    def package_name(self):
-        raise NotImplementedError()
 
-    @property
-    def main_activity(self):
-        raise NotImplementedError()
-
-    def __init__(self, basedir, config):
-        self.basedir = basedir
+    def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.package_name = ""
+        self.main_activity = ""
 
     def start(self, device):
-        self.logger.info('%s: Start %s' % device.id)
+        self.logger.info('%s: Start' % device.id)
         device.launch_activity(self.package_name, self.main_activity, from_scratch=True, force_stop=True,
                                action='android.intent.action.VIEW')
 
