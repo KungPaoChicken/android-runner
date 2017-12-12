@@ -75,6 +75,10 @@ Below are the supported types:
 - after_experiment  
   executes once after the last run
 
+## Detailed documentation
+The original thesis can be found here:  
+https://drive.google.com/file/d/0B7Fel9yGl5-xc2lEWmNVYkU5d2c/view?usp=sharing
+
 ## FAQ
 ### Devices have no permissions (udev requires plugdev group membership)
 This happens when the user calling adb is not in the plugdev group.
