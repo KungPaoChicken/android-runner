@@ -17,9 +17,11 @@ class WebExperiment(Experiment):
     def run(self, device, path, run):
         for browser in self.browsers:
             self.before_run(device, path, run, browser)
+            self.after_launch(device, path, run, browser)
             self.start_profiling(device, path, run, browser)
             self.interaction(device, path, run, browser)
             self.stop_profiling(device, path, run, browser)
+            self.before_close(device, path, run, browser)
             self.after_run(device, path, run, browser)
 
     def before_first_run(self, device, path, *args, **kwargs):

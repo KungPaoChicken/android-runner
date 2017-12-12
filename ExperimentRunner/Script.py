@@ -22,14 +22,14 @@ class Script(object):
         if logcat_regex is not None:
             self.logcat_event = Tests.is_string(logcat_regex)
 
-    def execute_script(self, *args, **kwargs):
+    def execute_script(self, device, *args, **kwargs):
         """The method that is extended to execute the script"""
         self.logger.info(self.filename)
 
-    def mp_run(self, queue, *args, **kwargs):
+    def mp_run(self, queue, device, *args, **kwargs):
         """The multiprocessing wrapper of execute_script()"""
         try:
-            output = self.execute_script(*args, **kwargs)
+            output = self.execute_script(device, *args, **kwargs)
             self.logger.debug('%s returned %s' % (self.filename, output))
         except Exception, e:
             import traceback
@@ -50,7 +50,7 @@ class Script(object):
             processes = []
             try:
                 queue = mp.Queue()
-                processes.append(mp.Process(target=self.mp_run, args=(queue,) + args, kwargs=kwargs))
+                processes.append(mp.Process(target=self.mp_run, args=(queue, device,) + args, kwargs=kwargs))
                 if self.logcat_event is not None and device is not None:
                     processes.append(mp.Process(target=self.mp_logcat_regex, args=(queue, device, self.logcat_event)))
                 for p in processes:

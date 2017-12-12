@@ -1,2 +1,2 @@
-def main(device_id, activity):
+def main(device, *args, **kwargs):
     pass

@@ -13,6 +13,6 @@ class Python2(Script):
             self.logger.error('Cannot import %s' % path)
             raise ImportError("Cannot import %s" % path)
 
-    def execute_script(self, *args, **kwargs):
-        super(Python2, self).execute_script(*args, **kwargs)
-        return self.module.main(*args, **kwargs)
+    def execute_script(self, device, *args, **kwargs):
+        super(Python2, self).execute_script(device, *args, **kwargs)
+        return self.module.main(device, *args, **kwargs)

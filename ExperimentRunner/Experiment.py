@@ -70,7 +70,7 @@ class Experiment(object):
 
     def before_experiment(self, device, *args, **kwargs):
         """Hook executed before the start of experiment"""
-        self.scripts.run('before_experiment', device, device.id, device.current_activity())
+        self.scripts.run('before_experiment', device, *args, **kwargs)
 
     def before_first_run(self, device, path, *args, **kwargs):
         """Hook executed before the first run for a subject"""
@@ -79,21 +79,27 @@ class Experiment(object):
     def before_run(self, device, path, run, *args, **kwargs):
         """Hook executed before a run"""
         self.logger.info('Run %s of %s' % (run + 1, self.replications))
-        self.scripts.run('before_run', device, device.id, device.current_activity())
+        self.scripts.run('before_run', device, *args, **kwargs)
+
+    def after_launch(self, device, path, run, *args, **kwargs):
+        self.scripts.run('after_launch', device, *args, **kwargs)
 
     def start_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.start_profiling(device)
 
     def interaction(self, device, path, run, *args, **kwargs):
         """Interactions on the device to be profiled"""
-        self.scripts.run('interaction', device, device.id, device.current_activity())
+        self.scripts.run('interaction', device, *args, **kwargs)
 
     def stop_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.stop_profiling(device)
 
+    def before_close(self, device, path, run, *args, **kwargs):
+        self.scripts.run('before_close', device, *args, **kwargs)
+
     def after_run(self, device, path, run, *args, **kwargs):
         """Hook executed after a run"""
-        self.scripts.run('after_run', device, device.id, device.current_activity())
+        self.scripts.run('after_run', device, *args, **kwargs)
         self.profilers.collect_results(device)
         self.logger.debug('Sleeping for %s milliseconds' % self.time_between_run)
         time.sleep(self.time_between_run / 1000.0)
@@ -105,4 +111,4 @@ class Experiment(object):
     def after_experiment(self, device, *args, **kwargs):
         """Hook executed after the end of experiment"""
         self.logger.info('Experiment completed, start cleanup')
-        self.scripts.run('after_experiment', device, device.id, device.current_activity())
+        self.scripts.run('after_experiment', device, *args, **kwargs)
