@@ -1,4 +1,5 @@
 import os.path as op
+import os
 import time
 
 import Tests
@@ -16,6 +17,7 @@ class WebExperiment(Experiment):
 
     def run(self, device, path, run):
         for browser in self.browsers:
+            paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(browser.package_name))
             self.before_run(device, path, run, browser)
             self.after_launch(device, path, run, browser)
             self.start_profiling(device, path, run, browser)
@@ -23,6 +25,7 @@ class WebExperiment(Experiment):
             self.stop_profiling(device, path, run, browser)
             self.before_close(device, path, run, browser)
             self.after_run(device, path, run, browser)
+            paths.OUTPUT_DIR = op.abspath(op.join(paths.OUTPUT_DIR, os.pardir))
 
     def before_first_run(self, device, path, *args, **kwargs):
         super(WebExperiment, self).before_first_run(device, path)
@@ -49,6 +52,11 @@ class WebExperiment(Experiment):
         browser.stop(device, clear_data=True)
         time.sleep(3)
         super(WebExperiment, self).after_run(device, path, run)
+
+    def after_last_run(self, device, path, *args, **kwargs):
+        super(WebExperiment, self).after_last_run(device, path, *args, **kwargs)
+        # https://stackoverflow.com/a/2860193
+        paths.OUTPUT_DIR = op.abspath(op.join(paths.OUTPUT_DIR, os.pardir))
 
     def cleanup(self, device):
         super(WebExperiment, self).cleanup(device)

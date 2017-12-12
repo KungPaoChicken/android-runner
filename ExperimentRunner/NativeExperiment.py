@@ -1,3 +1,4 @@
+import os
 import os.path as op
 from Experiment import Experiment
 from util import ConfigError, makedirs, slugify
@@ -46,6 +47,8 @@ class NativeExperiment(Experiment):
         super(NativeExperiment, self).after_last_run(device, path)
         device.uninstall(self.package)
         self.package = None
+        # https://stackoverflow.com/a/2860193
+        paths.OUTPUT_DIR = op.abspath(op.join(paths.OUTPUT_DIR, os.pardir))
 
     def after_experiment(self, device, *args, **kwargs):
         super(NativeExperiment, self).after_experiment(device)
