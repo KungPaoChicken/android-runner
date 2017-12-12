@@ -72,7 +72,7 @@ class Trepn(Profiler):
     def collect_results(self, device, path=None):
         # Gives the latest result
         super(Trepn, self).collect_results(device)
-        newest_db = device.shell('ls -1t %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()[0]
+        newest_db = device.shell('ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()[0]
         csv_filename = '%s_%s.csv' % (device.id, op.splitext(newest_db)[0])
         if newest_db:
             device.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
