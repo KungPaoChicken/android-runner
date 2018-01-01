@@ -17,7 +17,7 @@ class WebExperiment(Experiment):
 
     def run(self, device, path, run):
         for browser in self.browsers:
-            paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(browser.package_name))
+            paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(unicode(browser.package_name)))
             self.before_run(device, path, run, browser)
             self.after_launch(device, path, run, browser)
             self.start_profiling(device, path, run, browser)

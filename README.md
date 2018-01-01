@@ -12,6 +12,8 @@ You'll need:
 
 Note: It is important that monkeyrunner shares the same adb the experiment is using. Otherwise, there will be an adb restart and output may be tainted by the notification.
 
+Note 2: You can specifiy the path to ADB and/or Monkeyrunner in the experiment configuration. See the Experiment Configuration section below.
+
 ## Quick start
 To run an experiment, run:
 ```bash
@@ -25,6 +27,12 @@ A JSON config that maps devices names to their ADB ids for easy reference in con
 
 ### Experiment Configuration
 Below is a reference to the fields for the experiment configuration. It is not always updated.
+
+**adb_path** *string*  
+Path to ADB. Example path: `/opt/platform-tools/adb`
+
+**monkeyrunner_path** *string*  
+Path to Monkeyrunner. Example path: `/opt/platform-tools/bin/monkeyrunner`
 
 **type** *string*  
 Type of the experiment. Can be `web` or `native`
