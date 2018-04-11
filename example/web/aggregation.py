@@ -11,7 +11,7 @@ def list_subdir(a_dir):
             if os.path.isdir(os.path.join(a_dir, name))]
 
 
-def aggreate_android(logs_dir):
+def aggregate_android(logs_dir):
     def add_row(accum, new):
         row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
         count = accum['count'] + 1
@@ -55,11 +55,14 @@ def aggregate(data_dir):
         for subject in list_subdir(device_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            if os.path.isdir(os.path.join(subject_dir, 'android')):
-                row.update(aggreate_android(os.path.join(subject_dir, 'android')))
-            if os.path.isdir(os.path.join(subject_dir, 'trepn')):
-                row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
-            rows.append(row)
+            for browser in list_subdir(subject_dir):
+                row.update({'browser': browser})
+                browser_dir = os.path.join(subject_dir, browser)
+                if os.path.isdir(os.path.join(browser_dir, 'android')):
+                    row.update(aggregate_android(os.path.join(browser_dir, 'android')))
+                if os.path.isdir(os.path.join(browser_dir, 'trepn')):
+                    row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
+                rows.append(row)
     return rows
 
 
@@ -70,7 +73,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(output_root):
+def main(device, output_root):
     print('Output root: {}'.format(output_root))
     data_dir = os.path.join(output_root, 'data')
     rows = aggregate(data_dir)
