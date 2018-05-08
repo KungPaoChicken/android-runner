@@ -1,20 +1,19 @@
 {
   "type": "native",
-  "devices": ["5x"],
-  "replications": 2,
+  "devices": ["nexus7"],
+  "replications": 1,
+  "monkeyrunner_path": "/home/bla/Android/Sdk/tools/bin/monkeyrunner",
+  "systrace_path": "/home/bla/Android/Sdk/platform-tools/systrace/systrace.py",
+  "powerprofile_path": "android-runner/example/native/power_profile_nexus7.xml",
   "paths": [
-    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
+    "android-runner/example/native/test.androidrunner.apk"
   ],
   "profilers": {
-    "trepn": {
-      "sample_interval": 100,
-      "data_points": ["battery_power", "mem_usage"]
-    },
-    "android": {
-      "sample_interval": 0,
-      "data_points": ["cpu", "mem"]
+    "androidbattery": {
+      "sample_interval": 1000,
+      "data_points": ["battery"]
     }
- },
+  },
   "scripts": {
     "before_experiment": "before_experiment.py",
     "before_run": "before_run.py",

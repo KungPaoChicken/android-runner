@@ -1,0 +1,82 @@
+import os.path as op
+import subprocess
+import time
+from util import makedirs
+import timeit
+import threading
+import csv
+
+from Profiler import Profiler
+import paths
+import Tests
+
+
+class Androidbattery(Profiler):
+    def __init__(self, config):
+        super(Androidbattery, self).__init__(config)
+        self.profile = False
+        available_data_points = ['battery']
+        self.interval = float(Tests.is_integer(config.get('sample_interval', 0))) / 1000
+        self.data_points = config['data_points']
+        invalid_data_points = [dp for dp in config['data_points'] if dp not in set(available_data_points)]
+        if invalid_data_points:
+            self.logger.warning('Invalid data points in config: {}'.format(invalid_data_points))
+        self.data_points = [dp for dp in config['data_points'] if dp in set(available_data_points)]
+        self.data = [['datetime'] + self.data_points]
+        #systrace_path = config.get('systrace_path', 'systrace')
+
+    def get_battery_usage(self, device, app):
+        intensity = 5
+        voltage = int(device.shell('dumpsys batterystats | grep volt | tail -1').split("volt=")[1].split()[0])
+        time_frame = 1
+        usage = intensity * voltage * time_frame
+        return usage
+
+    def start_profiling(self, device, **kwargs):
+
+        #create output directories
+        global output_dir
+        global raw_dir
+        output_dir = op.join(paths.OUTPUT_DIR, 'android/')
+        makedirs(output_dir)
+        raw_dir = op.join(output_dir, 'raw_data/')
+        makedirs(raw_dir)
+
+        super(Androidbattery, self).start_profiling(device, **kwargs)
+        self.profile = True
+        app = kwargs.get('app', None)
+        self.get_data(device, app)
+
+
+    def get_data(self, device, app):
+        """Runs the profiling methods every self.interval seconds in a separate thread"""
+        start = timeit.default_timer()
+
+        # Get Systrace data
+        subprocess.Popen('/home/bla/Android/Sdk/platform-tools/systrace/systrace.py freq idle -t 10 -o %s/systrace.html' % raw_dir, shell=True)
+
+        device_time = device.shell('date -u')
+        row = [device_time]
+        row.append(self.get_battery_usage(device, app))
+        self.data.append(row)
+        end = timeit.default_timer()
+        # timer results could be negative
+
+    def stop_profiling(self, device, **kwargs):
+        super(Androidbattery, self).stop_profiling(device, **kwargs)
+        self.profile = False
+
+    def collect_results(self, device, path=None):
+        super(Androidbattery, self).collect_results(device)
+
+        filename = '{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        with open(op.join(output_dir, filename), 'w+') as f:
+            writer = csv.writer(f)
+            for row in self.data:
+                writer.writerow(row)
+
+        # Get BatteryStats data
+        batterystats_file = '{}_batterystats_{}.txt'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        file = open(op.join(raw_dir, batterystats_file), 'w+')
+        file.write(device.shell('dumpsys batterystats --history'))
+        file.close()
