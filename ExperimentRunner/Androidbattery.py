@@ -9,7 +9,7 @@ import csv
 from Profiler import Profiler
 import paths
 import Tests
-
+import Parser
 
 class Androidbattery(Profiler):
     def __init__(self, config):
@@ -24,6 +24,7 @@ class Androidbattery(Profiler):
         self.data_points = [dp for dp in config['data_points'] if dp in set(available_data_points)]
         self.data = [['datetime'] + self.data_points]
         #systrace_path = config.get('systrace_path', 'systrace')
+        #power_profile_path = config.get('power_profile_path', 'power_profile')
 
     def get_battery_usage(self, device, app):
         intensity = 5
@@ -41,6 +42,9 @@ class Androidbattery(Profiler):
         makedirs(output_dir)
         raw_dir = op.join(output_dir, 'raw_data/')
         makedirs(raw_dir)
+
+        # Parse Power Profile
+        Parser.parse_power_profile('android-runner/example/native/power_profile.xml', raw_dir)
 
         super(Androidbattery, self).start_profiling(device, **kwargs)
         self.profile = True
@@ -65,6 +69,7 @@ class Androidbattery(Profiler):
     def stop_profiling(self, device, **kwargs):
         super(Androidbattery, self).stop_profiling(device, **kwargs)
         self.profile = False
+        device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
         super(Androidbattery, self).collect_results(device)
