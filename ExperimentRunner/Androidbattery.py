@@ -26,6 +26,7 @@ class Androidbattery(Profiler):
         config_file = load_json(op.join(paths.CONFIG_DIR, 'config.json'))
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
+        self.dmtracedump = config_file.get('dmtracedump_path', 'dmtracedump')
 
     def get_battery_usage(self, device, app):
         intensity = 5
