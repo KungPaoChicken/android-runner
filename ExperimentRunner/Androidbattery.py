@@ -1,7 +1,7 @@
 import os.path as op
 import subprocess
 import time
-from util import makedirs
+from util import makedirs, load_json
 import timeit
 import threading
 import csv
@@ -23,8 +23,9 @@ class Androidbattery(Profiler):
             self.logger.warning('Invalid data points in config: {}'.format(invalid_data_points))
         self.data_points = [dp for dp in config['data_points'] if dp in set(available_data_points)]
         self.data = [['datetime'] + self.data_points]
-        #systrace_path = config.get('systrace_path', 'systrace')
-        #power_profile_path = config.get('power_profile_path', 'power_profile')
+        config_file = load_json(op.join(paths.CONFIG_DIR, 'config.json'))
+        self.systrace = config_file.get('systrace_path', 'systrace')
+        self.powerprofile = config_file['powerprofile_path']
 
     def get_battery_usage(self, device, app):
         intensity = 5
@@ -34,7 +35,7 @@ class Androidbattery(Profiler):
         return usage
 
     def start_profiling(self, device, **kwargs):
-
+        print self.systrace
         #create output directories
         global output_dir
         global raw_dir
@@ -42,12 +43,9 @@ class Androidbattery(Profiler):
         makedirs(output_dir)
         raw_dir = op.join(output_dir, 'raw_data/')
         makedirs(raw_dir)
-
-        # Parse Power Profile
-        Parser.parse_power_profile('android-runner/example/native/power_profile.xml', raw_dir)
-
         super(Androidbattery, self).start_profiling(device, **kwargs)
         self.profile = True
+        device.shell('dumpsys batterystats --reset')
         app = kwargs.get('app', None)
         self.get_data(device, app)
 
@@ -57,7 +55,7 @@ class Androidbattery(Profiler):
         start = timeit.default_timer()
 
         # Get Systrace data
-        subprocess.Popen('/home/bla/Android/Sdk/platform-tools/systrace/systrace.py freq idle -t 10 -o %s/systrace.html' % raw_dir, shell=True)
+        subprocess.Popen('%s freq idle -t %d -o %s/systrace.html' % (self.systrace, self.interval, raw_dir), shell=True)
 
         device_time = device.shell('date -u')
         row = [device_time]
@@ -69,7 +67,7 @@ class Androidbattery(Profiler):
     def stop_profiling(self, device, **kwargs):
         super(Androidbattery, self).stop_profiling(device, **kwargs)
         self.profile = False
-        device.shell('dumpsys battery reset')
+        #device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
         super(Androidbattery, self).collect_results(device)
@@ -80,8 +78,12 @@ class Androidbattery(Profiler):
             for row in self.data:
                 writer.writerow(row)
 
+        # Parse Power Profile
+        Parser.parse_power_profile(self.powerprofile, raw_dir)
+
         # Get BatteryStats data
-        batterystats_file = '{}_batterystats_{}.txt'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        batterystats_file = 'batterystats_raw.txt'
         file = open(op.join(raw_dir, batterystats_file), 'w+')
         file.write(device.shell('dumpsys batterystats --history'))
         file.close()
+
