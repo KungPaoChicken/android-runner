@@ -29,16 +29,6 @@ class Batterystats(Profiler):
         self.powerprofile = config_file['powerprofile_path']
         self.app = config_file['paths']
 
-    def get_battery_usage(self, device, app):
-        cpu_intensity = 1
-
-
-        intensity = 5
-        voltage = int(device.shell('dumpsys batterystats | grep volt | tail -1').split("volt=")[1].split()[0])
-        timeframe = 1
-        usage = intensity * voltage * timeframe
-        return usage
-
     def start_profiling(self, device, **kwargs):
         # clear data
         device.shell('dumpsys batterystats --reset')
@@ -46,31 +36,24 @@ class Batterystats(Profiler):
         # create output directories
         global app
         global output_dir
-        global raw_dir
         output_dir = op.join(paths.OUTPUT_DIR, 'android/')
         makedirs(output_dir)
-        # raw_dir = op.join(output_dir, 'raw_data/')
-        # makedirs(raw_dir)
         super(Batterystats, self).start_profiling(device, **kwargs)
         self.profile = True
         app = kwargs.get('app', None)
         self.get_data(device, app)
 
     def get_data(self, device, app):
-        """Runs the profiling methods every self.interval seconds in a separate thread"""
-        start = timeit.default_timer()
-
-        # Get Systrace data ## PROBLEM: if t too large, android-runner continues before output created
+        """Runs the profiling methods for self.interval seconds in a separate thread"""
+        # start = timeit.default_timer()
+        # Get Systrace data
         subprocess.Popen('{} freq idle -t {} -o {}systrace.html'.format(self.systrace, self.interval, output_dir), shell=True)
-
-        device_time = device.shell('date -u')
-        row = [device_time]
-        row.append(self.get_battery_usage(device, app))
-        self.data.append(row)
-        end = timeit.default_timer()
+        # end = timeit.default_timer()
         # timer results could be negative
 
     def stop_profiling(self, device, **kwargs):
+        if self.interval > 5:
+            time.sleep(self.interval / 2.0)
         super(Batterystats, self).stop_profiling(device, **kwargs)
         self.profile = False
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
@@ -79,23 +62,22 @@ class Batterystats(Profiler):
         #device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
-        #super(Batterystats, self).collect_results(device)
-
         filename = op.join(output_dir, 'batterystats_results_{}_{}.csv'
                            .format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
+
+        # Get BatteryStats data
+        batterystats_file = op.join(output_dir, 'batterystats_history.txt')
+        with open(batterystats_file, 'w+') as f2:
+            f2.write(device.shell('dumpsys batterystats --history'))
+        batterystats_results = Parser.parse_batterystats(app, batterystats_file, self.powerprofile)
+
+        # Get Systrace data
+        systrace_file = '{}systrace.html'.format(output_dir)
+        logcat_file = op.join(output_dir, 'logcat.txt')
+        systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile)
+
         with open(filename, 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(['timeframe (duration)', 'component', 'mAh'])
-
-            # Parse Power Profile
-            # parsed_profile = Parser.parse_power_profile(self.powerprofile, raw_dir)
-
-            # Get BatteryStats data
-            batterystats_file = op.join(output_dir, 'batterystats_history.txt')
-            with open(batterystats_file, 'w+') as f:
-                f.write(device.shell('dumpsys batterystats --history'))
-            Parser.parse_batterystats(app, batterystats_file, self.powerprofile, filename)
-
-            # Parse Systrace
-            systrace_file = '{}systrace.html'.format(output_dir)
-            Parser.parse_systrace(systrace_file, self.powerprofile, filename)
+            writer = csv.writer(f, delimiter="\n")
+            writer.writerow(['timeframe (duration), component, Joule'])
+            writer.writerow(batterystats_results)
+            writer.writerow(systrace_results)

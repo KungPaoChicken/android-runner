@@ -1,0 +1,39 @@
+{
+  "type": "native",
+  "devices": ["nexus7"],
+  "replications": 1,
+  "monkeyrunner_path": "/home/bla/Android/Sdk/tools/bin/monkeyrunner",
+  "systrace_path": "/home/bla/Android/Sdk/platform-tools/systrace/systrace.py",
+  "powerprofile_path": "android-runner/example/batterystats/power_profile.xml",
+  "dmtracedump_path": "/home/bla/Android/Sdk/platform-tools/dmtracedump",
+  "paths": [
+    "android-runner/example/batterystats/net.sourceforge.opencamera.apk"
+  ],
+  "profilers": {
+    "batterystats": {
+      "sample_interval": 10000,
+      "data_points": ["battery"]
+    }
+  },
+  "scripts": {
+    "before_experiment": "before_experiment.py",
+    "before_run": "before_run.py",
+    "after_launch": "after_launch.py",
+    "interaction": [
+      {
+        "type": "python2",
+        "path": "interaction.py",
+        "timeout": 5000,
+        "logcat_regex": "some keyword"
+      },
+      {
+        "type": "monkeyreplay",
+        "path": "monkey.txt"
+      }
+    ],
+    "before_close": "before_close.py",
+    "after_run": "after_run.py",
+    "after_experiment": "after_experiment.py"
+  },
+  "time_between_run": 5000
+}

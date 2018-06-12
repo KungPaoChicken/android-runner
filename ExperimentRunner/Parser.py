@@ -2,12 +2,8 @@ from xml.dom import minidom
 import csv
 import os.path as op
 import re
-
-SECONDS_IN_MS = 1000.0
-SECONDS_IN_M = 60.0
-SECONDS_IN_H = 3600.0
-SECONDS_IN_D = 86400.0
-
+import time
+import datetime
 
 ''' Power Profile '''
 
@@ -40,8 +36,8 @@ def parse_power_profile(power_profile, out_dir=''):
             writer.writerow(rows)
 
 
-def get_consumption_value(power_profile, component, state=0):
-    """ Retrieve mAh for component in power_profile.xml """
+def get_amp_value(power_profile, component, state=0):
+    """ Retrieve mAh for component in power_profile.xml and convert to Ah """
     xmlfile = minidom.parse(power_profile)
     itemlist = xmlfile.getElementsByTagName('item')
     arraylist = xmlfile.getElementsByTagName('array')
@@ -50,7 +46,7 @@ def get_consumption_value(power_profile, component, state=0):
         itemname = item.attributes['name'].value
         milliamps = item.childNodes[0].nodeValue
         if component == itemname:
-            return float(milliamps)
+            return float(milliamps) / 1000.0
     for arrays in arraylist:
         arrayname = arrays.attributes['name'].value
         if arrayname == 'cpu.speeds':
@@ -62,176 +58,185 @@ def get_consumption_value(power_profile, component, state=0):
         if arrayname == 'cpu.active':
             valuelist = arrays.getElementsByTagName('value')
             milliamps = valuelist.item(value_index).childNodes[0].nodeValue
-            return float(milliamps)
+            return float(milliamps) / 1000.0
 
 
 ''' Batterystats '''
 
 
-def parse_batterystats(app, batterystats_file, power_profile, filename):
+def parse_batterystats(app, batterystats_file, power_profile):
     """ Parse Batterystats history and calculate results """
-    with open(batterystats_file, 'r') as f:
+    with open(batterystats_file, 'r') as bs_file:
         voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
-        app_pattern = re.compile('(0|\+\d.*ms).*( top|\-top|\+top).*"{}"'.format(app))
-        wifi_pattern = re.compile('(0|\+\d.*ms).*(\+|\-)wifi_(on|running|scan)')
-        camera_pattern = re.compile('(0|\+\d.*ms).*(\+|\-)camera')
-        screen_pattern = re.compile('(0|\+\d.*ms).*(\+|\-)screen.*brightness=(dark|dim|medium|bright)')
-        # phonescanning_pattern = re.compile('(0|\+\d.*ms).*\+phone_scanning')
-        # time_pattern = re.compile('(0|\+\d.*ms).*')
+        app_pattern = re.compile('(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
+        screen_pattern = re.compile('(0|\+\d.*ms).*([+-])screen')
+        brightness_pattern = re.compile('(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
+        wifi_pattern = re.compile('(0|\+\d.*ms).*([+-])wifi_(on|running|scan)')
+        camera_pattern = re.compile('(0|\+\d.*ms).*([+-])camera')
+        time_pattern = re.compile('(0|\+\d.*ms).*')
+        f = bs_file.read()
 
-        app_start_time = 0
-        app_end_time = 0
-        app_duration = 0
-        voltage = 0
-        cam_start_time = 0
-        cam_end_time = 0
-        wifi_start_time = 0
-        wifi_end_time = 0
+        app_start_time = convert_to_s(re.findall(app_pattern, f)[0][0])
+        app_end_time = convert_to_s(re.findall(app_pattern, f)[-1][0])
+        app_duration = app_end_time - app_start_time
+        voltage = float(re.findall(voltage_pattern, f)[0][1]) / 1000.0
+        # cam_start_time = convert_to_s(re.findall(camera_pattern, f)[0][1])
+        # wifi_start_time = convert_to_s(re.findall(wifi_pattern, f)[0][0])
         screen_start_time = 0
-        screen_end_time = 0
 
+        old_brightness = None
         wifi_activation = 0
         cam_activation = 0
         screen_activation = 0
+        screen_results = []
         wifi_results = []
         cam_results = []
-        screen_results = []
+        all_results = []
 
-        for line in f:
+        bs_file.seek(0)
+        for line in bs_file:
             if voltage_pattern.search(line):
-                voltage = voltage_pattern.search(line).group(2)
-                #print 'voltage: {}'.format(voltage)
-            if app_pattern.search(line):
-                if app_pattern.search(line).group(2) == ' top' or app_pattern.search(line).group(2) == '+top':
-                    app_start_time = convert_to_s(app_pattern.search(line).group(1))
-                    #print 'app start {}'.format(app_start_time)
-                if app_pattern.search(line).group(2) == '-top':
-                    app_end_time = convert_to_s(app_pattern.search(line).group(1))
-                    #print 'app end {}'.format(app_end_time)
-                    app_duration = app_end_time - app_start_time
+                voltage = get_voltage(line)
+
+            if screen_pattern.search(line):
+                screen_state = screen_pattern.search(line).group(2)
+                if screen_state == '+':
+                    screen_activation = 1
+                    unknown_start = 1
+                    old_brightness = 'dark'
+                    screen_intensity = get_amp_value(power_profile, 'screen.on')
+                    screen_start_time = convert_to_s(time_pattern.search(line).group(1))
+            if screen_activation == 1 and brightness_pattern.search(line):
+                screen_state_time = convert_to_s(brightness_pattern.search(line).group(1))
+                brightness = brightness_pattern.search(line).group(2)
+                intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(
+                    power_profile, 'screen.on')
+                if unknown_start == 1:
+                    unknown_start = 0
+                    screen_end_time = screen_state_time
+                    duration = screen_end_time - screen_start_time
+                    if duration == 0:
+                        continue
+                    else:
+                        energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
+                        screen_results.append('{}-{} ({}s), screen {}, {}'.format
+                                              (screen_start_time, screen_end_time, duration,
+                                               old_brightness, energy_consumption))
+                        screen_start_time = screen_state_time
+                        old_brightness = None
+                if screen_activation == 1 and unknown_start == 0 and old_brightness is None:
+                    screen_start_time = screen_state_time
+                    if brightness == 'dark':
+                        screen_intensity = get_amp_value(power_profile, 'screen.on')
+                    elif brightness == 'dim':
+                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.25)
+                    elif brightness == 'medium':
+                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.50)
+                    elif brightness == 'light':
+                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.75)
+                    elif brightness == 'bright':
+                        screen_intensity = get_amp_value(power_profile, 'screen.full')
+                    old_brightness = brightness
+                elif screen_activation == 1 and unknown_start == 0 and old_brightness is not None:
+                    screen_end_time = screen_state_time
+                    duration = screen_end_time - screen_start_time
+                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
+                    screen_results.append('{}-{} ({}s), screen {}, {}'.format
+                                          (screen_start_time, screen_end_time, duration,
+                                           old_brightness, energy_consumption))
+                    screen_start_time = screen_state_time
+                    old_brightness = brightness
+                elif screen_activation == 1 and screen_state == '-':
+                    screen_activation = 0
+                    if screen_state_time > app_end_time:
+                        screen_end_time = app_end_time
+                    if (screen_start_time < app_end_time) and (screen_state_time > app_end_time):
+                        screen_end_time = app_end_time
+                    else:
+                        screen_end_time = screen_state_time
+                    duration = screen_end_time - screen_start_time
+                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
+                    screen_results.append('{}-{} ({}s), screen {}, {}'.format
+                                          (screen_start_time, screen_end_time, duration,
+                                           brightness, energy_consumption))
 
             if wifi_pattern.search(line):
-                wifi_activation = 1
                 wifi_state = wifi_pattern.search(line).group(3)
                 wifi_state_time = convert_to_s(wifi_pattern.search(line).group(1))
-                if wifi_pattern.search(line).group(2) == '+':
+                if wifi_pattern.search(line).group(2) == '+' and wifi_state_time < app_end_time:
+                    wifi_activation = 1
                     wifi_start_time = wifi_state_time
-                    if wifi_state == 'on':  # may be obsolete, wifi seems to be always running or scanning when it is on
-                        wifi_consumption = get_consumption_value(power_profile, 'wifi.on')
+                    if wifi_state == 'on':
+                        wifi_intensity = get_amp_value(power_profile, 'wifi.on')
                     if wifi_state == 'running':
-                        wifi_consumption = get_consumption_value(power_profile, 'wifi.active')
+                        wifi_intensity = get_amp_value(power_profile, 'wifi.active')
                     if wifi_state == 'scan':
-                        wifi_consumption = get_consumption_value(power_profile, 'wifi.scan')
-                elif wifi_pattern.search(line).group(2) == '-':
+                        wifi_intensity = get_amp_value(power_profile, 'wifi.scan')
+                elif wifi_pattern.search(line).group(2) == '-' and wifi_state_time < app_end_time:
                     wifi_activation = 0
-                    if (wifi_start_time < app_end_time) and (wifi_state_time > app_end_time):
-                        wifi_end_time = app_end_time
-                    else:
-                        wifi_state_time = convert_to_s(wifi_pattern.search(line).group(1))
-                        wifi_end_time = wifi_state_time
+                    wifi_end_time = wifi_state_time
                     duration = wifi_end_time - wifi_start_time
-                    intensity = (wifi_consumption * duration / SECONDS_IN_H)
+                    energy_consumption = calculate_energy_usage(wifi_intensity, voltage, duration)
                     wifi_results.append('{}-{} ({}s), wifi, {}'
-                                        .format(wifi_start_time, wifi_end_time, duration, intensity))
+                                        .format(wifi_start_time, wifi_end_time, duration, energy_consumption))
 
             if camera_pattern.search(line):
                 cam_state = camera_pattern.search(line).group(2)
                 cam_state_time = convert_to_s(camera_pattern.search(line).group(1))
-                cam_consumption = get_consumption_value(power_profile, 'camera.avg')
-                #print cam_state_time
-                #print app_end_time
-                if cam_state == '+':
+                cam_intensity = get_amp_value(power_profile, 'camera.avg')
+                if cam_state == '+' and cam_state_time < app_end_time:
                     cam_activation = 1
                     cam_start_time = cam_state_time
-                elif cam_state == '-':
+                elif cam_state == '-' and cam_state_time < app_end_time:
                     cam_activation = 0
                     if (cam_start_time < app_end_time) and (cam_state_time > app_end_time):
                         cam_end_time = app_end_time
                     else:
                         cam_end_time = convert_to_s(camera_pattern.search(line).group(1))
                     duration = cam_end_time - cam_start_time
-                    intensity = (cam_consumption * duration / SECONDS_IN_H)
-                    # print '{}-{} ({}s), camera, {} mAh'.format(cam_start_time, cam_end_time, duration, intensity)
-                    cam_results.append('{}-{} ({}s), camera, {}'.format(cam_start_time, cam_end_time, duration, intensity))
+                    energy_consumption = calculate_energy_usage(cam_intensity, voltage, duration)
+                    cam_results.append('{}-{} ({}s), camera, {}'.format
+                                       (cam_start_time, cam_end_time, duration, energy_consumption))
 
-            if screen_pattern.search(line):
-                screen_activation = 1
-                screen_state_time = convert_to_s(screen_pattern.search(line).group(1))
-                screen_state = screen_pattern.search(line).group(2)
-                brightness = screen_pattern.search(line).group(3)
-                consumption_range = get_consumption_value(power_profile, 'screen.full') - get_consumption_value(power_profile, 'screen.on')
-                if screen_state == '+':
-                    screen_start_time = screen_state_time
-                    if brightness == 'dark':
-                        screen_consumption = get_consumption_value(power_profile, 'screen.on')
-                    elif brightness == 'dim':
-                        screen_consumption = get_consumption_value(power_profile, 'screen.on') + (consumption_range * 0.25)
-                    elif brightness == 'medium':
-                        screen_consumption = get_consumption_value(power_profile, 'screen.on') + (consumption_range * 0.50)
-                    elif brightness == 'light':
-                        screen_consumption = get_consumption_value(power_profile, 'screen.on') + (consumption_range * 0.75)
-                    elif brightness == 'bright':
-                        screen_consumption = get_consumption_value(power_profile, 'screen.full')
-                elif screen_state == '-':
+            """ Ignore batterystats entries after closing app """
+            if convert_to_s(time_pattern.search(line).group(1)) >= app_end_time:
+                if screen_activation == 1 and screen_start_time < app_end_time:
+                    duration = app_duration - screen_start_time
+                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
+                    screen_end_time = app_end_time
                     screen_activation = 0
-                    if screen_state_time > app_end_time:
-                        screen_end_time = app_end_time
-                        # print screen_end_time
-                    if (screen_start_time < app_end_time) and (screen_state_time > app_end_time):
-                        screen_end_time = app_end_time
-                    else:
-                        screen_end_time = screen_state_time
-                    duration = screen_end_time - screen_start_time
-                    intensity = (screen_consumption * duration / SECONDS_IN_H)
-                    # print '{}-{} ({}s), screen, {} mAh'.format(screen_start_time, screen_end_time, duration, intensity)
-                    screen_results.append('{}-{} ({}s), screen, {}'.format(screen_start_time, screen_end_time, duration, intensity))
+                    screen_results.append('{}-{} ({}s), screen {}, {}'.format(screen_start_time, screen_end_time,
+                                                                              duration, old_brightness, energy_consumption))
+                if wifi_activation == 1 and wifi_start_time < app_end_time:
+                    duration = app_duration - wifi_start_time
+                    energy_consumption = calculate_energy_usage(wifi_intensity, voltage, duration)
+                    wifi_end_time = app_end_time
+                    wifi_activation = 0
 
-            if wifi_activation == 1 and app_duration > 0 and wifi_start_time < app_end_time:
-                duration = app_duration - wifi_start_time
-                intensity = (wifi_consumption * duration / SECONDS_IN_H)
-                wifi_end_time = app_end_time
-                wifi_activation = 0
-                wifi_results.append('{}-{} ({}s), wifi, {}'.format(wifi_start_time, wifi_end_time, duration, intensity))
-            if cam_activation == 1 and app_duration > 0 and cam_start_time < app_end_time < cam_state_time:
-                duration = app_duration - cam_start_time
-                intensity = (cam_consumption * duration / SECONDS_IN_H)
-                cam_end_time = app_end_time
-                cam_activation = 0
-                cam_results.append('{}-{} ({}s), cam, {}'.format(cam_start_time, cam_end_time, duration, intensity))
-            if screen_activation == 1 and app_duration > 0 and screen_end_time < app_end_time:
-                duration = app_duration - screen_start_time
-                intensity = (screen_consumption * duration / SECONDS_IN_H)
-                screen_end_time = app_end_time
-                screen_activation = 0
-                # print '{}-{} ({}s), screen, {} mAh'.format(screen_start_time, duration, duration, intensity)
-                screen_results.append('{}-{} ({}s), screen, {}'
-                                      .format(screen_start_time, screen_end_time, duration, intensity))
-
-
-    with open(filename, 'w') as f:
-        writer = csv.writer(f, delimiter="\n")
-        writer.writerow(wifi_results)
-        #writer.writerow(' ')
-        writer.writerow(cam_results)
-        #writer.writerow(' ')
-        writer.writerow(screen_results)
-        #writer.writerow(' ')
-
-        # Bluetooth
-        # dsp.audio
-        # dsp.video
-        # camera.flashlight
-        # gps.on
-        # radio.active
-        # radio.scanning
-        # radio.on
+                    wifi_results.append('{}-{} ({}s), wifi, {}'.format(wifi_start_time, wifi_end_time,
+                                                                       duration, energy_consumption))
+                if cam_activation == 1 and cam_start_time < app_end_time:
+                    duration = app_duration - cam_start_time
+                    energy_consumption = calculate_energy_usage(cam_intensity, voltage, duration)
+                    cam_end_time = app_end_time
+                    cam_activation = 0
+                    cam_results.append('{}-{} ({}s), camera, {}'.format(cam_start_time, cam_end_time,
+                                                                        duration, energy_consumption))
+                else:
+                    continue
+    all_results.extend(wifi_results + cam_results + screen_results)
+    return all_results
 
 
 def get_voltage(line):
     """ Obtain voltage value """
     pattern = re.compile('volt=(\d+)')
     match = pattern.search(line)
-    return int(match.group(1))
+    return float(match.group(1)) / 1000.0
+
+
+def calculate_energy_usage(intensity, voltage, duration):
+    return intensity * voltage * duration
 
 
 def convert_to_s(line):
@@ -247,6 +252,11 @@ def convert_to_s(line):
     minutes_matches = minutes_pattern.search(line)
     hours_matches = hours_pattern.search(line)
     days_matches = days_pattern.search(line)
+
+    SECONDS_IN_MS = 1000.0
+    SECONDS_IN_M = 60.0
+    SECONDS_IN_H = 3600.0
+    SECONDS_IN_D = 86400.0
 
     if milliseconds_matches:
         s = float(milliseconds_matches.group(1)) / SECONDS_IN_MS
@@ -280,77 +290,118 @@ def convert_to_s(line):
 ''' Systrace '''
 
 
-def parse_systrace(systrace_file, power_profile, filename):
+def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
     """ Parse systrace file and calculate results """
-    file = open(systrace_file, 'r').read()
-    pattern = re.compile('(?:<.{3,4}>-\d{1,4}|kworker.+\-\d{3}).*\s(\d+\.\d+): (cpu_.*): state=(.*) cpu_id=(\d)')
-    matches = pattern.finditer(file)
-    end_time = re.findall(pattern, file)[-1][0]
-    cpu_id_list = []
-    results = []
+    with open(batterystats, 'r') as bs:
+        voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
+        voltage = float(re.findall(voltage_pattern, bs.read())[0][1]) / 1000.0
 
-    for match in matches:
-        current_time = float(match.group(1))
-        current_cpu_id = int(match.group(4))
+    with open(systrace_file, 'r') as sys:
+        f = sys.read()
+        pattern = re.compile('(?:<.{3,4}>-\d{1,4}|kworker.+\-\d{3}).*\s(\d+\.\d+): (cpu_.*): state=(.*) cpu_id=(\d)')
+        matches = pattern.finditer(f)
+        time_pattern = re.compile('(\d+\.\d+):\stracing_mark_write:\strace_event_clock_sync:\srealtime_ts=(\d+)')
+        logcat_time = parse_logcat(app, logcat)
+        systrace_time = float(time_pattern.search(f).group(2))
+        start_time = (logcat_time - systrace_time) / 1000 + float(time_pattern.search(f).group(1))
+        #end_time = (logcat_time[1] - systrace_time) / 1000 + float(time_pattern.search(f).group(1))
+        end_time = re.findall(pattern, f)[-1][0]
 
-        if (current_cpu_id not in cpu_id_list) and (current_time <= end_time):
-            cpu_id_list.append(current_cpu_id)
-        elif (current_cpu_id in cpu_id_list) and (current_time <= end_time):
-            continue
-        elif current_time > end_time:
-            break
-    for cpu_id in cpu_id_list:
-        matches = pattern.finditer(file)
-        found_first_match = 0
+        cpu_id_list = []
+        results = []
+
         for match in matches:
             current_time = float(match.group(1))
-            current_category = str(match.group(2))
-            current_state = int(match.group(3))
             current_cpu_id = int(match.group(4))
-            if (found_first_match == 0) and (current_cpu_id == cpu_id):
-                time = float(match.group(1))
-                category = str(match.group(2))
-                state = int(match.group(3))
-                cpu_id = int(match.group(4))
-                found_first_match = 1
-            if found_first_match == 1:
-                if (current_time <= end_time) and (current_cpu_id == cpu_id):
-                    if (current_category == category) and (current_state == state):
-                        pass
-                    elif current_category == category == 'cpu_idle':
-                        pass
-                    elif (current_category == category == 'cpu_frequency') and (current_state == state):
-                        pass
-                    elif (current_category == category == 'cpu_frequency') and (current_state != state):
-                        duration = current_time - time
-                        intensity = get_consumption_value(power_profile, category, state) * duration
-                        results.append('{}-{} ({}s), core {} {}, {}'
-                                       .format(time, current_time, duration, cpu_id, category, intensity))
-                        time = current_time
-                        category = current_category
-                        state = current_state
-                    elif current_category != category:
-                        duration = (current_time - time) / SECONDS_IN_H
-                        intensity = get_consumption_value(power_profile, category, state) * duration
-                        results.append('{}-{} ({}s), core {} {}, {}'
-                                       .format(time, current_time, duration, cpu_id, category, intensity))
-                        time = current_time
-                        category = current_category
-                        state = current_state
-                elif (current_time >= end_time) and (current_category == category) and (current_state == state):
-                    duration = (current_time - time) / SECONDS_IN_H
-                    intensity = get_consumption_value(power_profile, category, state) * duration
-                    results.append('{}-{} ({}s), core {} {}, {}'
-                                   .format(time, current_time, duration, cpu_id, category, intensity))
-                    results.append(' ')
-                    found_first_match = 0
+            if end_time < current_time < start_time:
+                pass
+            else:
+                if (current_cpu_id not in cpu_id_list) and (current_time <= end_time):
+                    cpu_id_list.append(current_cpu_id)
+                elif (current_cpu_id in cpu_id_list) and (current_time <= end_time):
+                    continue
+                elif current_time > end_time:
                     break
-    with open(filename, 'a') as f:
-        writer = csv.writer(f, delimiter="\n")
-        writer.writerow(results)
+        for cpu_id in cpu_id_list:
+            matches = pattern.finditer(f)
+            found_first_match = 0
+            for match in matches:
+                current_time = float(match.group(1))
+                current_category = str(match.group(2))
+                current_state = int(match.group(3))
+                current_cpu_id = int(match.group(4))
+                if end_time < current_time < start_time:
+                    pass
+                else:
+                    if (found_first_match == 0) and (current_cpu_id == cpu_id):
+                        time = float(match.group(1))
+                        category = str(match.group(2))
+                        state = int(match.group(3))
+                        cpu_id = int(match.group(4))
+                        found_first_match = 1
+                    if found_first_match == 1:
+                        if (current_time <= end_time) and (current_cpu_id == cpu_id):
+                            if (current_category == category) and (current_state == state):
+                                pass
+                            elif current_category == category == 'cpu_idle':
+                                pass
+                            elif (current_category == category == 'cpu_frequency') and (current_state == state):
+                                pass
+                            elif (current_category == category == 'cpu_frequency') and (current_state != state):
+                                duration = current_time - time
+                                cpu_intensity = get_amp_value(power_profile, category, state)
+                                energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                                results.append('{}-{} ({}s), core {} {}, {}'.format
+                                               (time, current_time, duration, cpu_id, category, energy_consumption))
+                                time = current_time
+                                category = current_category
+                                state = current_state
+                            elif current_category != category:
+                                duration = current_time - time
+                                cpu_intensity = get_amp_value(power_profile, category, state)
+                                energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                                results.append('{}-{} ({}s), core {} {}, {}'.format
+                                               (time, current_time, duration, cpu_id, category, energy_consumption))
+                                time = current_time
+                                category = current_category
+                                state = current_state
+                        elif (current_time >= end_time) and (current_category == category) and (current_state == state):
+                            duration = current_time - time
+                            cpu_intensity = get_amp_value(power_profile, category, state)
+                            energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                            results.append('{}-{} ({}s), core {} {}, {}'.format
+                                           (time, current_time, duration, cpu_id, category, energy_consumption))
+                            results.append(' ')
+                            found_first_match = 0
+                            break
+    return results
 
 
-parse_batterystats('test.androidrunner', 'batterystats_test.txt', 'power_profile_nexus7.xml', 'result.csv')
-#parse_systrace('systrace.html', 'power_profile_nexus7.xml', 'result.csv')
+''' Logcat '''
 
-#get_consumption_value('power_profile_nexus7.xml', 'cpu.speeds', '1026000')
+
+def parse_logcat(app, logcat_file):
+    """ Obtain app start and end times from logcat """
+    with open(logcat_file, 'r') as f:
+        logcat = f.read()
+        app_start_pattern = re.compile(
+            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % app)
+        app_start_date = re.findall(app_start_pattern, logcat)[0][0]
+        year = datetime.datetime.now().year
+        time_tuple = time.strptime('{}-{}'.format(year, app_start_date), '%Y-%m-%d %H:%M:%S')
+        epoch_start_time = int(time.mktime(time_tuple)) * 1000 + int(app_start_pattern.search(logcat).group(2))
+        return epoch_start_time
+
+        """ 
+        app_stop_pattern = re.compile(
+            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
+        app_stop_date = re.findall(app_stop_pattern, logcat)[0][0]
+        time_tuple = time.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
+        epoch_end_time = int(time.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))
+        return epoch_start_time, epoch_end_time
+        """
+
+### Test ###
+#parse_batterystats('test.androidrunner', 'tempfiles/batterystats_test.txt', 'tempfiles/power_profile_nexus7.xml')
+#parse_systrace('net.sourceforge.opencamera', 'tempfiles/systrace.html', 'tempfiles/logcat.txt', 'tempfiles/batterystats_test.txt', 'tempfiles/power_profile_nexus7.xml')
+#get_amp_value('tempfiles/power_profile_nexus7.xml', 'cpu.speeds', '1026000')
