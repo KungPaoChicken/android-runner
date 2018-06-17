@@ -1,7 +1,7 @@
 {
   "type": "native",
   "devices": ["nexus7"],
-  "replications": 30,
+  "replications": 3,
   "monkeyrunner_path": "/Android/Sdk/tools/bin/monkeyrunner",
   "systrace_path": "/Android/Sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/example/batterystats/power_profile.xml",
@@ -12,12 +12,8 @@
   ],
   "profilers": {
     "batterystats": {
-      "duration": 3600000
-    },
-    "trepn": {
-      "duration": 3600000,
-      "sample_interval": 100,
-      "data_points": ["battery_power"]
+      "duration": 360000,
+      "cleanup": "False"
     }
   },
   "scripts": {
@@ -28,5 +24,5 @@
     "after_run": "after_run.py",
     "after_experiment": "after_experiment.py"
   },
-  "time_between_run": 5000
+  "time_between_run": 120000
 }

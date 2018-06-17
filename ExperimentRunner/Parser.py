@@ -42,118 +42,133 @@ def parse_batterystats(app, batterystats_file, power_profile):
         app_pattern = re.compile('(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
         screen_pattern = re.compile('(0|\+\d.*ms).*([+-])screen')
         brightness_pattern = re.compile('(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
-        wifi_pattern = re.compile('(0|\+\d.*ms).*([+-])wifi_(on|running|scan)')
+        wifi_pattern = re.compile('(0|\+\d.*ms).*([+-])wifi_(running|scan)')
         camera_pattern = re.compile('(0|\+\d.*ms).*([+-])camera')
+        flashlight_pattern = re.compile('(0|\+\d.*ms).*([+-])flashlight')
+        gps_pattern = re.compile('(0|\+\d.*ms).*([+-])gps')
+        audio_pattern = re.compile('(0|\+\d.*ms).*([+-])audio')
+        video_pattern = re.compile('(0|\+\d.*ms).*([+-])video')
+        bluetooth_pattern = re.compile('(0|\+\d.*ms).*([+-])ble_scan')
+        mobile_radio_pattern = re.compile('(0|\+\d.*ms).*([+-])mobile_radio')
         time_pattern = re.compile('(0|\+\d.*ms).*')
         f = bs_file.read()
 
         app_start_time = convert_to_s(re.findall(app_pattern, f)[0][0])
         app_end_time = convert_to_s(re.findall(app_pattern, f)[-1][0])
-        app_duration = app_end_time - app_start_time
         voltage = float(re.findall(voltage_pattern, f)[0][1]) / 1000.0
-        # cam_start_time = convert_to_s(re.findall(camera_pattern, f)[0][1])
-        # wifi_start_time = convert_to_s(re.findall(wifi_pattern, f)[0][0])
-        screen_start_time = 0
 
-        old_brightness = None
+        brightness = None
+        screen_start_time = 0
+        screen_activation = 0
         wifi_activation = 0
         cam_activation = 0
-        screen_activation = 0
+        flashlight_activation = 0
+        gps_activation = 0
+        video_activation = 0
+        audio_activation = 0
+        bluetooth_activation = 0
+        mobile_radio_activation = 0
+
         screen_results = []
         wifi_results = []
         cam_results = []
+        flashlight_results = []
+        gps_results = []
+        audio_results = []
+        video_results = []
+        bluetooth_results = []
+        mobile_radio_results = []
         all_results = []
 
         bs_file.seek(0)
         for line in bs_file:
+            current_time = convert_to_s(time_pattern.search(line).group(1))
+
             if voltage_pattern.search(line):
                 voltage = get_voltage(line)
 
-            if screen_pattern.search(line):
+            if screen_activation == 0 and screen_pattern.search(line) and brightness_pattern.search(line):
                 screen_state = screen_pattern.search(line).group(2)
-                if screen_state == '+':
+                if screen_state == '+' and brightness is None:
                     screen_activation = 1
-                    unknown_start = 1
-                    old_brightness = 'dark'
-                    screen_intensity = get_amp_value(power_profile, 'screen.on')
-                    screen_start_time = convert_to_s(time_pattern.search(line).group(1))
-            if screen_activation == 1 and brightness_pattern.search(line):
-                screen_state_time = convert_to_s(brightness_pattern.search(line).group(1))
+                    screen_start_time = current_time
+                    brightness = brightness_pattern.search(line).group(2)
+            elif screen_activation == 0 and screen_pattern.search(line):
+                screen_state = screen_pattern.search(line).group(2)
+                if screen_state == '+' and brightness is None:
+                    screen_activation = 1
+                    screen_start_time = current_time
+                    brightness = 'dark'
+            elif screen_activation == 1 and brightness_pattern.search(line):
+                if screen_start_time < app_start_time:
+                    screen_start_time = app_start_time
+                screen_end_time = current_time
+                duration = screen_end_time - screen_start_time
+                intensity = get_screen_intensity(brightness, power_profile)
+                energy_consumption = calculate_energy_usage(intensity, voltage, duration)
+                if screen_end_time >= app_start_time:
+                    screen_results.append('{},{},{},{} screen,{}'.format(
+                        screen_start_time - app_start_time, screen_end_time - app_start_time,
+                        duration, brightness, energy_consumption))
                 brightness = brightness_pattern.search(line).group(2)
-                intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(
-                    power_profile, 'screen.on')
-                if unknown_start == 1:
-                    unknown_start = 0
-                    screen_end_time = screen_state_time
-                    duration = screen_end_time - screen_start_time
-                    if duration == 0:
-                        pass
-                    else:
-                        energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
-                        screen_results.append('{},{},{},{} screen,{}'.format
-                                              (screen_start_time, screen_end_time, duration,
-                                               old_brightness, energy_consumption))
-                        screen_start_time = screen_state_time
-                        old_brightness = None
-                if screen_activation == 1 and unknown_start == 0 and old_brightness is None:
-                    screen_start_time = screen_state_time
-                    if brightness == 'dark':
-                        screen_intensity = get_amp_value(power_profile, 'screen.on')
-                    elif brightness == 'dim':
-                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.25)
-                    elif brightness == 'medium':
-                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.50)
-                    elif brightness == 'light':
-                        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.75)
-                    elif brightness == 'bright':
-                        screen_intensity = get_amp_value(power_profile, 'screen.full')
-                    old_brightness = brightness
-                elif screen_activation == 1 and unknown_start == 0 and old_brightness is not None:
-                    screen_end_time = screen_state_time
-                    duration = screen_end_time - screen_start_time
-                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
-                    if screen_start_time == screen_end_time:
-                        #old_brightness = brightness
-                        pass
-                    else:
-                        screen_results.append('{},{},{},{} screen,{}'.format
-                                              (screen_start_time, screen_end_time, duration,
-                                               old_brightness, energy_consumption))
-                    screen_start_time = screen_state_time
-                    old_brightness = brightness
-                elif screen_activation == 1 and screen_state == '-':
+                screen_start_time = current_time
+            elif screen_activation == 1 and current_time >= app_end_time:
+                screen_activation = 0
+                if screen_start_time < app_start_time:
+                    screen_start_time = app_start_time
+                screen_end_time = app_end_time
+                duration = screen_end_time - screen_start_time
+                intensity = get_screen_intensity(brightness, power_profile)
+                energy_consumption = calculate_energy_usage(intensity, voltage, duration)
+                if screen_end_time >= app_start_time and duration != 0:
+                    screen_results.append('{},{},{},{} screen,{}'.format(
+                        screen_start_time - app_start_time, screen_end_time - app_start_time,
+                        duration, brightness, energy_consumption))
+            elif screen_activation == 1 and screen_pattern.search(line):
+                screen_state = screen_pattern.search(line).group(2)
+                if screen_state == '-':
                     screen_activation = 0
-                    if screen_state_time > app_end_time:
-                        screen_end_time = app_end_time
-                    if (screen_start_time < app_end_time) and (screen_state_time > app_end_time):
-                        screen_end_time = app_end_time
-                    else:
-                        screen_end_time = screen_state_time
+                    if screen_start_time < app_start_time:
+                        screen_start_time = app_start_time - app_start_time
+                    screen_end_time = current_time - app_start_time
                     duration = screen_end_time - screen_start_time
-                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
-                    screen_results.append('{},{},{},{} screen,{}'.format
-                                          (screen_start_time, screen_end_time, duration,
-                                           brightness, energy_consumption))
+                    intensity = get_screen_intensity(brightness, power_profile)
+                    energy_consumption = calculate_energy_usage(intensity, voltage, duration)
+                    if screen_end_time >= app_start_time:
+                        screen_results.append('{},{},{},{} screen,{}'.format(
+                            screen_start_time - app_start_time, screen_end_time - app_start_time,
+                            duration, brightness, energy_consumption))
 
             if wifi_pattern.search(line):
                 wifi_state = wifi_pattern.search(line).group(3)
-                wifi_state_time = convert_to_s(wifi_pattern.search(line).group(1))
-                if wifi_pattern.search(line).group(2) == '+' and wifi_state_time < app_end_time:
+                if wifi_pattern.search(line).group(2) == '+' and current_time < app_end_time:
                     wifi_activation = 1
-                    wifi_start_time = wifi_state_time
-                    if wifi_state == 'on':
-                        wifi_intensity = get_amp_value(power_profile, 'wifi.on')
+                    if current_time < app_start_time:
+                        wifi_start_time = app_start_time
+                    else:
+                        wifi_start_time = current_time
                     if wifi_state == 'running':
+                        wifi_intensity = get_amp_value(power_profile, 'wifi.on')
+                    if wifi_state == 'wifi_radio':
                         wifi_intensity = get_amp_value(power_profile, 'wifi.active')
                     if wifi_state == 'scan':
                         wifi_intensity = get_amp_value(power_profile, 'wifi.scan')
-                elif wifi_pattern.search(line).group(2) == '-' and wifi_state_time < app_end_time:
+                elif wifi_activation == 1 and wifi_pattern.search(line).group(2) == '-' and current_time < app_end_time:
                     wifi_activation = 0
-                    wifi_end_time = wifi_state_time
+                    wifi_end_time = current_time
                     duration = wifi_end_time - wifi_start_time
                     energy_consumption = calculate_energy_usage(wifi_intensity, voltage, duration)
-                    wifi_results.append('{},{},{},wifi,{}'
-                                        .format(wifi_start_time, wifi_end_time, duration, energy_consumption))
+                    wifi_results.append('{},{},{},wifi {},{}'.format(
+                        wifi_start_time - app_start_time, wifi_end_time - app_start_time, duration,
+                        wifi_state, energy_consumption))
+            if wifi_activation == 1 and current_time >= app_end_time:
+                wifi_activation = 0
+                wifi_end_time = app_end_time
+                duration = wifi_end_time - wifi_start_time
+                energy_consumption = calculate_energy_usage(wifi_intensity, voltage, duration)
+                wifi_results.append('{},{},{},wifi {},{}'.format(
+                    wifi_start_time - app_start_time, wifi_end_time - app_start_time, duration,
+                    wifi_state, energy_consumption))
 
             if camera_pattern.search(line):
                 cam_state = camera_pattern.search(line).group(2)
@@ -170,38 +185,179 @@ def parse_batterystats(app, batterystats_file, power_profile):
                         cam_end_time = convert_to_s(camera_pattern.search(line).group(1))
                     duration = cam_end_time - cam_start_time
                     energy_consumption = calculate_energy_usage(cam_intensity, voltage, duration)
-                    cam_results.append('{},{},{},camera,{}'.format
-                                       (cam_start_time, cam_end_time, duration, energy_consumption))
+                    cam_results.append('{},{},{},camera,{}'.format(
+                        cam_start_time - app_start_time, cam_end_time - app_start_time, duration, energy_consumption))
+            if cam_activation == 1 and current_time >= app_end_time:
+                cam_end_time = app_end_time
+                cam_activation = 0
+                duration = cam_end_time - cam_start_time
+                energy_consumption = calculate_energy_usage(cam_intensity, voltage, duration)
+                cam_results.append('{},{},{},camera,{}'.format(
+                    cam_start_time - app_start_time, cam_end_time - app_start_time, duration, energy_consumption))
 
-            """ Ignore batterystats entries after closing app """
-            if convert_to_s(time_pattern.search(line).group(1)) >= app_end_time:
-                if screen_activation == 1 and screen_start_time < app_end_time:
-                    duration = app_duration - screen_start_time
-                    energy_consumption = calculate_energy_usage(screen_intensity, voltage, duration)
-                    screen_end_time = app_end_time
-                    screen_activation = 0
-                    screen_results.append('{},{},{},{} screen,{}'
-                                          .format(screen_start_time, screen_end_time, duration,
-                                                  old_brightness, energy_consumption))
-                if wifi_activation == 1 and wifi_start_time < app_end_time:
-                    duration = app_duration - wifi_start_time
-                    energy_consumption = calculate_energy_usage(wifi_intensity, voltage, duration)
-                    wifi_end_time = app_end_time
-                    wifi_activation = 0
+            if flashlight_pattern.search(line):
+                flashlight_state = flashlight_pattern.search(line).group(2)
+                flashlight_state_time = convert_to_s(cflashlight_pattern.search(line).group(1))
+                flashlight_intensity = get_amp_value(power_profile, 'camera.flashlight')
+                if flashlight_state == '+' and flashlight_state_time < app_end_time:
+                    flashlight_activation = 1
+                    flashlight_start_time = flashlight_state_time
+                elif flashlight_state == '-' and flashlight_state_time < app_end_time:
+                    flashlight_activation = 0
+                    if (flashlight_start_time < app_end_time) and (flashlight_state_time > app_end_time):
+                        flashlight_end_time = app_end_time
+                    else:
+                        flashlight_end_time = convert_to_s(flashlight_pattern.search(line).group(1))
+                    duration = flashlight_end_time - flashlight_start_time
+                    energy_consumption = calculate_energy_usage(flashlight_intensity, voltage, duration)
+                    flashlight_results.append('{},{},{},flashlight,{}'.format(
+                        flashlight_start_time - app_start_time, flashlight_end_time - app_start_time,
+                        duration, energy_consumption))
+            if flashlight_activation == 1 and current_time >= app_end_time:
+                flashlight_end_time = app_end_time
+                flashlight_activation = 0
+                duration = flashlight_end_time - flashlight_start_time
+                energy_consumption = calculate_energy_usage(flashlight_intensity, voltage, duration)
+                flashlight_results.append('{},{},{},flashlight,{}'.format(
+                    flashlight_start_time - app_start_time, flashlight_end_time - app_start_time,
+                    duration, energy_consumption))
 
-                    wifi_results.append('{},{},{},wifi,{}'.format(wifi_start_time, wifi_end_time, duration,
-                                                                     energy_consumption))
-                if cam_activation == 1 and cam_start_time < app_end_time:
-                    duration = app_duration - cam_start_time
-                    energy_consumption = calculate_energy_usage(cam_intensity, voltage, duration)
-                    cam_end_time = app_end_time
-                    cam_activation = 0
-                    cam_results.append('{},{},{},camera,{}'.format(cam_start_time, cam_end_time, duration,
-                                                                      energy_consumption))
-                else:
-                    continue
-    all_results.extend(wifi_results + cam_results + screen_results)
+            if gps_pattern.search(line):
+                gps_state = gps_pattern.search(line).group(2)
+                gps_state_time = convert_to_s(gps_pattern.search(line).group(1))
+                gps_intensity = get_amp_value(power_profile, 'gps.on')
+                if gps_state == '+' and gps_state_time < app_end_time:
+                    gps_activation = 1
+                    gps_start_time = gps_state_time
+                elif gps_state == '-' and gps_state_time < app_end_time:
+                    gps_activation = 0
+                    if (gps_start_time < app_end_time) and (gps_state_time > app_end_time):
+                        gps_end_time = app_end_time
+                    else:
+                        gps_end_time = convert_to_s(gps_pattern.search(line).group(1))
+                    duration = gps_end_time - gps_start_time
+                    energy_consumption = calculate_energy_usage(gps_intensity, voltage, duration)
+                    gps_results.append('{},{},{},gps,{}'.format(
+                        gps_start_time - app_start_time, gps_end_time - app_start_time, duration, energy_consumption))
+            if gps_activation == 1 and current_time >= app_end_time:
+                gps_end_time = app_end_time
+                gps_activation = 0
+                duration = gps_end_time - gps_start_time
+                energy_consumption = calculate_energy_usage(gps_intensity, voltage, duration)
+                gps_results.append('{},{},{},gps,{}'.format(
+                    gps_start_time - app_start_time, gps_end_time - app_start_time, duration, energy_consumption))
+
+            if audio_pattern.search(line):
+                audio_state = audio_pattern.search(line).group(2)
+                audio_state_time = convert_to_s(audio_pattern.search(line).group(1))
+                audio_intensity = get_amp_value(power_profile, 'dsp.audio')
+                if audio_state == '+' and audio_state_time < app_end_time:
+                    audio_activation = 1
+                    audio_start_time = audio_state_time
+                elif audio_state == '-' and audio_state_time < app_end_time:
+                    audio_activation = 0
+                    if (audio_start_time < app_end_time) and (audio_state_time > app_end_time):
+                        audio_end_time = app_end_time
+                    else:
+                        audio_end_time = convert_to_s(audio_pattern.search(line).group(1))
+                    duration = audio_end_time - audio_start_time
+                    energy_consumption = calculate_energy_usage(audio_intensity, voltage, duration)
+                    audio_results.append('{},{},{},audio,{}'.format(
+                        audio_start_time - app_start_time, audio_end_time - app_start_time,
+                        duration, energy_consumption))
+            if audio_activation == 1 and current_time >= app_end_time:
+                audio_end_time = app_end_time
+                audio_activation = 0
+                duration = audio_end_time - audio_start_time
+                energy_consumption = calculate_energy_usage(audio_intensity, voltage, duration)
+                audio_results.append('{},{},{},audio,{}'.format(
+                    audio_start_time - app_start_time, audio_end_time - app_start_time, duration, energy_consumption))
+
+            if video_pattern.search(line):
+                video_state = video_pattern.search(line).group(2)
+                video_state_time = convert_to_s(video_pattern.search(line).group(1))
+                video_intensity = get_amp_value(power_profile, 'dsp.video')
+                if video_state == '+' and video_state_time < app_end_time:
+                    video_activation = 1
+                    video_start_time = video_state_time
+                elif video_state == '-' and video_state_time < app_end_time:
+                    video_activation = 0
+                    if (video_start_time < app_end_time) and (video_state_time > app_end_time):
+                        video_end_time = app_end_time
+                    else:
+                        video_end_time = convert_to_s(video_pattern.search(line).group(1))
+                    duration = video_end_time - video_start_time
+                    energy_consumption = calculate_energy_usage(video_intensity, voltage, duration)
+                    video_results.append('{},{},{},video,{}'.format(
+                        video_start_time - app_start_time, video_end_time - app_start_time,
+                        duration, energy_consumption))
+            if video_activation == 1 and current_time >= app_end_time:
+                video_end_time = app_end_time
+                video_activation = 0
+                duration = video_end_time - video_start_time
+                energy_consumption = calculate_energy_usage(video_intensity, voltage, duration)
+                video_results.append('{},{},{},video,{}'.format(
+                    video_start_time - app_start_time, video_end_time - app_start_time, duration, energy_consumption))
+
+            if bluetooth_pattern.search(line):
+                bluetooth_state = bluetooth_pattern.search(line).group(2)
+                bluetooth_state_time = convert_to_s(bluetooth_pattern.search(line).group(1))
+                bluetooth_intensity = get_amp_value(power_profile, 'bluetooth.on')
+                if bluetooth_state == '+' and bluetooth_state_time < app_end_time:
+                    bluetooth_activation = 1
+                    bluetooth_start_time = bluetooth_state_time
+                elif bluetooth_state == '-' and bluetooth_state_time < app_end_time:
+                    bluetooth_activation = 0
+                    if (bluetooth_start_time < app_end_time) and (bluetooth_state_time > app_end_time):
+                        bluetooth_end_time = app_end_time
+                    else:
+                        bluetooth_end_time = convert_to_s(bluetooth_pattern.search(line).group(1))
+                    duration = bluetooth_end_time - bluetooth_start_time
+                    energy_consumption = calculate_energy_usage(bluetooth_intensity, voltage, duration)
+                    bluetooth_results.append('{},{},{},bluetooth,{}'.format(
+                        bluetooth_start_time - app_start_time, bluetooth_end_time - app_start_time,
+                        duration, energy_consumption))
+            if bluetooth_activation == 1 and current_time >= app_end_time:
+                bluetooth_end_time = app_end_time
+                bluetooth_activation = 0
+                duration = bluetooth_end_time - bluetooth_start_time
+                energy_consumption = calculate_energy_usage(bluetooth_intensity, voltage, duration)
+                bluetooth_results.append('{},{},{},bluetooth,{}'.format(
+                    bluetooth_start_time - app_start_time, bluetooth_end_time - app_start_time,
+                    duration, energy_consumption))
+
+            if mobile_radio_pattern.search(line):
+                mobile_radio_state = mobile_radio_pattern.search(line).group(2)
+                mobile_radio_state_time = convert_to_s(mobile_radio_pattern.search(line).group(1))
+                mobile_radio_intensity = get_amp_value(power_profile, 'radio.on')
+                if mobile_radio_state == '+' and mobile_radio_state_time < app_end_time:
+                    mobile_radio_activation = 1
+                    mobile_radio_start_time = mobile_radio_state_time
+                elif mobile_radio_state == '-' and mobile_radio_state_time < app_end_time:
+                    mobile_radio_activation = 0
+                    if (mobile_radio_start_time < app_end_time) and (mobile_radio_state_time > app_end_time):
+                        mobile_radio_end_time = app_end_time
+                    else:
+                        mobile_radio_end_time = convert_to_s(mobile_radio_pattern.search(line).group(1))
+                    duration = mobile_radio_end_time - mobile_radio_start_time
+                    energy_consumption = calculate_energy_usage(mobile_radio_intensity, voltage, duration)
+                    mobile_radio_results.append('{},{},{},mobile_radio,{}'.format(
+                        mobile_radio_start_time - app_start_time, mobile_radio_end_time - app_start_time,
+                        duration, energy_consumption))
+            if mobile_radio_activation == 1 and current_time >= app_end_time:
+                mobile_radio_end_time = app_end_time
+                mobile_radio_activation = 0
+                duration = mobile_radio_end_time - mobile_radio_start_time
+                energy_consumption = calculate_energy_usage(mobile_radio_intensity, voltage, duration)
+                mobile_radio_results.append('{},{},{},mobile_radio,{}'.format(
+                    mobile_radio_start_time - app_start_time, mobile_radio_end_time - app_start_time,
+                    duration, energy_consumption))
+
+    all_results.extend(screen_results + wifi_results + cam_results + flashlight_results +
+                       gps_results + audio_results + video_results + bluetooth_results + mobile_radio_results)
     return all_results
+    #for result in all_results:
+        #print result
 
 
 def get_voltage(line):
@@ -209,6 +365,21 @@ def get_voltage(line):
     pattern = re.compile('volt=(\d+)')
     match = pattern.search(line)
     return float(match.group(1)) / 1000.0
+
+
+def get_screen_intensity(brightness, power_profile):
+    intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(power_profile, 'screen.on')
+    if brightness == 'dark':
+        screen_intensity = get_amp_value(power_profile, 'screen.on')
+    elif brightness == 'dim':
+        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.25)
+    elif brightness == 'medium':
+        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.50)
+    elif brightness == 'light':
+        screen_intensity = get_amp_value(power_profile, 'screen.on') + (intensity_range * 0.75)
+    elif brightness == 'bright':
+        screen_intensity = get_amp_value(power_profile, 'screen.full')
+    return screen_intensity
 
 
 def calculate_energy_usage(intensity, voltage, duration):
@@ -295,11 +466,12 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                 pass
             else:
                 if (current_cpu_id not in cpu_id_list) and (current_time <= end_time):
-                    cpu_id_list.append(current_cpu_id)
+                    cpu_id_list.append(int(current_cpu_id))
                 elif (current_cpu_id in cpu_id_list) and (current_time <= end_time):
                     continue
                 elif current_time > end_time:
                     break
+        cpu_id_list.sort()
         for cpu_id in cpu_id_list:
             matches = pattern.finditer(f)
             found_first_match = 0
@@ -311,7 +483,6 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                 if current_time > end_time or current_time < start_time:
                     pass
                 else:
-                    #current_time = float(match.group(1))
                     if (found_first_match == 0) and (current_cpu_id == cpu_id):
                         time = float(match.group(1))
                         category = str(match.group(2))
@@ -331,17 +502,18 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                                 cpu_intensity = get_amp_value(power_profile, category, state)
                                 energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                                 results.append('{},{},{},core {} {},{}'.format
-                                               (time - start_time, current_time - start_time, duration, cpu_id, category, energy_consumption))
+                                               (time - start_time, current_time - start_time,
+                                                duration, cpu_id, category, energy_consumption))
                                 time = current_time
                                 category = current_category
                                 state = current_state
                             elif current_category != category:
                                 duration = current_time - time
-                                #print current_time
                                 cpu_intensity = get_amp_value(power_profile, category, state)
                                 energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                                 results.append('{},{},{},core {} {},{}'.format
-                                               (time - start_time, current_time - start_time, duration, cpu_id, category, energy_consumption))
+                                               (time - start_time, current_time - start_time,
+                                                duration, cpu_id, category, energy_consumption))
                                 time = current_time
                                 category = current_category
                                 state = current_state
@@ -350,13 +522,19 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                         cpu_intensity = get_amp_value(power_profile, category, state)
                         energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                         results.append('{},{},{},core {} {},{}'.format
-                                       (time - start_time, current_time - start_time, duration, cpu_id, category, energy_consumption))
-                        #results.append(' ')
+                                       (time - start_time, current_time - start_time,
+                                        duration, cpu_id, category, energy_consumption))
+                        results.append(' ')
                         found_first_match = 0
                         break
     return results
-
-
+    """
+    import csv
+    with open('results.csv', 'w') as f:
+        writer = csv.writer(f, delimiter="\n")
+        writer.writerow(['Start time,End time,Duration (seconds),Component,Energy Consumption (Joule)'])
+        writer.writerow(results)
+    """
 ''' Logcat '''
 
 
@@ -379,5 +557,5 @@ def parse_logcat(app, logcat_file):
         return unix_start_time, unix_end_time
 
 # Test
-# parse_systrace('net.sourceforge.opencamera', 'Test/systrace.html', 'Test/logcat.txt', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
-# parse_batterystats('net.sourceforge.opencamera', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
+#parse_systrace('net.sourceforge.opencamera', 'Test/systrace.html', 'Test/logcat.txt', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
+#parse_batterystats('net.sourceforge.opencamera', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
