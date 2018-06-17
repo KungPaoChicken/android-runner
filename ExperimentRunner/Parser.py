@@ -7,7 +7,7 @@ import datetime as dt
 ''' Power Profile '''
 
 
-def get_amp_value(power_profile, component, state=0):
+def get_amp_value(power_profile, component, state=''):
     """ Retrieve mAh for component in power_profile.xml and convert to Ah """
     xmlfile = minidom.parse(power_profile)
     itemlist = xmlfile.getElementsByTagName('item')
@@ -106,7 +106,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
                 duration = screen_end_time - screen_start_time
                 intensity = get_screen_intensity(brightness, power_profile)
                 energy_consumption = calculate_energy_usage(intensity, voltage, duration)
-                if screen_end_time >= app_start_time:
+                if screen_end_time >= app_start_time and duration != 0:
                     screen_results.append('{},{},{},{} screen,{}'.format(
                         screen_start_time - app_start_time, screen_end_time - app_start_time,
                         duration, brightness, energy_consumption))
@@ -149,8 +149,6 @@ def parse_batterystats(app, batterystats_file, power_profile):
                         wifi_start_time = current_time
                     if wifi_state == 'running':
                         wifi_intensity = get_amp_value(power_profile, 'wifi.on')
-                    if wifi_state == 'wifi_radio':
-                        wifi_intensity = get_amp_value(power_profile, 'wifi.active')
                     if wifi_state == 'scan':
                         wifi_intensity = get_amp_value(power_profile, 'wifi.scan')
                 elif wifi_activation == 1 and wifi_pattern.search(line).group(2) == '-' and current_time < app_end_time:
@@ -197,7 +195,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
 
             if flashlight_pattern.search(line):
                 flashlight_state = flashlight_pattern.search(line).group(2)
-                flashlight_state_time = convert_to_s(cflashlight_pattern.search(line).group(1))
+                flashlight_state_time = convert_to_s(flashlight_pattern.search(line).group(1))
                 flashlight_intensity = get_amp_value(power_profile, 'camera.flashlight')
                 if flashlight_state == '+' and flashlight_state_time < app_end_time:
                     flashlight_activation = 1
@@ -356,8 +354,6 @@ def parse_batterystats(app, batterystats_file, power_profile):
     all_results.extend(screen_results + wifi_results + cam_results + flashlight_results +
                        gps_results + audio_results + video_results + bluetooth_results + mobile_radio_results)
     return all_results
-    #for result in all_results:
-        #print result
 
 
 def get_voltage(line):
@@ -478,63 +474,68 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
             for match in matches:
                 current_time = float(match.group(1))
                 current_category = str(match.group(2))
-                current_state = int(match.group(3))
+                current_state = str(match.group(3))
                 current_cpu_id = int(match.group(4))
                 if current_time > end_time or current_time < start_time:
                     pass
                 else:
                     if (found_first_match == 0) and (current_cpu_id == cpu_id):
-                        time = float(match.group(1))
-                        category = str(match.group(2))
-                        state = int(match.group(3))
-                        cpu_id = int(match.group(4))
+                        time = current_time
+                        category = current_category
+                        state = current_state
+                        cpu_id = current_cpu_id
                         found_first_match = 1
-                    if found_first_match == 1:
-                        if (current_time <= end_time) and (current_cpu_id == cpu_id):
-                            if (current_category == category) and (current_state == state):
-                                pass
-                            elif current_category == category == 'cpu_idle':
-                                pass
-                            elif (current_category == category == 'cpu_frequency') and (current_state == state):
-                                pass
-                            elif (current_category == category == 'cpu_frequency') and (current_state != state):
-                                duration = current_time - time
-                                cpu_intensity = get_amp_value(power_profile, category, state)
-                                energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
-                                results.append('{},{},{},core {} {},{}'.format
-                                               (time - start_time, current_time - start_time,
-                                                duration, cpu_id, category, energy_consumption))
-                                time = current_time
-                                category = current_category
-                                state = current_state
-                            elif current_category != category:
-                                duration = current_time - time
-                                cpu_intensity = get_amp_value(power_profile, category, state)
-                                energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
-                                results.append('{},{},{},core {} {},{}'.format
-                                               (time - start_time, current_time - start_time,
-                                                duration, cpu_id, category, energy_consumption))
-                                time = current_time
-                                category = current_category
-                                state = current_state
-                    elif (current_time >= end_time) and (current_category == category) and (current_state == state):
-                        duration = current_time - time
+                    if found_first_match == 1 and (current_cpu_id == cpu_id):
+                        if (current_category == category) and (current_state == state):
+                            pass
+                        elif current_category == category == 'cpu_idle':
+                            pass
+                        elif category == 'cpu_idle' and current_category == 'cpu_frequency':
+                            duration = current_time - time
+                            cpu_intensity = get_amp_value(power_profile, 'cpu.idle')
+                            energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                            results.append('{},{},{},core {} {},{}'.format
+                                           (time, current_time,
+                                            duration, cpu_id, category, energy_consumption))
+                            time = current_time
+                            category = current_category
+                            state = current_state
+                        elif (current_category == category == 'cpu_frequency') and (current_state == state):
+                            pass
+                        elif (current_category == category == 'cpu_frequency') and (current_state != state):
+                            duration = current_time - time
+                            cpu_intensity = get_amp_value(power_profile, category, state)
+                            energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                            results.append('{},{},{},core {} {},{}'.format
+                                           (time, current_time,
+                                            duration, cpu_id, category, energy_consumption))
+                            time = current_time
+                            category = current_category
+                            state = current_state
+                        elif current_category != category:
+                            duration = current_time - time
+                            cpu_intensity = get_amp_value(power_profile, category, state)
+                            energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                            results.append('{},{},{},core {} {},{}'.format
+                                           (time, current_time,
+                                            duration, cpu_id, category, energy_consumption))
+                            time = current_time
+                            category = current_category
+                            state = current_state
+                if (current_time >= end_time) and (current_category == category) and (current_state == state):
+                    duration = current_time - time
+                    if current_category == 'cpu_idle':
+                        cpu_intensity = get_amp_value(power_profile, 'cpu.idle')
+                    else:
                         cpu_intensity = get_amp_value(power_profile, category, state)
-                        energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
-                        results.append('{},{},{},core {} {},{}'.format
-                                       (time - start_time, current_time - start_time,
-                                        duration, cpu_id, category, energy_consumption))
-                        results.append(' ')
-                        found_first_match = 0
-                        break
+                    energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
+                    results.append('{},{},{},core {} {},{}'.format
+                                   (time, current_time,
+                                    duration, cpu_id, category, energy_consumption))
+                    break
     return results
-    """
-    import csv
-    with open('results.csv', 'w') as f:
-        writer = csv.writer(f, delimiter="\n")
-        writer.writerow(['Start time,End time,Duration (seconds),Component,Energy Consumption (Joule)'])
-        writer.writerow(results)
-    """
+
+
 ''' Logcat '''
 
 
@@ -555,7 +556,3 @@ def parse_logcat(app, logcat_file):
         time_tuple = t.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
         unix_end_time = int(t.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))
         return unix_start_time, unix_end_time
-
-# Test
-#parse_systrace('net.sourceforge.opencamera', 'Test/systrace.html', 'Test/logcat.txt', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
-#parse_batterystats('net.sourceforge.opencamera', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
