@@ -79,7 +79,7 @@ class Batterystats(Profiler):
         # Estimate total consumption
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
-        energy_consumed = float(charge) * (float(volt) / 1000) * 3600
+        energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
 
         # Get Systrace data
         systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile)
