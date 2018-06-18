@@ -1,6 +1,6 @@
 import os.path as op
 import os
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen
 import time
 from util import makedirs, load_json
 import csv
@@ -17,9 +17,9 @@ class Batterystats(Profiler):
         self.profile = False
         self.duration = int(Tests.is_integer(config.get('duration', 0))) / 1000
         config_file = load_json(op.join(paths.CONFIG_DIR, 'config.json'))
+        self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
-        self.app = config_file['paths']
         self.cleanup = config.get('cleanup')
 
     def start_profiling(self, device, **kwargs):
@@ -37,7 +37,10 @@ class Batterystats(Profiler):
         global results_file
         output_dir = op.join(paths.OUTPUT_DIR, 'android/')
         makedirs(output_dir)
-        app = kwargs.get('app', None)
+        if self.type == 'native':
+            app = kwargs.get('app', None)
+        elif self.type == 'web':
+            app = 'com.android.chrome'
 
         # Create files
         systrace_file = '{}systrace_{}_{}.html'.format(output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
@@ -65,8 +68,7 @@ class Batterystats(Profiler):
         # device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
-        time.sleep(15)
-
+        time.sleep(10)
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
         device.pull('/mnt/sdcard/logcat.txt', logcat_file)
         device.shell('rm -f /mnt/sdcard/logcat.txt')
