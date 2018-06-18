@@ -495,7 +495,7 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                             cpu_intensity = get_amp_value(power_profile, 'cpu.idle')
                             energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                             results.append('{},{},{},core {} {},{}'.format
-                                           (time, current_time,
+                                           (time - start_time, current_time - start_time,
                                             duration, cpu_id, category, energy_consumption))
                             time = current_time
                             category = current_category
@@ -507,7 +507,7 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                             cpu_intensity = get_amp_value(power_profile, category, state)
                             energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                             results.append('{},{},{},core {} {},{}'.format
-                                           (time, current_time,
+                                           (time - start_time, current_time - start_time,
                                             duration, cpu_id, category, energy_consumption))
                             time = current_time
                             category = current_category
@@ -517,7 +517,7 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                             cpu_intensity = get_amp_value(power_profile, category, state)
                             energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                             results.append('{},{},{},core {} {},{}'.format
-                                           (time, current_time,
+                                           (time - start_time, current_time - start_time,
                                             duration, cpu_id, category, energy_consumption))
                             time = current_time
                             category = current_category
@@ -530,12 +530,17 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile):
                         cpu_intensity = get_amp_value(power_profile, category, state)
                     energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                     results.append('{},{},{},core {} {},{}'.format
-                                   (time, current_time,
+                                   (time - start_time, current_time - start_time,
                                     duration, cpu_id, category, energy_consumption))
                     break
     return results
-
-
+    """
+    import csv
+    with open('results.csv', 'w') as f:
+        writer = csv.writer(f, delimiter="\n")
+        writer.writerow(['Start time,End time,Duration (seconds),Component,Energy Consumption (Joule)'])
+        writer.writerow(results)
+    """
 ''' Logcat '''
 
 
@@ -556,3 +561,7 @@ def parse_logcat(app, logcat_file):
         time_tuple = t.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
         unix_end_time = int(t.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))
         return unix_start_time, unix_end_time
+
+# Test
+#('test.androidrunner', 'Test/systrace.html', 'Test/logcat.txt', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
+#parse_batterystats('net.sourceforge.opencamera', 'Test/batterystats_history.txt', 'Test/power_profile.xml')
