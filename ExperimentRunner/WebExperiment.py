@@ -44,8 +44,9 @@ class WebExperiment(Experiment):
     def interaction(self, device, path, run, *args, **kwargs):
         browser = args[0]
         browser.load_url(device, path)
-        time.sleep(self.duration)
+        #time.sleep(5)
         super(WebExperiment, self).interaction(device, path, run, *args, **kwargs)
+        time.sleep(self.duration)
 
     def after_run(self, device, path, run, *args, **kwargs):
         self.scripts.run('before_close', device, device.id, device.current_activity())

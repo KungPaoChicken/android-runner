@@ -2,6 +2,7 @@ import os.path as op
 import os
 from subprocess import Popen, PIPE
 import time
+import timeit
 from util import makedirs, load_json
 import csv
 
@@ -55,19 +56,20 @@ class Batterystats(Profiler):
         self.get_data(device, app)
 
     def get_data(self, device, app):
-        """Runs the profiling methods for self.duration milliseconds in a separate thread"""
+        """Runs the systrace method for self.duration seconds in a separate thread"""
         # Run systrace
-        Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
+        global sysproc
+        sysproc = Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
               (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
         #time.sleep(self.duration)
 
     def stop_profiling(self, device, **kwargs):
         super(Batterystats, self).stop_profiling(device, **kwargs)
         self.profile = False
+        os.system('\n')
         # device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
-        time.sleep(30)
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
         device.pull('/mnt/sdcard/logcat.txt', logcat_file)
         device.shell('rm -f /mnt/sdcard/logcat.txt')
@@ -83,6 +85,7 @@ class Batterystats(Profiler):
         energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
 
         # Get Systrace data
+        sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
         systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile, cores)
 
@@ -91,8 +94,8 @@ class Batterystats(Profiler):
             writer.writerow(['Start Time,End Time,Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
-            writer.writerow([''])
-            writer.writerow([',,,Estimated total consumption:,{}'.format(energy_consumed)])
+            writer.writerow([',,,Total:'])
+            writer.writerow([',,,Internal Android Estimation:,{}'.format(energy_consumed)])
 
         if self.cleanup == 'True':
             os.remove(systrace_file)
