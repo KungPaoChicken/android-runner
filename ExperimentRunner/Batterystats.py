@@ -91,13 +91,14 @@ class Batterystats(Profiler):
 
         with open(results_file, 'w+') as results:
             writer = csv.writer(results, delimiter="\n")
-            writer.writerow(['Start Time,End Time,Duration (Seconds),Component,Energy Consumption (Joule)'])
+            writer.writerow(['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
-            writer.writerow([',,,Total:'])
-            writer.writerow([',,,Internal Android Estimation:,{}'.format(energy_consumed)])
+            writer.writerow([''])
+            writer.writerow(['Total:'])
+            writer.writerow(['Android Internal Estimation:,{}'.format(energy_consumed)])
 
-        if self.cleanup == 'True':
+        if self.cleanup is True:
             os.remove(systrace_file)
             os.remove(logcat_file)
             os.remove(batterystats_file)

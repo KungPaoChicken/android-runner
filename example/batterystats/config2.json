@@ -1,18 +1,24 @@
 {
   "type": "native",
   "devices": ["nexus7"],
-  "replications": 1,
-  "monkeyrunner_path": "/Android/Sdk/tools/bin/monkeyrunner",
-  "systrace_path": "/Android/Sdk/platform-tools/systrace/systrace.py",
+  "replications": 3,
+  "duration": 60000,
+  "monkeyrunner_path": "/home/user/Android/Sdk/tools/bin/monkeyrunner",
+  "systrace_path": "/home/user/Android/Sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/example/batterystats/power_profile.xml",
-  "dmtracedump_path": "/Android/Sdk/platform-tools/dmtracedump",
   "paths": [
-    "android-runner/example/batterystats/test.androidrunner.apk",
-    "android-runner/example/batterystats/net.sourceforge.opencamera.apk"
+    "android-runner/example/batterystats/Apps/keepass2android.keepass2android.apk",
+    "android-runner/example/batterystats/Apps/com.dunkinbrands.otgo.apk",
+    "android-runner/example/batterystats/Apps/com.fifa.fifaapp.android.apk",
+    "android-runner/example/batterystats/Apps/com.sega.vectorman.apk",
+    "android-runner/example/batterystats/Apps/com.snapchat.android.apk",
+    "android-runner/example/batterystats/Apps/com.tencent.ig.apk",
+    "android-runner/example/batterystats/Apps/com.udacity.android.apk",
+    "android-runner/example/batterystats/Apps/com.walmart.grocery.apk",
+    "android-runner/example/batterystats/Apps/tv.twitch.android.app.apk"
   ],
   "profilers": {
     "trepn": {
-      "duration": 360000,
       "sample_interval": 100,
       "data_points": ["battery_power"]
     }
@@ -23,8 +29,7 @@
     "after_launch": "after_launch.py",
     "before_close": "before_close.py",
     "after_run": "after_run.py",
-    "after_experiment": "after_experiment.py",
-    "aggregation": "aggregation.py"
+    "after_experiment": "after_experiment.py"
   },
   "time_between_run": 120000
 }

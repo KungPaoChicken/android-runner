@@ -21,7 +21,7 @@ class Trepn(Profiler):
         self.pref_dir = None
         self.remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
         self.build_preferences(config)
-        self.duration = int(Tests.is_integer(config.get('duration', 0))) / 1000
+        #self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
 
     def build_preferences(self, params):
         """Build the XML files to setup Trepn and the data points"""
@@ -66,7 +66,7 @@ class Trepn(Profiler):
     def start_profiling(self, device, **kwargs):
         super(Trepn, self).start_profiling(device, **kwargs)
         device.shell('am broadcast -a com.quicinc.trepn.start_profiling')
-        time.sleep(self.duration)
+        #time.sleep(self.duration)
 
     def stop_profiling(self, device, **kwargs):
         super(Trepn, self).stop_profiling(device, **kwargs)
