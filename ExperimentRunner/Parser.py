@@ -461,7 +461,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
                             component_start_time - app_start_time,
                             component_end_time - app_start_time, duration, component, energy_consumption))
         all_results.extend(component_results)
-    print component_results, all_results
+    #print component_results, all_results
     #all_results.extend(screen_results + wifi_results + cam_results + flashlight_results +
                        #gps_results + audio_results + video_results + bluetooth_results + phone_scanning_results)
     #for results in all_results:
