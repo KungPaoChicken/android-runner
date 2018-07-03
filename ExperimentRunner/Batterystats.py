@@ -66,8 +66,6 @@ class Batterystats(Profiler):
     def stop_profiling(self, device, **kwargs):
         super(Batterystats, self).stop_profiling(device, **kwargs)
         self.profile = False
-        os.system('\n')
-        # device.shell('dumpsys battery reset')
 
     def collect_results(self, device, path=None):
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
@@ -84,7 +82,7 @@ class Batterystats(Profiler):
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
         energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
 
-        # Get Systrace data
+        # Wait for Systrace file finalisation and parse Systrace data
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
         systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile, cores)
@@ -95,7 +93,7 @@ class Batterystats(Profiler):
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
             writer.writerow([''])
-            writer.writerow(['Total:'])
+            # writer.writerow(['Total:'])
             writer.writerow(['Android Internal Estimation:,{}'.format(energy_consumed)])
 
         if self.cleanup is True:
