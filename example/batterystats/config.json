@@ -1,21 +1,14 @@
 {
   "type": "native",
   "devices": ["nexus7"],
-  "replications": 30,
+  "replications": 1,
   "duration": 60000,
   "monkeyrunner_path": "/home/user/Android/Sdk/tools/bin/monkeyrunner",
   "systrace_path": "/home/user/Android/Sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/example/batterystats/power_profile.xml",
   "paths": [
-    "android-runner/example/batterystats/Apps/keepass2android.keepass2android.apk",
-    "android-runner/example/batterystats/Apps/com.dunkinbrands.otgo.apk",
-    "android-runner/example/batterystats/Apps/com.fifa.fifaapp.android.apk",
-    "android-runner/example/batterystats/Apps/com.sega.vectorman.apk",
-    "android-runner/example/batterystats/Apps/com.snapchat.android.apk",
-    "android-runner/example/batterystats/Apps/com.tencent.ig.apk",
-    "android-runner/example/batterystats/Apps/com.udacity.android.apk",
-    "android-runner/example/batterystats/Apps/com.walmart.grocery.apk",
-    "android-runner/example/batterystats/Apps/tv.twitch.android.app.apk"
+    "android-runner/example/batterystats/test.androidrunner.apk",
+    "android-runner/example/batterystats/test.blackscreen.apk"
   ],
   "profilers": {
     "batterystats": {
