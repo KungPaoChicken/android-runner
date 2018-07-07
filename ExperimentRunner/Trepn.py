@@ -6,7 +6,6 @@ import lxml.etree as et
 from util import load_json, makedirs
 from Profiler import Profiler
 import paths
-import Tests
 
 
 class Trepn(Profiler):
@@ -21,7 +20,6 @@ class Trepn(Profiler):
         self.pref_dir = None
         self.remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
         self.build_preferences(config)
-        #self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
 
     def build_preferences(self, params):
         """Build the XML files to setup Trepn and the data points"""
@@ -66,7 +64,6 @@ class Trepn(Profiler):
     def start_profiling(self, device, **kwargs):
         super(Trepn, self).start_profiling(device, **kwargs)
         device.shell('am broadcast -a com.quicinc.trepn.start_profiling')
-        #time.sleep(self.duration)
 
     def stop_profiling(self, device, **kwargs):
         super(Trepn, self).stop_profiling(device, **kwargs)
@@ -74,13 +71,11 @@ class Trepn(Profiler):
 
     def collect_results(self, device, path=None):
         # Gives the latest result
-        # time.sleep(60)
         super(Trepn, self).collect_results(device)
         db = device.shell('ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()
         newest_db = db[len(db)-1]
         csv_filename = '%s_%s.csv' % (device.id, op.splitext(newest_db)[0])
         if newest_db:
-            # time.sleep(10)
             device.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
                          '-e com.quicinc.trepn.export_db_input_file "%s" '
                          '-e com.quicinc.trepn.export_csv_output_file "%s"' % (newest_db, csv_filename))
