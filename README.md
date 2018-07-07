@@ -64,7 +64,7 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
 ```json
   "profilers": {
     "trepn": {
-      "sample_interval": 100
+      "sample_interval": 100,
       "data_points": ["battery_power", "mem_usage"]
     }
   }
