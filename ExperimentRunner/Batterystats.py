@@ -24,13 +24,13 @@ class Batterystats(Profiler):
         self.duration = Tests.is_integer(config_file.get('duration', 0)) / 1000
 
     def start_profiling(self, device, **kwargs):
-        ## clear data (moved to before_run)
-        #device.shell('dumpsys batterystats --reset')
-        #print 'Batterystats cleared'
-        #device.shell('logcat -c')
-        #print 'Logcat cleared'
+        # Reset logs on the device
+        device.shell('dumpsys batterystats --reset')
+        device.shell('logcat -c')
+        print('Batterystats cleared')
+        print('Logcat cleared')
 
-        # create output directories
+        # Create output directories
         global app
         global systrace_file
         global logcat_file
@@ -40,6 +40,8 @@ class Batterystats(Profiler):
         makedirs(output_dir)
         if self.type == 'native':
             app = kwargs.get('app', None)
+
+        # TODO: add support for other browsers, required form: app = 'package.name'
         elif self.type == 'web':
             app = 'com.android.chrome'
 
@@ -57,17 +59,16 @@ class Batterystats(Profiler):
 
     def get_data(self, device, app):
         """Runs the systrace method for self.duration seconds in a separate thread"""
-        # Run systrace
         global sysproc
         sysproc = Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
               (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
-        #time.sleep(self.duration)
 
     def stop_profiling(self, device, **kwargs):
         super(Batterystats, self).stop_profiling(device, **kwargs)
         self.profile = False
 
     def collect_results(self, device, path=None):
+        # Pull logcat file from device
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
         device.pull('/mnt/sdcard/logcat.txt', logcat_file)
         device.shell('rm -f /mnt/sdcard/logcat.txt')
@@ -82,7 +83,7 @@ class Batterystats(Profiler):
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
         energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
 
-        # Wait for Systrace file finalisation and parse Systrace data
+        # Wait for Systrace file finalisation before parsing
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
         systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile, cores)
@@ -93,9 +94,9 @@ class Batterystats(Profiler):
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
             writer.writerow([''])
-            # writer.writerow(['Total:'])
             writer.writerow(['Android Internal Estimation:,{}'.format(energy_consumed)])
 
+        # Remove log files
         if self.cleanup is True:
             os.remove(systrace_file)
             os.remove(logcat_file)

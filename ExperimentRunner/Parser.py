@@ -81,23 +81,9 @@ def parse_batterystats(app, batterystats_file, power_profile):
         screen_start_time = 0
         screen_activation = 0
         wifi_activation = 0
-        cam_activation = 0
-        flashlight_activation = 0
-        gps_activation = 0
-        video_activation = 0
-        audio_activation = 0
-        bluetooth_activation = 0
-        phone_scanning_activation = 0
 
         screen_results = []
         wifi_results = []
-        cam_results = []
-        flashlight_results = []
-        gps_results = []
-        audio_results = []
-        video_results = []
-        bluetooth_results = []
-        phone_scanning_results = []
         all_results = []
 
         bs_file.seek(0)
@@ -442,6 +428,7 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile, core
                                     duration, cpu_id, activity, energy_consumption))
                     break
     return results
+
 
 ''' Logcat '''
 
