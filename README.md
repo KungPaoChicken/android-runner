@@ -34,11 +34,20 @@ Path to ADB. Example path: `/opt/platform-tools/adb`
 **monkeyrunner_path** *string*  
 Path to Monkeyrunner. Example path: `/opt/platform-tools/bin/monkeyrunner`
 
+**systrace_path** *string*  
+Path to Systrace.py. Example path: `/home/user/Android/Sdk/platform-tools/systrace/systrace.py`
+
+**powerprofile_path** *string*  
+Path to power_profile.xml. Example path: `android-runner/example/batterystats/power_profile.xml`
+
 **type** *string*  
 Type of the experiment. Can be `web` or `native`
 
 **replications** *positive integer*  
 Number of times an experiment is run.
+
+**duration** *positive integer*  
+The duration of each run in milliseconds.
 
 **devices** *Array\<String\>*  
 The names of devices to use. They will be translated into ids defined in devices.json.
@@ -51,14 +60,35 @@ The paths to the APKs/URLs to test with.
 The names of browser(s) to use. Currently supported values are `chrome`.
 
 **profilers** *JSON*   
-A JSON object to describe the profilers to be used and their arguments. Below is an example:
+A JSON object to describe the profilers to be used and their arguments. Below are several examples:
 ```json
   "profilers": {
     "trepn": {
       "sample_interval": 100
+      "data_points": ["battery_power", "mem_usage"]
     }
   }
 ```
+
+```json
+  "profilers": {
+    "android": {
+      "sample_interval": 100,
+      "data_points": ["cpu", "mem"]
+    }
+  }
+```
+
+```json
+  "profilers": {
+    "batterystats": {
+      "cleanup": true
+    }
+  }
+```
+
+**cleanup** *boolean*  
+Delete log files required by Batterystats after completion of the experiment. The default is *true*.
 
 **scripts** *JSON*  
 A JSON list of types and paths of scripts to run. Below is an example:
@@ -95,3 +125,14 @@ This happens when the user calling adb is not in the plugdev group.
 #### References
 https://developer.android.com/studio/run/device.html  
 http://www.janosgyerik.com/adding-udev-rules-for-usb-debugging-android-devices/
+
+### [Batterystats] IOError: Unable to get atrace data. Did you forget adb root?
+This happens when the device is unable to retrieve CPU information using systrace.py.
+#### Fix
+Check whether the device is able to report on both categories `freq` and `idle` using Systrace:
+
+`python systrace.py -l`
+
+If the categories are not listed, use a different device.
+#### References
+https://developer.android.com/studio/command-line/systrace
