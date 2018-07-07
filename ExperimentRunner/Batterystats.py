@@ -16,11 +16,13 @@ class Batterystats(Profiler):
     def __init__(self, config):
         super(Batterystats, self).__init__(config)
         self.profile = False
+        self.cleanup = config.get('cleanup')
+
+        # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
         config_file = load_json(op.join(paths.CONFIG_DIR, 'config.json'))
         self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
-        self.cleanup = config.get('cleanup')
         self.duration = Tests.is_integer(config_file.get('duration', 0)) / 1000
 
     def start_profiling(self, device, **kwargs):
@@ -38,14 +40,14 @@ class Batterystats(Profiler):
         global results_file
         output_dir = op.join(paths.OUTPUT_DIR, 'android/')
         makedirs(output_dir)
+
         if self.type == 'native':
             app = kwargs.get('app', None)
-
         # TODO: add support for other browsers, required form: app = 'package.name'
         elif self.type == 'web':
             app = 'com.android.chrome'
 
-        # Create files
+        # Create files on system
         systrace_file = '{}systrace_{}_{}.html'.format(output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         logcat_file = '{}logcat_{}_{}.txt'.format(output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         batterystats_file = op.join(output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
@@ -59,6 +61,7 @@ class Batterystats(Profiler):
 
     def get_data(self, device, app):
         """Runs the systrace method for self.duration seconds in a separate thread"""
+        # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
         sysproc = Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
               (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
