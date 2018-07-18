@@ -1,0 +1,27 @@
+{
+  "type": "native",
+  "devices": ["nexus7"],
+  "replications": 3,
+  "duration": 60000,
+  "monkeyrunner_path": "/home/user/Android/Sdk/tools/bin/monkeyrunner",
+  "systrace_path": "/home/user/Android/Sdk/platform-tools/systrace/systrace.py",
+  "powerprofile_path": "android-runner/example/batterystats/power_profile.xml",
+  "paths": [
+    "android-runner/example/batterystats/test.androidrunner.apk",
+    "android-runner/example/batterystats/test.blackscreen.apk"
+  ],
+  "profilers": {
+    "batterystats": {
+      "cleanup": true
+    }
+  },
+  "scripts": {
+    "before_experiment": "before_experiment.py",
+    "before_run": "before_run.py",
+    "after_launch": "after_launch.py",
+    "before_close": "before_close.py",
+    "after_run": "after_run.py",
+    "after_experiment": "after_experiment.py"
+  },
+  "time_between_run": 120000
+}

@@ -3,11 +3,14 @@ import os.path as op
 from Experiment import Experiment
 from util import ConfigError, makedirs, slugify
 import paths
+import Tests
+import time
 
 
 class NativeExperiment(Experiment):
     def __init__(self, config):
         self.package = None
+        self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
         super(NativeExperiment, self).__init__(config)
         for apk in config.get('paths', []):
             if not op.isfile(apk):
@@ -37,6 +40,7 @@ class NativeExperiment(Experiment):
 
     def start_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.start_profiling(device, app=self.package)
+        time.sleep(self.duration)
 
     def after_run(self, device, path, run, *args, **kwargs):
         self.scripts.run('before_close', device, device.id, device.current_activity())

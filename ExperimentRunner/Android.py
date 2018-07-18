@@ -25,15 +25,17 @@ class Android(Profiler):
 
     def get_cpu_usage(self, device):
         """Get CPU usage in percentage"""
-        return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
+        #return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
+        return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
 
     def get_mem_usage(self, device, app):
         """Get memory usage in KB for app, if app is None system usage is used"""
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
-            return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
+            # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
+            return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
         else:
-            result = device.shell('dumpsys meminfo {} | grep TOTAL:'.format(app))
+            result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
             if 'No process found' in result:
                 raise Exception('Android Profiler: {}'.format(result))
             return ' '.join(result.strip().split()).split()[1]

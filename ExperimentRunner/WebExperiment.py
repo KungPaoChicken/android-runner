@@ -14,6 +14,7 @@ class WebExperiment(Experiment):
         super(WebExperiment, self).__init__(config)
         self.browsers = [BrowserFactory.get_browser(b)(config) for b in config.get('browsers', ['chrome'])]
         Tests.check_dependencies(self.devices, [b.package_name for b in self.browsers])
+        self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
 
     def run(self, device, path, run):
         for browser in self.browsers:
@@ -45,6 +46,9 @@ class WebExperiment(Experiment):
         browser.load_url(device, path)
         time.sleep(5)
         super(WebExperiment, self).interaction(device, path, run, *args, **kwargs)
+
+        # TODO: Fix web experiments running longer than self.duration
+        time.sleep(self.duration)
 
     def after_run(self, device, path, run, *args, **kwargs):
         self.scripts.run('before_close', device, device.id, device.current_activity())
