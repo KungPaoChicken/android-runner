@@ -10,9 +10,16 @@ You'll need:
 - JDK 8 (NOT JDK 9) (`sudo apt install openjdk-8-jre`)
 - lxml (`sudo apt install python-lxml`)
 
+Additionally, the following are also required for the Batterystats method:
+- power_profile.xml (retrievable from the device using [APKTool](https://github.com/iBotPeaches/Apktool))
+- systrace.py (from the Android SDK Tools)
+- A device that is able to report on the `idle` and `frequency` states of the CPU using systrace.py
+
 Note: It is important that monkeyrunner shares the same adb the experiment is using. Otherwise, there will be an adb restart and output may be tainted by the notification.
 
 Note 2: You can specifiy the path to ADB and/or Monkeyrunner in the experiment configuration. See the Experiment Configuration section below.
+
+Note 3: To check whether the the device is able to report on the `idle` and `frequency` states of the CPU, you can run the command `python systrace.py -l` and ensure both categories are listed among the supported categories.
 
 ## Quick start
 To run an experiment, run:
@@ -118,6 +125,9 @@ Below are the supported types:
 ## Detailed documentation
 The original thesis can be found here:  
 https://drive.google.com/file/d/0B7Fel9yGl5-xc2lEWmNVYkU5d2c/view?usp=sharing
+
+The thesis regarding the implementation of Batterystats can be found here:
+https://drive.google.com/file/d/1O7BqmkRFRDq7AD1oKOGjHqJzCTEe8AMz/view?usp=sharing
 
 ## FAQ
 ### Devices have no permissions (udev requires plugdev group membership)
