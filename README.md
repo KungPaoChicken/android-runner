@@ -26,7 +26,7 @@ To run an experiment, run:
 ```bash
 python android_runner your_config.json
 ```
-There is an example configuration file in `example/example_config.json`
+Example configuration files can be found in the subdirectories of the `example` directory.
 
 ## Structure
 ### devices.json
@@ -35,38 +35,38 @@ A JSON config that maps devices names to their ADB ids for easy reference in con
 ### Experiment Configuration
 Below is a reference to the fields for the experiment configuration. It is not always updated.
 
-**adb_path** *string*  
+**adb_path** *string*
 Path to ADB. Example path: `/opt/platform-tools/adb`
 
-**monkeyrunner_path** *string*  
+**monkeyrunner_path** *string*
 Path to Monkeyrunner. Example path: `/opt/platform-tools/bin/monkeyrunner`
 
-**systrace_path** *string*  
+**systrace_path** *string*
 Path to Systrace.py. Example path: `/home/user/Android/Sdk/platform-tools/systrace/systrace.py`
 
-**powerprofile_path** *string*  
+**powerprofile_path** *string*
 Path to power_profile.xml. Example path: `android-runner/example/batterystats/power_profile.xml`
 
-**type** *string*  
+**type** *string*
 Type of the experiment. Can be `web` or `native`
 
-**replications** *positive integer*  
+**replications** *positive integer*
 Number of times an experiment is run.
 
-**duration** *positive integer*  
+**duration** *positive integer*
 The duration of each run in milliseconds.
 
-**devices** *Array\<String\>*  
+**devices** *Array\<String\>*
 The names of devices to use. They will be translated into ids defined in devices.json.
 
-**paths** *Array\<String\>*  
+**paths** *Array\<String\>*
 The paths to the APKs/URLs to test with.
 
-**browsers** *Array\<String\>*  
-*Dependent on type = web*  
+**browsers** *Array\<String\>*
+*Dependent on type = web*
 The names of browser(s) to use. Currently supported values are `chrome`.
 
-**profilers** *JSON*   
+**profilers** *JSON*
 A JSON object to describe the profilers to be used and their arguments. Below are several examples:
 ```json
   "profilers": {
@@ -94,10 +94,10 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
   }
 ```
 
-**cleanup** *boolean*  
+**cleanup** *boolean*
 Delete log files required by Batterystats after completion of the experiment. The default is *true*.
 
-**scripts** *JSON*  
+**scripts** *JSON*
 A JSON list of types and paths of scripts to run. Below is an example:
 ```json
 "scripts": {
@@ -109,21 +109,21 @@ A JSON list of types and paths of scripts to run. Below is an example:
 }
 ```
 Below are the supported types:
-- before_experiment  
+- before_experiment
   executes once before the first run
-- before_run  
+- before_run
   executes before every run
-- after_launch  
+- after_launch
   executes after the target app/website is launched, but before profiling starts
-- interaction  
+- interaction
   executes between the start and end of a run
-- after_run  
+- after_run
   executes after a run completes
-- after_experiment  
+- after_experiment
   executes once after the last run
 
 ## Detailed documentation
-The original thesis can be found here:  
+The original thesis can be found here:
 https://drive.google.com/file/d/0B7Fel9yGl5-xc2lEWmNVYkU5d2c/view?usp=sharing
 
 The thesis regarding the implementation of Batterystats can be found here:
@@ -135,7 +135,7 @@ This happens when the user calling adb is not in the plugdev group.
 #### Fix
 `sudo usermod -aG plugdev $LOGNAME`
 #### References
-https://developer.android.com/studio/run/device.html  
+https://developer.android.com/studio/run/device.html
 http://www.janosgyerik.com/adding-udev-rules-for-usb-debugging-android-devices/
 
 ### [Batterystats] IOError: Unable to get atrace data. Did you forget adb root?
