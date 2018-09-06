@@ -136,6 +136,7 @@ This happens when the user calling adb is not in the plugdev group.
 `sudo usermod -aG plugdev $LOGNAME`
 #### References
 https://developer.android.com/studio/run/device.html
+
 http://www.janosgyerik.com/adding-udev-rules-for-usb-debugging-android-devices/
 
 ### [Batterystats] IOError: Unable to get atrace data. Did you forget adb root?
