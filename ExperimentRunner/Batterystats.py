@@ -28,9 +28,7 @@ class Batterystats(Profiler):
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
         device.shell('dumpsys batterystats --reset')
-        device.shell('logcat -c')
         print('Batterystats cleared')
-        print('Logcat cleared')
 
         # Create output directories
         global app
