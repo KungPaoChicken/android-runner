@@ -13,7 +13,7 @@ def list_subdir(a_dir):
 
 def aggregate_android(logs_dir):
     def add_row(accum, new):
-        row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
+        row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
         count = accum['count'] + 1
         return dict(row, **{'count': count})
 
