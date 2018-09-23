@@ -62,7 +62,8 @@ def aggregate(data_dir):
                     row.update(aggregate_android(os.path.join(browser_dir, 'android')))
                 if os.path.isdir(os.path.join(browser_dir, 'trepn')):
                     row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
-                rows.append(row)
+                rows.append(row.copy())
+
     return rows
 
 
