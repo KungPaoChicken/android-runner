@@ -88,7 +88,10 @@ def parse_batterystats(app, batterystats_file, power_profile):
 
         bs_file.seek(0)
         for line in bs_file:
-            current_time = convert_to_s(time_pattern.search(line).group(1))
+            time_pattern_match = time_pattern.search(line)
+            if not time_pattern_match:
+                continue
+            current_time = convert_to_s(time_pattern_match.group(1))
 
             if voltage_pattern.search(line):
                 voltage = get_voltage(line)

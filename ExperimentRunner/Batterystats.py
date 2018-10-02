@@ -28,9 +28,7 @@ class Batterystats(Profiler):
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
         device.shell('dumpsys batterystats --reset')
-        device.shell('logcat -c')
         print('Batterystats cleared')
-        print('Logcat cleared')
 
         # Create output directories
         global app
@@ -82,9 +80,11 @@ class Batterystats(Profiler):
         batterystats_results = Parser.parse_batterystats(app, batterystats_file, self.powerprofile)
 
         # Estimate total consumption
+        # charge is given in mAh
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
-        energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
+        energy_consumed_Wh = float(charge) * float(volt) / 1000.0
+        energy_consumed_J = energy_consumed_Wh * 3600.0
 
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
@@ -96,8 +96,10 @@ class Batterystats(Profiler):
             writer.writerow(['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
-            writer.writerow([''])
-            writer.writerow(['Android Internal Estimation:,{}'.format(energy_consumed)])
+
+        with open(op.join(paths.OUTPUT_DIR, 'android',
+                          'energy_consumed_Joule.txt')) as out:
+            out.write('{}\n'.format(energy_consumed_J))
 
         # Remove log files
         if self.cleanup is True:

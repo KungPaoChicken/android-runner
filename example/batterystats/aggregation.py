@@ -59,7 +59,7 @@ def aggregate(data_dir):
                 row.update(aggregate_android(os.path.join(subject_dir, 'android')))
             if os.path.isdir(os.path.join(subject_dir, 'trepn')):
                 row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
-            rows.append(row)
+            rows.append(row.copy())
     return rows
 
 
@@ -80,4 +80,4 @@ def main(device, output_root):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
-        main(sys.argv[1])
+        main(None, sys.argv[1])

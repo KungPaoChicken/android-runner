@@ -13,7 +13,7 @@ def list_subdir(a_dir):
 
 def aggregate_android(logs_dir):
     def add_row(accum, new):
-        row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
+        row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
         count = accum['count'] + 1
         return dict(row, **{'count': count})
 
@@ -62,7 +62,8 @@ def aggregate(data_dir):
                     row.update(aggregate_android(os.path.join(browser_dir, 'android')))
                 if os.path.isdir(os.path.join(browser_dir, 'trepn')):
                     row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
-                rows.append(row)
+                rows.append(row.copy())
+
     return rows
 
 
@@ -83,4 +84,4 @@ def main(device, output_root):
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
-        main(sys.argv[1])
+        main(None, sys.argv[1])
