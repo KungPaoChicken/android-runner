@@ -7,7 +7,10 @@ import csv
 
 from Profiler import Profiler
 import paths
-import Tests
+
+
+class ConfigError(Exception):
+    pass
 
 
 class Android(Profiler):
@@ -15,7 +18,7 @@ class Android(Profiler):
         super(Android, self).__init__(config)
         self.profile = False
         available_data_points = ['cpu', 'mem']
-        self.interval = float(Tests.is_integer(config.get('sample_interval', 0))) / 1000
+        self.interval = float(self.is_integer(config.get('sample_interval', 0))) / 1000
         self.data_points = config['data_points']
         invalid_data_points = [dp for dp in config['data_points'] if dp not in set(available_data_points)]
         if invalid_data_points:
@@ -25,7 +28,7 @@ class Android(Profiler):
 
     def get_cpu_usage(self, device):
         """Get CPU usage in percentage"""
-        #return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
+        # return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
         return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
 
     def get_mem_usage(self, device, app):
@@ -75,3 +78,10 @@ class Android(Profiler):
             writer = csv.writer(f)
             for row in self.data:
                 writer.writerow(row)
+
+    def is_integer(self, number, minimum=0):
+        if not isinstance(number, (int, long)):
+            raise ConfigError('%s is not an integer' % number)
+        if number < minimum:
+            raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
+        return number

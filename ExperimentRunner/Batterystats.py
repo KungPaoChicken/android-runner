@@ -1,15 +1,17 @@
 import os.path as op
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen
 import time
-import timeit
 from util import makedirs, load_json
 import csv
 
 from Profiler import Profiler
 import paths
-import Tests
 import Parser
+
+
+class ConfigError(Exception):
+    pass
 
 
 class Batterystats(Profiler):
@@ -23,7 +25,7 @@ class Batterystats(Profiler):
         self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
-        self.duration = Tests.is_integer(config_file.get('duration', 0)) / 1000
+        self.duration = self.is_integer(config_file.get('duration', 0)) / 1000
 
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
@@ -104,3 +106,12 @@ class Batterystats(Profiler):
             os.remove(systrace_file)
             os.remove(logcat_file)
             os.remove(batterystats_file)
+
+    def is_integer(self, number, minimum=0):
+        if not isinstance(number, (int, long)):
+            raise ConfigError('%s is not an integer' % number)
+        if number < minimum:
+            raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
+        return number
+
+
