@@ -8,6 +8,7 @@ except ImportError, e:
     print "[!] Required module missing. %s" % e.args[0]
     sys.exit(-1)
 
+
 class Fastboot(object):
 
     __fastboot_path = None
@@ -121,16 +122,16 @@ class Fastboot(object):
         if self.__error is not None:
             return ''
         try:
-            device_list = self.__output.replace('fastboot','').split()
+            device_list = self.__output.replace('fastboot', '').split()
 
-            if device_list[1:] == ['no','permissions']:
+            if device_list[1:] == ['no', 'permissions']:
                 error = 2
                 self.__devices = None
         except:
             self.__devices = None
-            error = 1
+            return self.__devices
         i = 0
-        device_dict =  {}
+        device_dict = {}
         for device in device_list:
             # Add list to dictionary with incrementing ID
             device_dict[i] = device
@@ -143,7 +144,7 @@ class Fastboot(object):
         Specify the device name to target
         example: set_target_device('emulator-5554')
         """
-        if device is None or not device in self.__devices.values():
+        if device is None or device not in self.__devices.values():
 
             self.__error = 'Must get device list first'
             print "[!] Device not found in device list"
@@ -156,7 +157,7 @@ class Fastboot(object):
         Specify the device ID to target.
         The ID should be one from the device list.
         """
-        if device is None or not device in self.__devices:
+        if device is None or device not in self.__devices:
             self.__error = 'Must get device list first'
             print "[!] Device not found in device list"
             return False
@@ -167,7 +168,7 @@ class Fastboot(object):
         """
         Returns the selected device to work with
         """
-        if self.__target == None:
+        if self.__target is None:
             print "[*] No device target set"
 
         return self.__target

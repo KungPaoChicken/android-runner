@@ -14,6 +14,7 @@ class ConnectionError(Exception):
     """Raised when there's an connection error"""
     pass
 
+
 adb = None
 
 

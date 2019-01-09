@@ -33,7 +33,7 @@ def aggregate_trepn(logs_dir):
     def format_stats(accum, new):
         column_name = new['Name']
         if '[' in new['Type']:
-            column_name += ' [' +new['Type'].split('[')[1]
+            column_name += ' [' + new['Type'].split('[')[1]
         accum.update({column_name: float(new['Average'])})
         return accum
     runs = []
@@ -57,6 +57,8 @@ def aggregate(data_dir):
             subject_dir = os.path.join(device_dir, subject)
             if os.path.isdir(os.path.join(subject_dir, 'android')):
                 row.update(aggregate_android(os.path.join(subject_dir, 'android')))
+            if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
+                row.update(aggregate_android(os.path.join(subject_dir, 'batterystats')))
             if os.path.isdir(os.path.join(subject_dir, 'trepn')):
                 row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
             rows.append(row)

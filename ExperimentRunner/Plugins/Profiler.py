@@ -1,31 +1,32 @@
-import logging
-
-
 class Profiler(object):
     @staticmethod
     def dependencies():
-        return []
+        """Returns list of needed app dependencies,like com.quicinc.trepn, [] if none"""
+        raise NotImplementedError
 
-    def __init__(self, config):
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug('Initialized')
+    def __init__(self, config, paths):
+        raise NotImplementedError
 
     def load(self, device):
         """Load (and start) the profiler process on the device"""
-        self.logger.debug('%s: Loading configuration' % device)
+        raise NotImplementedError
 
     def start_profiling(self, device, **kwargs):
         """Start the profiling process"""
-        self.logger.debug('%s: Start profiling' % device)
+        raise NotImplementedError
 
     def stop_profiling(self, device, **kwargs):
         """Stop the profiling process"""
-        self.logger.debug('%s: Stop profiling' % device)
+        raise NotImplementedError
 
     def collect_results(self, device, path=None):
         """Collect the data and clean up extra files on the device"""
-        self.logger.debug('%s: Collecting data' % device)
+        raise NotImplementedError
 
     def unload(self, device):
         """Stop the profiler, removing configuration files on device"""
-        self.logger.debug('%s: Cleanup' % device)
+        raise NotImplementedError
+
+    def set_output(self, output_dir):
+        """Set the output directory before the start_profiling is called"""
+        raise NotImplementedError

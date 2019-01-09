@@ -3,7 +3,10 @@ import re
 import time as t
 import datetime as dt
 
-
+SECONDS_IN_MS = 1000.0
+SECONDS_IN_M = 60.0
+SECONDS_IN_H = 3600.0
+SECONDS_IN_D = 86400.0
 '''
 Power Profile
 '''
@@ -154,7 +157,8 @@ def parse_batterystats(app, batterystats_file, power_profile):
                         wifi_start_time = app_start_time
                     else:
                         wifi_start_time = current_time
-                elif wifi_activation == 1 and wifi_state != old_wifi_state and wifi_pattern.search(line).group(2) == '+':
+                elif wifi_activation == 1 and wifi_state != old_wifi_state and \
+                        wifi_pattern.search(line).group(2) == '+':
                     if old_wifi_state == 'running':
                         wifi_intensity = get_amp_value(power_profile, 'wifi.on')
                     if old_wifi_state == 'radio':
@@ -284,11 +288,6 @@ def convert_to_s(line):
     minutes_matches = minutes_pattern.search(line)
     hours_matches = hours_pattern.search(line)
     days_matches = days_pattern.search(line)
-
-    SECONDS_IN_MS = 1000.0
-    SECONDS_IN_M = 60.0
-    SECONDS_IN_H = 3600.0
-    SECONDS_IN_D = 86400.0
 
     if milliseconds_matches:
         s = float(milliseconds_matches.group(1)) / SECONDS_IN_MS

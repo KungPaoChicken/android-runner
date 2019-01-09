@@ -1,12 +1,10 @@
 import os.path as op
 import time
-from util import makedirs
 import timeit
 import threading
 import csv
 
 from Profiler import Profiler
-import paths
 
 
 class ConfigError(Exception):
@@ -14,8 +12,9 @@ class ConfigError(Exception):
 
 
 class Android(Profiler):
-    def __init__(self, config):
-        super(Android, self).__init__(config)
+    def __init__(self, config, paths):
+        self.output_dir = ''
+        self.paths = paths
         self.profile = False
         available_data_points = ['cpu', 'mem']
         self.interval = float(self.is_integer(config.get('sample_interval', 0))) / 1000
@@ -44,7 +43,6 @@ class Android(Profiler):
             return ' '.join(result.strip().split()).split()[1]
 
     def start_profiling(self, device, **kwargs):
-        super(Android, self).start_profiling(device, **kwargs)
         self.profile = True
         app = kwargs.get('app', None)
         self.get_data(device, app)
@@ -66,18 +64,26 @@ class Android(Profiler):
             threading.Timer(interval, self.get_data, args=(device, app)).start()
 
     def stop_profiling(self, device, **kwargs):
-        super(Android, self).stop_profiling(device, **kwargs)
         self.profile = False
 
     def collect_results(self, device, path=None):
-        super(Android, self).collect_results(device)
-        output_dir = op.join(paths.OUTPUT_DIR, 'android/')
-        makedirs(output_dir)
         filename = '{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
-        with open(op.join(output_dir, filename), 'w+') as f:
+        with open(op.join(self.output_dir, filename), 'w+') as f:
             writer = csv.writer(f)
             for row in self.data:
                 writer.writerow(row)
+
+    def set_output(self, output_dir):
+        self.output_dir = output_dir
+
+    def dependencies(self):
+        return []
+
+    def load(self, device):
+        return
+
+    def unload(self, device):
+        return
 
     def is_integer(self, number, minimum=0):
         if not isinstance(number, (int, long)):

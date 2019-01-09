@@ -284,7 +284,7 @@ class ADB(object):
         """
         return self.run_cmd('get-serialno')
 
-    def reboot_device(self,mode=0):
+    def reboot_device(self, mode=0):
         """
         Reboot the target device
         Specify mode to reboot normally, recovery or bootloader
@@ -336,7 +336,7 @@ class ADB(object):
         self.run_cmd('push \"%s\" \"%s\"' % (local, remote))
         return self.__output
 
-    def shell_command(self,cmd):
+    def shell_command(self, cmd):
         """
         Executes a shell command
         adb shell <cmd>
@@ -352,7 +352,7 @@ class ADB(object):
         self.run_cmd("usb")
         return self.__output
 
-    def listen_tcp(self,port=DEFAULT_TCP_PORT):
+    def listen_tcp(self, port=DEFAULT_TCP_PORT):
         """
         Restarts the adbd daemon listening on the specified port
         adb tcpip <port>
@@ -375,7 +375,7 @@ class ADB(object):
         """
         return self.run_cmd("jdwp")
 
-    def get_logcat(self,lcfilter=""):
+    def get_logcat(self, lcfilter=""):
         """
         View device log
         adb logcat <filter>
@@ -383,30 +383,30 @@ class ADB(object):
         self.run_cmd("logcat %s" % lcfilter)
         return self.__output
 
-    def run_emulator(self,cmd=""):
+    def run_emulator(self, cmd=""):
         """
         Run emulator console command
         """
         self.run_cmd("emu %s" % cmd)
         return self.__output
 
-    def connect_remote (self,host=DEFAULT_TCP_HOST,port=DEFAULT_TCP_PORT):
+    def connect_remote(self, host=DEFAULT_TCP_HOST, port=DEFAULT_TCP_PORT):
         """
         Connect to a device via TCP/IP
         adb connect host:port
         """
-        self.run_cmd("connect %s:%s" % ( host , port ) )
+        self.run_cmd("connect %s:%s" % (host, port))
         return self.__output
 
-    def disconnect_remote (self , host=DEFAULT_TCP_HOST , port=DEFAULT_TCP_PORT):
+    def disconnect_remote(self, host=DEFAULT_TCP_HOST, port=DEFAULT_TCP_PORT):
         """
         Disconnect from a TCP/IP device
         adb disconnect host:port
         """
-        self.run_cmd("disconnect %s:%s" % ( host , port ) )
+        self.run_cmd("disconnect %s:%s" % (host, port))
         return self.__output
 
-    def ppp_over_usb(self,tty=None,params=""):
+    def ppp_over_usb(self, tty=None, params=""):
         """
         Run PPP over USB
         adb ppp <tty> <params>
@@ -421,36 +421,36 @@ class ADB(object):
         self.run_cmd(cmd)
         return self.__output
 
-    def sync_directory(self,directory=""):
+    def sync_directory(self, directory=""):
         """
         Copy host->device only if changed (-l means list but don't copy)
         adb sync <dir>
         """
-        self.run_cmd("sync %s" % directory )
+        self.run_cmd("sync %s" % directory)
         return self.__output
 
-    def forward_socket(self,local=None,remote=None):
+    def forward_socket(self, local=None, remote=None):
         """
         Forward socket connections
         adb forward <local> <remote>
         """
         if local is None or remote is None:
             return self.__output
-        self.run_cmd("forward %s %s" % (local,remote) )
+        self.run_cmd("forward %s %s" % (local, remote))
         return self.__output
 
-    def uninstall(self,package=None,keepdata=False):
+    def uninstall(self, package=None, keepdata=False):
         """
         Remove this app package from the device
         adb uninstall [-k] package
         """
         if package is None:
             return self.__output
-        cmd = "uninstall %s" % (package if keepdata is True else "-k %s" % package )
+        cmd = "uninstall %s" % (package if keepdata is True else "-k %s" % package)
         self.run_cmd(cmd)
         return self.__output
 
-    def install(self,pkgapp=None,fwdlock=False,reinstall=False,sdcard=False):
+    def install(self, pkgapp=None, fwdlock=False, reinstall=False, sdcard=False):
         """
         Push this package file to the device and install it
         adb install [-l] [-r] [-s] <file>
@@ -470,19 +470,19 @@ class ADB(object):
         if sdcard is True:
             cmd += " -s "
 
-        self.run_cmd("%s %s" % (cmd , pkgapp) )
+        self.run_cmd("%s %s" % (cmd, pkgapp))
         return self.__output
 
-    def find_binary(self,name=None):
+    def find_binary(self, name=None):
         """
         Look for a binary file on the device
         """
 
         self.shell_command("which %s" % name)
 
-        if self.__output is None: # not found
+        if self.__output is None:  # not found
             self.__error = "'%s' was not found" % name
-        elif self.__output.strip() == "which: not found": # which binary not available
+        elif self.__output.strip() == "which: not found":  # which binary not available
             self.__output = None
             self.__error = "which binary not found"
         else:

@@ -1,27 +1,25 @@
 import os.path as op
 import os
-from subprocess import Popen
 import time
-from util import makedirs, load_json
 import csv
-
-from Profiler import Profiler
-import paths
+import json
+import errno
 import Parser
 
-
-class ConfigError(Exception):
-    pass
+from collections import OrderedDict
+from subprocess import Popen
+from Profiler import Profiler
 
 
 class Batterystats(Profiler):
-    def __init__(self, config):
-        super(Batterystats, self).__init__(config)
+    def __init__(self, config, paths):
+        self.output_dir = ''
+        self.paths = paths
         self.profile = False
         self.cleanup = config.get('cleanup')
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
-        config_file = load_json(op.join(paths.CONFIG_DIR, 'config.json'))
+        config_file = self.load_json(op.join(self.paths.CONFIG_DIR, 'config.json'))
         self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
@@ -40,8 +38,6 @@ class Batterystats(Profiler):
         global logcat_file
         global batterystats_file
         global results_file
-        output_dir = op.join(paths.OUTPUT_DIR, 'android/')
-        makedirs(output_dir)
 
         if self.type == 'native':
             app = kwargs.get('app', None)
@@ -50,14 +46,13 @@ class Batterystats(Profiler):
             app = 'com.android.chrome'
 
         # Create files on system
-        systrace_file = '{}systrace_{}_{}.html'.format(output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
-        logcat_file = '{}logcat_{}_{}.txt'.format(output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
-        batterystats_file = op.join(output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
+        systrace_file = '{}systrace_{}_{}.html'.format(self.output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        logcat_file = '{}logcat_{}_{}.txt'.format(self.output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        batterystats_file = op.join(self.output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
             '%Y.%m.%d_%H%M%S')))
-        results_file = op.join(output_dir, 'results_{}_{}.csv'
+        results_file = op.join(self.output_dir, 'results_{}_{}.csv'
                                .format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
 
-        super(Batterystats, self).start_profiling(device, **kwargs)
         self.profile = True
         self.get_data(device, app)
 
@@ -66,10 +61,9 @@ class Batterystats(Profiler):
         # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
         sysproc = Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
-              (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
+                        (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
 
     def stop_profiling(self, device, **kwargs):
-        super(Batterystats, self).stop_profiling(device, **kwargs)
         self.profile = False
 
     def collect_results(self, device, path=None):
@@ -91,11 +85,13 @@ class Batterystats(Profiler):
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
-        systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile, cores)
+        systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile,
+                                                 cores)
 
         with open(results_file, 'w+') as results:
             writer = csv.writer(results, delimiter="\n")
-            writer.writerow(['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
+            writer.writerow(
+                ['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
             writer.writerow([''])
@@ -107,11 +103,50 @@ class Batterystats(Profiler):
             os.remove(logcat_file)
             os.remove(batterystats_file)
 
+    def set_output(self, output_dir):
+        self.output_dir = output_dir
+
+    def dependencies(self):
+        return []
+
+    def load(self, device):
+        return
+
+    def unload(self, device):
+        return
+
     def is_integer(self, number, minimum=0):
         if not isinstance(number, (int, long)):
             raise ConfigError('%s is not an integer' % number)
         if number < minimum:
             raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
         return number
+
+    def load_json(self, path):
+        """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
+        try:
+            with open(path, 'r') as f:
+                try:
+                    return json.loads(f.read(), object_pairs_hook=OrderedDict)
+                except ValueError:
+                    raise FileFormatError(path)
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                raise FileNotFoundError(path)
+            else:
+                raise e
+
+
+class FileNotFoundError(Exception):
+    def __init__(self, filename):
+        Exception.__init__(self, '[Errno %s] %s: \'%s\'' % (errno.ENOENT, os.strerror(errno.ENOENT), filename))
+
+
+class FileFormatError(Exception):
+    pass
+
+
+class ConfigError(Exception):
+    pass
 
 

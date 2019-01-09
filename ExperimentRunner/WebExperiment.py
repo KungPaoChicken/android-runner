@@ -32,6 +32,7 @@ class WebExperiment(Experiment):
         super(WebExperiment, self).before_first_run(device, path)
         paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(path))
         makedirs(paths.OUTPUT_DIR)
+
         self.logger.info('URL: %s' % path)
 
     def before_run(self, device, path, run, *args, **kwargs):
