@@ -53,15 +53,20 @@ def aggregate(data_dir):
         row = OrderedDict({'device': device})
         device_dir = os.path.join(data_dir, device)
         for subject in list_subdir(device_dir):
-            row.update({'subject': subject})
+            subject_row = row.copy()
+            subject_row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            if os.path.isdir(os.path.join(subject_dir, 'android')):
-                row.update(aggregate_android(os.path.join(subject_dir, 'android')))
-            if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
-                row.update(aggregate_android(os.path.join(subject_dir, 'batterystats')))
-            if os.path.isdir(os.path.join(subject_dir, 'trepn')):
-                row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
-            rows.append(row)
+            for browser in list_subdir(subject_dir):
+                browser_row = subject_row.copy()
+                browser_row.update({'browser': browser})
+                browser_dir = os.path.join(subject_dir, browser)
+                if os.path.isdir(os.path.join(browser_dir, 'android')):
+                    browser_row.update(aggregate_android(os.path.join(browser_dir, 'android')))
+                if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
+                    browser_row.update(aggregate_android(os.path.join(browser_dir, 'batterystats')))
+                if os.path.isdir(os.path.join(browser_dir, 'trepn')):
+                    browser_row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
+                rows.append(browser_row)
     return rows
 
 
