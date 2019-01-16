@@ -48,3 +48,8 @@ class Profilers(object):
         self.logger.info('Setting output')
         for p in self.profilers:
             p.set_output()
+
+    def aggregate_end(self, output_dir):
+        self.logger.info('Start aggregation')
+        for p in self.profilers:
+            p.aggregate_data_end(output_dir)

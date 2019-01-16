@@ -1,6 +1,9 @@
 import logging
 import paths
 import os
+
+from Python2 import Python2
+from collections import OrderedDict
 from pluginbase import PluginBase
 from util import makedirs
 
@@ -8,7 +11,7 @@ from util import makedirs
 class PluginHandler(object):
     def __init__(self, name, params):
         self.logger = logging.getLogger(self.__class__.__name__)
-
+        self.plugginParams = params
         self.nameLower = name.lower()
         self.moduleName = self.nameLower.capitalize()
 
@@ -56,5 +59,23 @@ class PluginHandler(object):
     def set_output(self):
         self.paths['OUTPUT_DIR'] = os.path.join(paths.OUTPUT_DIR, self.nameLower + '/')
         makedirs(self.paths['OUTPUT_DIR'])
+        self.logger.debug('%s: Setting output: %s' % (self.moduleName, self.paths['OUTPUT_DIR']))
         self.currentProfiler.set_output(self.paths['OUTPUT_DIR'])
+
+    def aggregate_data_end(self, output_dir):
+        aggregate_function = self.plugginParams.get('experiment_aggregation', 'default')
+        aggregate_function_lower = aggregate_function.lower()
+
+        data_dir = os.path.join(output_dir, 'data')
+        result_file = os.path.join(output_dir, 'aggregated_results_{}.csv'.format(self.moduleName))
+
+        if aggregate_function_lower == 'none':
+            return
+        elif aggregate_function_lower == 'default':
+            self.logger.debug('%s: aggregating results')
+            self.currentProfiler.aggregate_data_end(data_dir, result_file)
+        else:
+            aggregate_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_function))
+            aggregate_script.run(None, data_dir, result_file)
+
 

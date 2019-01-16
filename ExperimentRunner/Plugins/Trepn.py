@@ -4,6 +4,7 @@ import time
 import lxml.etree as et
 import json
 import errno
+import csv
 
 from collections import OrderedDict
 from Profiler import Profiler
@@ -90,6 +91,58 @@ class Trepn(Profiler):
 
     def set_output(self, output_dir):
         self.output_dir = output_dir
+
+    def aggregate_data_end(self, data_dir, output_file):
+        rows = self.aggregate(data_dir)
+        self.write_to_file(output_file, rows)
+
+    def write_to_file(self, filename, rows):
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def aggregate_trepn(self, logs_dir):
+        def format_stats(accum, new):
+            column_name = new['Name']
+            if '[' in new['Type']:
+                column_name += ' [' + new['Type'].split('[')[1]
+            accum.update({column_name: float(new['Average'])})
+            return accum
+
+        runs = []
+        for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
+            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+                contents = run.read()  # Be careful with large files, this loads everything into memory
+                system_stats = contents.split('System Statistics:')[1].strip().splitlines()
+                reader = csv.DictReader(system_stats)
+                runs.append(reduce(format_stats, reader, {}))
+        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
+        return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+
+    def aggregate(self, data_dir):
+        rows = []
+        for device in self.list_subdir(data_dir):
+            row = OrderedDict({'device': device})
+            device_dir = os.path.join(data_dir, device)
+            for subject in self.list_subdir(device_dir):
+                subject_row = row.copy()
+                subject_row.update({'subject': subject})
+                subject_dir = os.path.join(device_dir, subject)
+                for browser in self.list_subdir(subject_dir):
+                    browser_row = subject_row.copy()
+                    browser_row.update({'browser': browser})
+                    browser_dir = os.path.join(subject_dir, browser)
+                    if os.path.isdir(os.path.join(browser_dir, 'trepn')):
+                        browser_row.update(self.aggregate_trepn(os.path.join(browser_dir, 'trepn')))
+                        rows.append(browser_row)
+        return rows
+
+    def list_subdir(self, a_dir):
+        """List immediate subdirectories of a_dir"""
+        # https://stackoverflow.com/a/800201
+        return [name for name in os.listdir(a_dir)
+                if os.path.isdir(os.path.join(a_dir, name))]
 
     def makedirs(self, path):
         """Create a directory on path if it does not exist"""

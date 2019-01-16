@@ -115,6 +115,57 @@ class Batterystats(Profiler):
     def unload(self, device):
         return
 
+    def aggregate_data_end(self, data_dir, output_file):
+        rows = self.aggregate(data_dir)
+        self.write_to_file(output_file, rows)
+
+    def write_to_file(self, filename, rows):
+        with open(filename, 'w') as f:
+            writer = csv.DictWriter(f, rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def aggregate_battery(self, logs_dir):
+        def add_row(accum, new):
+            row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
+            count = accum['count'] + 1
+            return dict(row, **{'count': count})
+
+        runs = []
+        for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
+            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+                reader = csv.DictReader(run)
+                init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
+                run_total = reduce(add_row, reader, init)
+                runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
+        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
+        return OrderedDict(
+            sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+
+    def aggregate(self, data_dir):
+        rows = []
+        for device in self.list_subdir(data_dir):
+            row = OrderedDict({'device': device})
+            device_dir = os.path.join(data_dir, device)
+            for subject in self.list_subdir(device_dir):
+                subject_row = row.copy()
+                subject_row.update({'subject': subject})
+                subject_dir = os.path.join(device_dir, subject)
+                for browser in self.list_subdir(subject_dir):
+                    browser_row = subject_row.copy()
+                    browser_row.update({'browser': browser})
+                    browser_dir = os.path.join(subject_dir, browser)
+                    if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
+                        browser_row.update(self.aggregate_battery(os.path.join(browser_dir, 'batterystats')))
+                        rows.append(browser_row)
+        return rows
+
+    def list_subdir(self, a_dir):
+        """List immediate subdirectories of a_dir"""
+        # https://stackoverflow.com/a/800201
+        return [name for name in os.listdir(a_dir)
+                if os.path.isdir(os.path.join(a_dir, name))]
+
     def is_integer(self, number, minimum=0):
         if not isinstance(number, (int, long)):
             raise ConfigError('%s is not an integer' % number)

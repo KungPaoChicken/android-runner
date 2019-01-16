@@ -59,7 +59,8 @@ class Experiment(object):
                 self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
             finally:
                 self.cleanup(device)
-        self.scripts.run('aggregation', None, self.output_root)
+        self.aggregate_end()
+        #self.scripts.run('aggregation', None, self.output_root)
 
     def run(self, device, path, run):
         self.before_run(device, path, run)
@@ -113,3 +114,6 @@ class Experiment(object):
         """Hook executed after the end of experiment"""
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run('after_experiment', device, *args, **kwargs)
+
+    def aggregate_end(self):
+        self.profilers.aggregate_end(self.output_root)
