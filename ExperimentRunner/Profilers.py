@@ -49,7 +49,12 @@ class Profilers(object):
         for p in self.profilers:
             p.set_output()
 
+    def aggregate_subject(self):
+        self.logger.info('Start subject aggregation')
+        for p in self.profilers:
+            p.aggregate_subject()
+
     def aggregate_end(self, output_dir):
-        self.logger.info('Start aggregation')
+        self.logger.info('Start final aggregation')
         for p in self.profilers:
             p.aggregate_data_end(output_dir)

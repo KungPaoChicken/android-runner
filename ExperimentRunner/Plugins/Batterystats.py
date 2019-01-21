@@ -13,6 +13,8 @@ from Profiler import Profiler
 
 class Batterystats(Profiler):
     def __init__(self, config, paths):
+        # TODO check super call
+        # super(Profiler, self).__init__(config, paths)
         self.output_dir = ''
         self.paths = paths
         self.profile = False
@@ -115,7 +117,13 @@ class Batterystats(Profiler):
     def unload(self, device):
         return
 
-    def aggregate_data_end(self, data_dir, output_file):
+    def aggregate_subject(self):
+        filename = os.path.join(self.output_dir, 'Aggregated.csv')
+        subject_rows = list()
+        subject_rows.append(self.aggregate_battery_subject(self.output_dir))
+        self.write_to_file(filename, subject_rows)
+
+    def aggregate_end(self, data_dir, output_file):
         rows = self.aggregate(data_dir)
         self.write_to_file(output_file, rows)
 
@@ -125,7 +133,7 @@ class Batterystats(Profiler):
             writer.writeheader()
             writer.writerows(rows)
 
-    def aggregate_battery(self, logs_dir):
+    def aggregate_battery_subject(self, logs_dir):
         def add_row(accum, new):
             row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
             count = accum['count'] + 1
@@ -142,7 +150,7 @@ class Batterystats(Profiler):
         return OrderedDict(
             sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
-    def aggregate(self, data_dir):
+    def aggregate_final(self, data_dir):
         rows = []
         for device in self.list_subdir(data_dir):
             row = OrderedDict({'device': device})
@@ -156,9 +164,20 @@ class Batterystats(Profiler):
                     browser_row.update({'browser': browser})
                     browser_dir = os.path.join(subject_dir, browser)
                     if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
-                        browser_row.update(self.aggregate_battery(os.path.join(browser_dir, 'batterystats')))
+                        browser_row.update(self.aggregate_battery_final(os.path.join(browser_dir, 'batterystats')))
                         rows.append(browser_row)
         return rows
+
+    def aggregate_batterystats_final(self, logs_dir):
+        for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
+            if aggregated_file == "Aggregated.csv":
+                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                    reader = csv.DictReader(aggregated)
+                    row_dict = OrderedDict()
+                    for row in reader:
+                        for f in reader.fieldnames:
+                            row_dict.update({f: row[f]})
+                    return OrderedDict(row_dict)
 
     def list_subdir(self, a_dir):
         """List immediate subdirectories of a_dir"""

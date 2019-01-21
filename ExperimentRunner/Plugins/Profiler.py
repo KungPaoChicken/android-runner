@@ -31,6 +31,10 @@ class Profiler(object):
         """Set the output directory before the start_profiling is called"""
         raise NotImplementedError
 
-    def aggregate_data_end(self, data_dir, output_dir):
-        """Aggregate the data at the end of the run"""
+    def aggregate_subject(self):
+        """Aggregate the data at the end of the subject"""
+        raise NotImplementedError
+
+    def aggregate_end(self, data_dir, output_dir):
+        """Aggregate the data at the end of the experiment"""
         raise NotImplementedError
