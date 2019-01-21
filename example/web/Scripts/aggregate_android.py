@@ -13,7 +13,7 @@ def list_subdir(a_dir):
 
 def aggregate_android(logs_dir):
     def add_row(accum, new):
-        row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
+        row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
         count = accum['count'] + 1
         return dict(row, **{'count': count})
 
@@ -35,16 +35,14 @@ def aggregate(data_dir):
         row = OrderedDict({'device': device})
         device_dir = os.path.join(data_dir, device)
         for subject in list_subdir(device_dir):
-            subject_row = row.copy()
-            subject_row.update({'subject': subject})
+            row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
             for browser in list_subdir(subject_dir):
-                browser_row = subject_row.copy()
-                browser_row.update({'browser': browser})
+                row.update({'browser': browser})
                 browser_dir = os.path.join(subject_dir, browser)
                 if os.path.isdir(os.path.join(browser_dir, 'android')):
-                    browser_row.update(aggregate_android(os.path.join(browser_dir, 'android')))
-                rows.append(browser_row)
+                    row.update(aggregate_android(os.path.join(browser_dir, 'android')))
+                    rows.append(row.copy)
     return rows
 
 
@@ -55,7 +53,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(device, data_dir, result_file):
+def main(data_dir, result_file):
     print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
     write_to_file(result_file, rows)

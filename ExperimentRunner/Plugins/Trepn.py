@@ -134,16 +134,14 @@ class Trepn(Profiler):
             row = OrderedDict({'device': device})
             device_dir = os.path.join(data_dir, device)
             for subject in self.list_subdir(device_dir):
-                subject_row = row.copy()
-                subject_row.update({'subject': subject})
+                row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
                 for browser in self.list_subdir(subject_dir):
-                    browser_row = subject_row.copy()
-                    browser_row.update({'browser': browser})
+                    row.update({'browser': browser})
                     browser_dir = os.path.join(subject_dir, browser)
                     if os.path.isdir(os.path.join(browser_dir, 'trepn')):
-                        browser_row.update(self.aggregate_trepn_final(os.path.join(browser_dir, 'trepn')))
-                        rows.append(browser_row)
+                        row.update(self.aggregate_trepn_final(os.path.join(browser_dir, 'trepn')))
+                        rows.append(row.copy)
         return rows
 
     def aggregate_trepn_final(self, logs_dir):

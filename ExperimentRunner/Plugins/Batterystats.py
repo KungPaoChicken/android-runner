@@ -30,9 +30,7 @@ class Batterystats(Profiler):
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
         device.shell('dumpsys batterystats --reset')
-        device.shell('logcat -c')
         print('Batterystats cleared')
-        print('Logcat cleared')
 
         # Create output directories
         global app
@@ -80,9 +78,11 @@ class Batterystats(Profiler):
         batterystats_results = Parser.parse_batterystats(app, batterystats_file, self.powerprofile)
 
         # Estimate total consumption
+        # charge is given in mAh
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
-        energy_consumed = (float(charge) / 1000) * (float(volt) / 1000.0) * 3600.0
+        energy_consumed_Wh = float(charge) * float(volt) / 1000.0
+        energy_consumed_J = energy_consumed_Wh * 3600.0
 
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
@@ -96,8 +96,10 @@ class Batterystats(Profiler):
                 ['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
-            writer.writerow([''])
-            writer.writerow(['Android Internal Estimation:,{}'.format(energy_consumed)])
+
+        with open(op.join(self.output_dir.split('/')[:-1], 'batterystats_joule',
+                          'energy_consumed_Joule.txt')) as out:
+            out.write('{}\n'.format(energy_consumed_J))
 
         # Remove log files
         if self.cleanup is True:
@@ -119,8 +121,10 @@ class Batterystats(Profiler):
 
     def aggregate_subject(self):
         filename = os.path.join(self.output_dir, 'Aggregated.csv')
+        current_row = self.aggregate_battery_subject(self.output_dir)
+        current_row.update(self.aggregate_battery_subject(op.join(self.output_dir.split('/')[:-1], 'batterystats_joule')))
         subject_rows = list()
-        subject_rows.append(self.aggregate_battery_subject(self.output_dir))
+        subject_rows.append(current_row)
         self.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
@@ -135,7 +139,7 @@ class Batterystats(Profiler):
 
     def aggregate_battery_subject(self, logs_dir):
         def add_row(accum, new):
-            row = {k: v + float(new[k]) for k, v in accum.items() if k != 'count'}
+            row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
@@ -156,16 +160,14 @@ class Batterystats(Profiler):
             row = OrderedDict({'device': device})
             device_dir = os.path.join(data_dir, device)
             for subject in self.list_subdir(device_dir):
-                subject_row = row.copy()
-                subject_row.update({'subject': subject})
+                row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
                 for browser in self.list_subdir(subject_dir):
-                    browser_row = subject_row.copy()
-                    browser_row.update({'browser': browser})
+                    row.update({'browser': browser})
                     browser_dir = os.path.join(subject_dir, browser)
                     if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
-                        browser_row.update(self.aggregate_battery_final(os.path.join(browser_dir, 'batterystats')))
-                        rows.append(browser_row)
+                        row.update(self.aggregate_battery_final(os.path.join(browser_dir, 'batterystats')))
+                        rows.append(row.copy())
         return rows
 
     def aggregate_batterystats_final(self, logs_dir):
