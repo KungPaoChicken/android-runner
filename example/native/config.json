@@ -7,10 +7,14 @@
   ],
   "profilers": {
     "trepn": {
+      "subject_aggregation" : "default",
+      "experiment_aggregation" : "default",
       "sample_interval": 100,
       "data_points": ["battery_power", "mem_usage"]
     },
     "android": {
+      "subject_aggregation" : "default",
+      "experiment_aggregation" : "default",
       "sample_interval": 0,
       "data_points": ["cpu", "mem"]
     }
@@ -33,8 +37,7 @@
     ],
     "before_close": "Scripts/before_close.py",
     "after_run": "Scripts/after_run.py",
-    "after_experiment": "Scripts/after_experiment.py",
-    "aggregation": "Scripts/aggregation.py"
+    "after_experiment": "Scripts/after_experiment.py"
   },
   "time_between_run": 500
 }

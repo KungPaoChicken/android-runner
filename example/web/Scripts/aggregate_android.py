@@ -29,24 +29,6 @@ def aggregate_android(logs_dir):
         sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
 
-def aggregate_trepn(logs_dir):
-    def format_stats(accum, new):
-        column_name = new['Name']
-        if '[' in new['Type']:
-            column_name += ' [' + new['Type'].split('[')[1]
-        accum.update({column_name: float(new['Average'])})
-        return accum
-    runs = []
-    for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-        with open(os.path.join(logs_dir, run_file), 'rb') as run:
-            contents = run.read()   # Be careful with large files, this loads everything into memory
-            system_stats = contents.split('System Statistics:')[1].strip().splitlines()
-            reader = csv.DictReader(system_stats)
-            runs.append(reduce(format_stats, reader, {}))
-    runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
-    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
-
-
 def aggregate(data_dir):
     rows = []
     for device in list_subdir(data_dir):
@@ -62,10 +44,6 @@ def aggregate(data_dir):
                 browser_dir = os.path.join(subject_dir, browser)
                 if os.path.isdir(os.path.join(browser_dir, 'android')):
                     browser_row.update(aggregate_android(os.path.join(browser_dir, 'android')))
-                if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
-                    browser_row.update(aggregate_android(os.path.join(browser_dir, 'batterystats')))
-                if os.path.isdir(os.path.join(browser_dir, 'trepn')):
-                    browser_row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
                 rows.append(browser_row)
     return rows
 
@@ -77,14 +55,12 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(device, output_root):
-    print('Output root: {}'.format(output_root))
-    data_dir = os.path.join(output_root, 'data')
+def main(device, data_dir, result_file):
+    print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
-    filename = os.path.join(output_root, 'aggregated_results.csv')
-    write_to_file(filename, rows)
+    write_to_file(result_file, rows)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        main(sys.argv[1])
+    if len(sys.argv) == 3:
+        main(sys.argv[1], sys.argv[2])

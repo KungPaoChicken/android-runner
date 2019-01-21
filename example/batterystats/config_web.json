@@ -12,7 +12,9 @@
   ],
   "profilers": {
     "batterystats": {
-      "cleanup": true
+      "cleanup": true,
+      "subject_aggregation": "none",
+      "experiment_aggregation" : "none"
     }
   },
   "scripts": {
