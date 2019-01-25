@@ -42,7 +42,7 @@ def aggregate(data_dir):
                 browser_dir = os.path.join(subject_dir, browser)
                 if os.path.isdir(os.path.join(browser_dir, 'android')):
                     row.update(aggregate_android(os.path.join(browser_dir, 'android')))
-                    rows.append(row.copy)
+                    rows.append(row.copy())
     return rows
 
 
@@ -53,7 +53,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(data_dir, result_file):
+def main(dummy, data_dir, result_file):
     print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
     write_to_file(result_file, rows)
