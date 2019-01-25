@@ -129,7 +129,7 @@ class Android(Profiler):
                     browser_dir = os.path.join(subject_dir, browser)
                     if os.path.isdir(os.path.join(browser_dir, 'android')):
                         row.update(self.aggregate_android_final(os.path.join(browser_dir, 'android')))
-                        rows.append(row.copy)
+                        rows.append(row.copy())
         return rows
 
     def aggregate_android_final(self, logs_dir):

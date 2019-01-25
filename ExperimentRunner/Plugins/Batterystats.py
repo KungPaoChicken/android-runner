@@ -38,6 +38,7 @@ class Batterystats(Profiler):
         global logcat_file
         global batterystats_file
         global results_file
+        global results_file_name
 
         if self.type == 'native':
             app = kwargs.get('app', None)
@@ -50,8 +51,8 @@ class Batterystats(Profiler):
         logcat_file = '{}logcat_{}_{}.txt'.format(self.output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         batterystats_file = op.join(self.output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
             '%Y.%m.%d_%H%M%S')))
-        results_file = op.join(self.output_dir, 'results_{}_{}.csv'
-                               .format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
+        results_file_name = 'results_{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        results_file = op.join(self.output_dir, results_file_name)
 
         self.profile = True
         self.get_data(device, app)
@@ -97,9 +98,8 @@ class Batterystats(Profiler):
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
 
-        with open(op.join(self.output_dir.split('/')[:-1], 'batterystats_joule',
-                          'energy_consumed_Joule.txt')) as out:
-            out.write('{}\n'.format(energy_consumed_J))
+        with open(op.join(self.output_dir, 'Joule_{}'.format(results_file_name))) as out:
+            out.write('Joule calculated\n{}\n'.format(energy_consumed_J))
 
         # Remove log files
         if self.cleanup is True:
@@ -121,8 +121,8 @@ class Batterystats(Profiler):
 
     def aggregate_subject(self):
         filename = os.path.join(self.output_dir, 'Aggregated.csv')
-        current_row = self.aggregate_battery_subject(self.output_dir)
-        current_row.update(self.aggregate_battery_subject(op.join(self.output_dir.split('/')[:-1], 'batterystats_joule')))
+        current_row = self.aggregate_battery_subject(self.output_dir, False)
+        current_row.update(self.aggregate_battery_subject(self.output_dir, True))
         subject_rows = list()
         subject_rows.append(current_row)
         self.write_to_file(filename, subject_rows)
@@ -137,7 +137,7 @@ class Batterystats(Profiler):
             writer.writeheader()
             writer.writerows(rows)
 
-    def aggregate_battery_subject(self, logs_dir):
+    def aggregate_battery_subject(self, logs_dir, joules):
         def add_row(accum, new):
             row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
             count = accum['count'] + 1
@@ -145,14 +145,15 @@ class Batterystats(Profiler):
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            with open(os.path.join(logs_dir, run_file), 'rb') as run:
-                reader = csv.DictReader(run)
-                init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
-                run_total = reduce(add_row, reader, init)
-                runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
+            if run_file.contains('Joule') and joules:
+                with open(os.path.join(logs_dir, run_file), 'rb') as run:
+                    reader = csv.DictReader(run)
+                    init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
+                    run_total = reduce(add_row, reader, init)
+                    runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
         runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
         return OrderedDict(
-            sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+            sorted({'batterystats_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
     def aggregate_final(self, data_dir):
         rows = []
