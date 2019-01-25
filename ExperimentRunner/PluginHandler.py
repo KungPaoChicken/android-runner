@@ -3,7 +3,7 @@ import paths
 import os
 
 from Python2 import Python2
-from collections import OrderedDict
+from shutil import copyfile
 from pluginbase import PluginBase
 from util import makedirs
 
@@ -22,6 +22,8 @@ class PluginHandler(object):
             self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.defaultPluginsPath])
         else:
             self.pluginPath = os.path.join(paths.CONFIG_DIR, 'Plugins')
+            copyfile(os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins', 'Profiler.py'), os.path.join(
+                paths.CONFIG_DIR, 'Plugins', 'Profiler.py'))
             self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.pluginPath])
 
         self.pluginModule = self.plugin_source.load_plugin(self.moduleName)
