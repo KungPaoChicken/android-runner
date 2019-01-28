@@ -15,17 +15,18 @@ class PluginHandler(object):
         self.plugginParams = params
         self.nameLower = name.lower()
         self.moduleName = self.nameLower.capitalize()
+        self.subject_aggregated = False
+        self.subject_aggregated_default = False
 
         self.plugin_base = PluginBase(package='ExperimentRunner.plugins')
         if self.nameLower == 'android' or self.nameLower == 'trepn' or self.nameLower == 'batterystats':
-            self.defaultPluginsPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
-            self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.defaultPluginsPath])
+            self.pluginPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
         else:
             self.pluginPath = os.path.join(paths.CONFIG_DIR, 'Plugins')
             copyfile(os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins', 'Profiler.py'), os.path.join(
-                paths.CONFIG_DIR, 'Plugins', 'Profiler.py'))
-            self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.pluginPath])
+                self.pluginPath, 'Profiler.py'))
 
+        self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.pluginPath])
         self.pluginModule = self.plugin_source.load_plugin(self.moduleName)
         self.paths = paths.paths_dict()
         self.currentProfiler = getattr(self.pluginModule, self.moduleName)(params, self.paths)
@@ -74,10 +75,14 @@ class PluginHandler(object):
             return
         elif aggregate_subject_function_lower == 'default':
             self.logger.debug('%s: aggregating subject results')
+            self.subject_aggregated = True
+            self.subject_aggregated_default = True
             self.currentProfiler.aggregate_subject()
         else:
             aggregate_subject_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_subject_function))
             self.logger.debug('%s: aggregating subject results')
+            self.subject_aggregated = True
+            self.subject_aggregated_default = False
             aggregate_subject_script.run(None,  self.paths['OUTPUT_DIR'])
 
     def aggregate_data_end(self, output_dir):
@@ -90,11 +95,35 @@ class PluginHandler(object):
         if aggregate_function_lower == 'none':
             return
         elif aggregate_function_lower == 'default':
-            self.logger.debug('%s: aggregating results')
-            self.currentProfiler.aggregate_end(data_dir, result_file)
+            if self.subject_aggregated and self.subject_aggregated_default:
+                self.logger.debug('%s: aggregating results')
+                self.currentProfiler.aggregate_end(data_dir, result_file)
+            elif self.subject_aggregated and not self.subject_aggregated_default:
+                self.logger.info("{} profiler: User defined subject aggregation used,"
+                                 " default experiment aggregation not possible.".format(self.moduleName))
+                return
+            elif not self.subject_aggregated:
+                self.logger.debug('%s: aggregating results')
+                self.aggregate_subjects_default(data_dir)
+                self.currentProfiler.aggregate_end(data_dir, result_file)
         else:
             aggregate_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_function))
             self.logger.debug('%s: aggregating results')
             aggregate_script.run(None, data_dir, result_file)
 
+    def aggregate_subjects_default(self, data_dir):
+        for device in self.list_subdir(data_dir):
+            device_dir = os.path.join(data_dir, device)
+            for subject in self.list_subdir(device_dir):
+                subject_dir = os.path.join(device_dir, subject)
+                for browser in self.list_subdir(subject_dir):
+                    browser_dir = os.path.join(subject_dir, browser)
+                    if os.path.isdir(os.path.join(browser_dir, self.nameLower)):
+                        self.currentProfiler.set_output(os.path.join(browser_dir, self.nameLower))
+                        self.currentProfiler.aggregate_subject()
 
+    def list_subdir(self, a_dir):
+        """List immediate subdirectories of a_dir"""
+        # https://stackoverflow.com/a/800201
+        return [name for name in os.listdir(a_dir)
+                if os.path.isdir(os.path.join(a_dir, name))]
