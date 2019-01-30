@@ -163,15 +163,19 @@ class Batterystats(Profiler):
             for subject in self.list_subdir(device_dir):
                 row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
-                for browser in self.list_subdir(subject_dir):
-                    row.update({'browser': browser})
-                    browser_dir = os.path.join(subject_dir, browser)
-                    if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
-                        row.update(self.aggregate_battery_final(os.path.join(browser_dir, 'batterystats')))
-                        rows.append(row.copy())
+                if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
+                    row.update(self.aggregate_battery_final(os.path.join(subject_dir, 'batterystats')))
+                    rows.append(row.copy())
+                else:
+                    for browser in self.list_subdir(subject_dir):
+                        row.update({'browser': browser})
+                        browser_dir = os.path.join(subject_dir, browser)
+                        if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
+                            row.update(self.aggregate_battery_final(os.path.join(browser_dir, 'batterystats')))
+                            rows.append(row.copy())
         return rows
 
-    def aggregate_batterystats_final(self, logs_dir):
+    def aggregate_battery_final(self, logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
                 with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:

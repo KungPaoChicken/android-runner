@@ -11,7 +11,7 @@ def list_subdir(a_dir):
             if os.path.isdir(os.path.join(a_dir, name))]
 
 
-def aggregate_trepn(logs_dir):
+def aggregate_trepn_final(logs_dir):
     def format_stats(accum, new):
         column_name = new['Name']
         if '[' in new['Type']:
@@ -37,12 +37,16 @@ def aggregate(data_dir):
         for subject in list_subdir(device_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            for browser in list_subdir(subject_dir):
-                row.update({'browser': browser})
-                browser_dir = os.path.join(subject_dir, browser)
-                if os.path.isdir(os.path.join(browser_dir, 'trepn')):
-                    row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
-                    rows.append(row.copy())
+            if os.path.isdir(os.path.join(subject_dir, 'trepn')):
+                row.update(aggregate_trepn_final(os.path.join(subject_dir, 'trepn')))
+                rows.append(row.copy())
+            else:
+                for browser in list_subdir(subject_dir):
+                    row.update({'browser': browser})
+                    browser_dir = os.path.join(subject_dir, browser)
+                    if os.path.isdir(os.path.join(browser_dir, 'trepn')):
+                        row.update(aggregate_trepn_final(os.path.join(browser_dir, 'trepn')))
+                        rows.append(row.copy())
     return rows
 
 
