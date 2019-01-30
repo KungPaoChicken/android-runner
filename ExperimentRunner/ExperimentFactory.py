@@ -2,8 +2,9 @@ import logging
 import shutil
 import paths
 import os.path as op
-
 import util
+
+from Progress import Progress
 from Experiment import Experiment
 from NativeExperiment import NativeExperiment
 from WebExperiment import WebExperiment
@@ -21,10 +22,11 @@ class ExperimentFactory(object):
         logger.info(path)
         shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
+        progress = Progress(config, path)
         experiment_type = config['type']
         if experiment_type == 'native':
-            return NativeExperiment(config)
+            return NativeExperiment(config, progress)
         elif experiment_type == 'web':
-            return WebExperiment(config)
+            return WebExperiment(config, progress)
         else:
-            return Experiment(config)
+            return Experiment(config, progress)

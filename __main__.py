@@ -18,6 +18,7 @@ def main():
     log_dir = op.join(paths.CONFIG_DIR, 'output/%s/' % time.strftime('%Y.%m.%d_%H%M%S'))
     makedirs(log_dir)
     paths.OUTPUT_DIR = log_dir
+    paths.BASE_OUTPUT_DIR = log_dir
     log_filename = op.join(log_dir, 'experiment.log')
 
     logger = logging.getLogger()

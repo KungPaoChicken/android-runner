@@ -6,3 +6,6 @@ class Opera(Browser):
         super(Opera, self).__init__(config)
         self.package_name = 'com.opera.browser'
         self.main_activity = 'com.opera.Opera'
+
+    def to_string(self):
+        return self.package_name

@@ -8,6 +8,7 @@ class Profilers(object):
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.profilers = []
+        self.loaded_devices =[]
         for name, params in config.items():
             try:
                 self.profilers.append(PluginHandler(name, params))
@@ -21,8 +22,10 @@ class Profilers(object):
 
     def load(self, device):
         self.logger.info('Loading')
-        for p in self.profilers:
-            p.load(device)
+        if device.name not in self.loaded_devices:
+            for p in self.profilers:
+                p.load(device)
+                self.loaded_devices.append(device.name)
 
     def start_profiling(self, device, **kwargs):
         self.logger.info('Start profiling')
