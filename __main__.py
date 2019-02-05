@@ -50,10 +50,13 @@ def main():
         experiment.start()
     except Exception, e:
         logger.error('%s: %s' % (e.__class__.__name__, e.message))
-        logger.error('An error occurred, the experiment has been stopped.'
-                     ' To continue use progress file: {}'.format(progress_file))
+        logger.error('An error occurred, the experiment has been stopped. '
+                     'To continue, add progress file argument to experiment startup: '
+                     '--progress {}'.format(progress_file))
     except KeyboardInterrupt:
-        logger.error('Experiment stopped by user. To continue use progress file: {}'.format(progress_file))
+        logger.error('Experiment stopped by user. '
+                     'To continue, add progress file argument to experiment startup: '
+                     '--progress {}'.format(progress_file))
 
 
 if __name__ == "__main__":
