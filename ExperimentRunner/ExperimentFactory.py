@@ -17,12 +17,13 @@ class ExperimentFactory(object):
         pass
 
     @staticmethod
-    def from_json(path):
+    def from_json(path, progress):
         """Returns an Experiment object from a JSON configuration"""
         logger.info(path)
         shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
-        progress = Progress(config, path)
+        if progress is None:
+            progress = Progress(config_file=path, config=config, load_progress=False)
         experiment_type = config['type']
         if experiment_type == 'native':
             return NativeExperiment(config, progress)

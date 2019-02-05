@@ -75,8 +75,6 @@ class PluginHandler(object):
             return
         elif aggregate_subject_function_lower == 'default':
             self.logger.debug('%s: aggregating subject results')
-            self.subject_aggregated = True
-            self.subject_aggregated_default = True
             self.currentProfiler.aggregate_subject()
         else:
             aggregate_subject_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_subject_function))
@@ -86,6 +84,8 @@ class PluginHandler(object):
             aggregate_subject_script.run(None,  self.paths['OUTPUT_DIR'])
 
     def aggregate_data_end(self, output_dir):
+        aggregate_subject_function = self.plugginParams.get('subject_aggregation', 'default')
+        aggregate_subject_function_lower = aggregate_subject_function.lower()
         aggregate_function = self.plugginParams.get('experiment_aggregation', 'default')
         aggregate_function_lower = aggregate_function.lower()
 
@@ -95,17 +95,17 @@ class PluginHandler(object):
         if aggregate_function_lower == 'none':
             return
         elif aggregate_function_lower == 'default':
-            if self.subject_aggregated and self.subject_aggregated_default:
+            if aggregate_subject_function_lower == 'default':
                 self.logger.debug('%s: aggregating results')
                 self.currentProfiler.aggregate_end(data_dir, result_file)
-            elif self.subject_aggregated and not self.subject_aggregated_default:
-                self.logger.info("{} profiler: User defined subject aggregation used,"
-                                 " default experiment aggregation not possible.".format(self.moduleName))
-                return
             elif not self.subject_aggregated:
                 self.logger.debug('%s: aggregating results')
                 self.aggregate_subjects_default(data_dir)
                 self.currentProfiler.aggregate_end(data_dir, result_file)
+            else:
+                self.logger.info("{} profiler: User defined subject aggregation used,"
+                                 " default experiment aggregation not possible.".format(self.moduleName))
+                return
         else:
             aggregate_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_function))
             self.logger.debug('%s: aggregating results')

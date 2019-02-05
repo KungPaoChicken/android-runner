@@ -1,16 +1,24 @@
 import os
 import paths
 import hashlib
+import logging
+import sys
 import lxml.etree as et
 from random import randint
 
 
 class Progress(object):
-    def __init__(self, config, config_path):
-        self.config_hash = self.file_to_hash(config_path)
-        self.progress_xml_file = os.path.join(paths.OUTPUT_DIR, 'progress.xml')
-        self.progress_xml_content = self.build_progress_xml(config)
-        self.write_progress_to_file()
+    """If progress True, path is progress.xml. If false, path is config.json"""
+    def __init__(self, progress_file=None, config_file=None, config=None, load_progress=None):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        if load_progress:
+            self.progress_xml_file = progress_file
+            self.progress_xml_content = et.parse(self.progress_xml_file).getroot()
+            self.check_config_hash(config_file)
+        else:
+            self.progress_xml_file = os.path.join(paths.OUTPUT_DIR, 'progress.xml')
+            self.progress_xml_content = self.build_progress_xml(config, config_file)
+            self.write_progress_to_file()
 
     def file_to_hash(self, path):
         with open(path, 'r') as myfile:
@@ -18,8 +26,17 @@ class Progress(object):
         hashed_string_obj = hashlib.md5(content_string.encode())
         return hashed_string_obj.hexdigest()
 
-    def build_progress_xml(self, config):
-        config_hash_xml = '<configHash>{}</configHash>'.format(self.config_hash)
+    def check_config_hash(self, config_file):
+        progress_config_hash = self.progress_xml_content.find('configHash').text
+        if progress_config_hash == self.file_to_hash(config_file):
+            return
+        else:
+            print 'Current config.json and config.json from progress.xml are not the same, cannot continue'
+            sys.exit()
+
+
+    def build_progress_xml(self, config, config_file):
+        config_hash_xml = '<configHash>{}</configHash>'.format(self.file_to_hash(config_file))
         output_dir_xml = '<outputDir>{}</outputDir>'.format(paths.OUTPUT_DIR)
         subjects_xml = '<subjects>{}</subjects>'.format(self.build_aggregated_xml(config))
         runs_to_run_xml = '<runsToRun>{}</runsToRun>'.format(self.build_runs_xml(config))
@@ -73,6 +90,9 @@ class Progress(object):
     def write_progress_to_file(self):
         xml = self.progress_xml_content.getroottree()
         xml.write(self.progress_xml_file, pretty_print=True)
+
+    def get_output_dir(self):
+        return self.progress_xml_content.find('outputDir').text
 
     """Get a random run from the <runsToRuns> element"""
     def get_random_run(self):
