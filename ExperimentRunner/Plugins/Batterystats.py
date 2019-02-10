@@ -12,9 +12,9 @@ from Profiler import Profiler
 
 
 class Batterystats(Profiler):
+
     def __init__(self, config, paths):
-        # TODO check super call
-        # super(Profiler, self).__init__(config, paths)
+        super(Batterystats, self).__init__(config, paths)
         self.output_dir = ''
         self.paths = paths
         self.profile = False

@@ -1,10 +1,10 @@
 class Profiler(object):
-    @staticmethod
-    def dependencies():
-        """Returns list of needed app dependencies,like com.quicinc.trepn, [] if none"""
-        raise NotImplementedError
 
     def __init__(self, config, paths):
+        pass
+
+    def dependencies(self):
+        """Returns list of needed app dependencies,like com.quicinc.trepn, [] if none"""
         raise NotImplementedError
 
     def load(self, device):
@@ -19,8 +19,8 @@ class Profiler(object):
         """Stop the profiling process"""
         raise NotImplementedError
 
-    def collect_results(self, device, path=None):
-        """Collect the data and clean up extra files on the device"""
+    def collect_results(self, device):
+        """Collect the data and clean up extra files on the device, save data in location set by 'set_output' """
         raise NotImplementedError
 
     def unload(self, device):
@@ -32,9 +32,11 @@ class Profiler(object):
         raise NotImplementedError
 
     def aggregate_subject(self):
-        """Aggregate the data at the end of the subject"""
+        """Aggregate the data at the end of a subject, collect data and save data to location set by 'set output' """
         raise NotImplementedError
 
-    def aggregate_end(self, data_dir, output_dir):
-        """Aggregate the data at the end of the experiment"""
+    def aggregate_end(self, data_dir, output_file):
+        """Aggregate the data at the end of the experiment.
+         Data located in file structure inside data_dir. Save aggregated data to output_file
+        """
         raise NotImplementedError

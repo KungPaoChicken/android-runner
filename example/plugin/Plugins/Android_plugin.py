@@ -15,8 +15,7 @@ class ConfigError(Exception):
 
 class Android_plugin(Profiler):
     def __init__(self, config, paths):
-        # TODO check super call
-        # super(Profiler, self).__init__(config, paths)
+        super(Android_plugin, self).__init__(config, paths)
         self.output_dir = ''
         self.paths = paths
         self.profile = False

@@ -13,13 +13,11 @@ from Profiler import Profiler
 class Trepn(Profiler):
     DEVICE_PATH = '/sdcard/trepn/'
 
-    @staticmethod
-    def dependencies():
+    def dependencies(self):
         return ['com.quicinc.trepn']
 
     def __init__(self, config, paths):
-        # TODO check super call
-        # super(Profiler, self).__init__(config, paths)
+        super(Trepn, self).__init__(config, paths)
         self.output_dir = ''
         self.paths = paths
         self.pref_dir = None

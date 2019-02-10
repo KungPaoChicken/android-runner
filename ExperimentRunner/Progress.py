@@ -8,7 +8,6 @@ from random import randint
 
 
 class Progress(object):
-    """If progress True, path is progress.xml. If false, path is config.json"""
     def __init__(self, progress_file=None, config_file=None, config=None, load_progress=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         if load_progress:
@@ -19,6 +18,9 @@ class Progress(object):
             self.progress_xml_file = os.path.join(paths.OUTPUT_DIR, 'progress.xml')
             self.progress_xml_content = self.build_progress_xml(config, config_file)
             self.write_progress_to_file()
+
+    def get_progress_xml_file(self):
+        return self.progress_xml_file
 
     def file_to_hash(self, path):
         with open(path, 'r') as myfile:

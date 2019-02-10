@@ -46,7 +46,7 @@ def main():
     progress_file = ' No progress file created'
     try:
         experiment = ExperimentFactory.from_json(config_file, progress)
-        progress_file = experiment.progress.progress_xml_file
+        progress_file = experiment.get_progress_xml_file()
         experiment.start()
     except Exception, e:
         logger.error('%s: %s' % (e.__class__.__name__, e.message))

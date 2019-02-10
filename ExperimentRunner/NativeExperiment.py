@@ -3,14 +3,14 @@ import os.path as op
 from Experiment import Experiment
 from util import ConfigError, makedirs, slugify
 import paths
-import Tests
+import Checks
 import time
 
 
 class NativeExperiment(Experiment):
     def __init__(self, config, progress):
         self.package = None
-        self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
+        self.duration = Checks.is_integer(config.get('duration', 0)) / 1000
         super(NativeExperiment, self).__init__(config, progress)
         for apk in config.get('paths', []):
             if not op.isfile(apk):
