@@ -4,10 +4,10 @@ import inspect
 import os
 import time
 import traceback
-import Checks
 from PluginHandler import PluginHandler
 from Devices import Devices
 from util import makedirs
+
 
 class Tests(object):
 
@@ -20,6 +20,7 @@ class Tests(object):
         self.profilers = None
         self.output_root = paths.OUTPUT_DIR
         self.result_file = os.path.join(self.output_root, 'Test_results.txt')
+        self.dirs = {}
 
     def get_progress_xml_file(self):
         return "Testing, no progress file has been made"
@@ -29,6 +30,8 @@ class Tests(object):
         default_profilers = ['android', 'batterystats', 'trepn']
         for profiler in self.profilers:
             if profiler.nameLower not in default_profilers:
+                self.check_profiler(profiler.currentProfiler, profiler.moduleName)
+            else:
                 self.check_profiler(profiler.currentProfiler, profiler.moduleName)
 
     def check_init_profilers(self):
@@ -51,6 +54,47 @@ class Tests(object):
                                'as parent class, plugin can\'t be tested'.format(profiler_name))
 
     def check_profiler_methods(self, profiler, profiler_name):
+        device = self.check_profiler_dependencies(profiler, profiler_name)
+        if device is not None:
+            self.set_dirs(device, profiler_name)
+            methods = ['load', 'set_output', 'start_profiling', 'stop_profiling', 'collect_results',
+                       'aggregate_subject', 'unload', 'aggregate_end']
+
+            for current_method in methods:
+                self.check_profiler_method(device, profiler, current_method, profiler_name)
+
+    def set_dirs(self, device, profiler_name):
+        self.dirs['subject'] = os.path.join(self.output_root, 'data', device.name, 'test_dir_1', 'test_dir_2',
+                                       profiler_name.lower())
+        self.dirs['aggregated'] = os.path.join(paths.OUTPUT_DIR, '{}_aggregated.csv'.format(profiler_name))
+        self.dirs['base'] = os.path.join(paths.OUTPUT_DIR, 'data')
+        makedirs(self.dirs['subject'])
+
+    def check_profiler_method(self, device, profiler, current_method, profiler_name):
+        try:
+            if current_method == 'set_output':
+                method_result = getattr(profiler, current_method)(self.dirs['subject'])
+            elif current_method == 'stop_profiling':
+                time.sleep(5)
+                method_result = getattr(profiler, current_method)(device)
+                time.sleep(5)
+            elif current_method == 'aggregate_subject':
+                method_result = getattr(profiler, current_method)()
+            elif current_method == 'aggregate_end':
+                method_result = getattr(profiler, current_method)(self.dirs['base'], self.dirs['aggregated'])
+            else:
+                method_result = getattr(profiler, current_method)(device)
+
+            if method_result is not None:
+                self.errors.append("Profiler {}: Method {} gives non expected return value.".
+                                   format(profiler_name, current_method))
+        except NotImplementedError:
+            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, current_method))
+        except Exception as e:
+            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
+                               .format(profiler_name, current_method, traceback.format_exc()))
+
+    def check_profiler_dependencies(self, profiler, profiler_name):
         method = 'dependencies()'
         try:
             method_result = profiler.dependencies()
@@ -74,114 +118,7 @@ class Tests(object):
                 self.errors.append('Profiler {}: plugin not further tested, '
                                    'no device available that meets the dependencies. '
                                    'Check devices and dependencies'.format(profiler_name))
-                return
-
-        method = 'load()'
-        try:
-            method_result = profiler.load(device)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        method = 'set_output()'
-        profiler_test_output = os.path.join(self.output_root, 'data',
-                                            device.name, 'test_dir_1', 'test_dir_2', profiler_name.lower())
-        try:
-            method_result = profiler.set_output(profiler_test_output)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-        makedirs(profiler_test_output)
-
-        method = 'start_profiling()'
-        try:
-            method_result = profiler.start_profiling(device)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        """Ensures something is measured for testing"""
-        time.sleep(5)
-
-        method = 'stop_profiling()'
-        try:
-            method_result = profiler.stop_profiling(device)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        """Gives time to end all multi threaded profiling"""
-        time.sleep(5)
-
-        method = 'collect_results()'
-        try:
-            method_result = profiler.collect_results(device)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        method = 'aggregate_subject()'
-        try:
-            method_result = profiler.aggregate_subject()
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        method = 'unload()'
-        try:
-            method_result = profiler.unload(device)
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
-
-        method = 'aggregate_end()'
-        try:
-            method_result = profiler.aggregate_end(os.path.join(paths.OUTPUT_DIR, 'data'),
-                                                   os.path.join(paths.OUTPUT_DIR, '{}_aggregated.csv').
-                                                   format(profiler_name))
-            if method_result is not None:
-                self.errors.append("Profiler {}: Method {} gives non expected return value.".
-                                   format(profiler_name, method))
-        except NotImplementedError:
-            self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
-            self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
-                               .format(profiler_name, method, traceback.format_exc()))
+            return device
 
     def check_dependencies(self, dependencies, profiler_name):
         if isinstance(dependencies, list):
