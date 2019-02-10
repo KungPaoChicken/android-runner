@@ -31,8 +31,6 @@ class Tests(object):
         for profiler in self.profilers:
             if profiler.nameLower not in default_profilers:
                 self.check_profiler(profiler.currentProfiler, profiler.moduleName)
-            else:
-                self.check_profiler(profiler.currentProfiler, profiler.moduleName)
 
     def check_init_profilers(self):
         self.profilers = []
