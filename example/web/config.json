@@ -1,7 +1,8 @@
 {
   "type": "web",
   "devices": ["nexus6p"],
-  "replications": 1,
+  "replications": 3,
+  "randomization": "True",
   "browsers": ["firefox"],
   "paths": [
     "https://google.com/",
