@@ -3,7 +3,7 @@ import shutil
 import paths
 import os.path as op
 import util
-from Tests import Tests
+from PluginTests import Tests
 from Progress import Progress
 from Experiment import Experiment
 from NativeExperiment import NativeExperiment

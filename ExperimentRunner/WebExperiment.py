@@ -1,7 +1,7 @@
 import os.path as op
 import time
 
-import Checks
+import Tests
 import paths
 from Experiment import Experiment
 from BrowserFactory import BrowserFactory
@@ -12,8 +12,8 @@ class WebExperiment(Experiment):
     def __init__(self, config, progress):
         super(WebExperiment, self).__init__(config, progress)
         self.browsers = [BrowserFactory.get_browser(b)(config) for b in config.get('browsers', ['chrome'])]
-        Checks.check_dependencies(self.devices, [b.package_name for b in self.browsers])
-        self.duration = Checks.is_integer(config.get('duration', 0)) / 1000
+        Tests.check_dependencies(self.devices, [b.package_name for b in self.browsers])
+        self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
 
     def run(self, device, path, run, browser_name):
         for browserItem in self.browsers:

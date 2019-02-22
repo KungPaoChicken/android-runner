@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os.path as op
 import signal
 from util import FileNotFoundError
-import Checks
+import Tests
 
 
 class ScriptError(Exception):
@@ -17,10 +17,10 @@ class Script(object):
         self.filename = op.basename(path)
         if not op.isfile(path):
             raise FileNotFoundError(self.filename)
-        self.timeout = float(Checks.is_integer(timeout)) / 1000
+        self.timeout = float(Tests.is_integer(timeout)) / 1000
         self.logcat_event = logcat_regex
         if logcat_regex is not None:
-            self.logcat_event = Checks.is_string(logcat_regex)
+            self.logcat_event = Tests.is_string(logcat_regex)
 
     def execute_script(self, device, *args, **kwargs):
         """The method that is extended to execute the script"""

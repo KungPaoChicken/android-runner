@@ -3,7 +3,7 @@ import os.path as op
 import time
 
 import paths
-import Checks
+import Tests
 from Devices import Devices
 from Profilers import Profilers
 from Scripts import Scripts
@@ -20,13 +20,13 @@ class Experiment(object):
             raise ConfigError('"device" is required in the configuration')
         adb_path = config.get('adb_path', 'adb')
         self.devices = Devices(config['devices'], adb_path=adb_path)
-        self.replications = Checks.is_integer(config.get('replications', 1))
+        self.replications = Tests.is_integer(config.get('replications', 1))
         self.paths = config.get('paths', [])
         self.profilers = Profilers(config.get('profilers', {}))
         monkeyrunner_path = config.get('monkeyrunner_path', 'monkeyrunner')
         self.scripts = Scripts(config.get('scripts', {}), monkeyrunner_path=monkeyrunner_path)
-        self.time_between_run = Checks.is_integer(config.get('time_between_run', 0))
-        Checks.check_dependencies(self.devices, self.profilers.dependencies())
+        self.time_between_run = Tests.is_integer(config.get('time_between_run', 0))
+        Tests.check_dependencies(self.devices, self.profilers.dependencies())
         self.output_root = paths.OUTPUT_DIR
 
     def prepare(self, device):
