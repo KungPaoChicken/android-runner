@@ -1,10 +1,11 @@
 import logging
 import os.path as op
 
-from util import ConfigError
-from Python2 import Python2
-from MonkeyReplay import MonkeyReplay
 import paths
+from MonkeyReplay import MonkeyReplay
+from MonkeyRunner import MonkeyRunner
+from Python2 import Python2
+from util import ConfigError
 
 
 class Scripts(object):
@@ -21,13 +22,17 @@ class Scripts(object):
                 path = op.join(paths.CONFIG_DIR, s['path'])
                 timeout = s.get('timeout', 0)
                 logcat_regex = s.get('logcat_regex', None)
+
                 if s['type'] == 'python2':
-                    self.scripts[name].append(Python2(path, timeout, logcat_regex))
+                    script = Python2(path, timeout, logcat_regex)
                 elif s['type'] == 'monkeyreplay':
-                    self.scripts[name].append(
-                        MonkeyReplay(path, timeout, logcat_regex, monkeyrunner_path=monkeyrunner_path))
+                    script = MonkeyReplay(path, timeout, logcat_regex, monkeyrunner_path)
+                elif s['type'] == 'monkeyrunner':
+                    script = MonkeyRunner(path, timeout, logcat_regex, monkeyrunner_path)
                 else:
-                    raise ConfigError('Unknown script type')
+                    raise ConfigError('Unknown script type: {}'.format(s['type']))
+
+                self.scripts[name].append(script)
 
     def run(self, name, device, *args, **kwargs):
         self.logger.debug('Running hook {} on device {}\nargs: {}\nkwargs: {}'.format(name, device, args, kwargs))
