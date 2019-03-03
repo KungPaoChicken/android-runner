@@ -38,6 +38,7 @@ def aggregate(data_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
             if os.path.isdir(os.path.join(subject_dir, 'android')):
+<<<<<<< HEAD:example/web/Scripts/aggregate_android.py
                 row.update(aggregate_android_final(os.path.join(subject_dir, 'android')))
                 rows.append(row.copy())
             else:
@@ -47,6 +48,12 @@ def aggregate(data_dir):
                     if os.path.isdir(os.path.join(browser_dir, 'android')):
                         row.update(aggregate_android_final(os.path.join(browser_dir, 'android')))
                         rows.append(row.copy())
+=======
+                row.update(aggregate_android(os.path.join(subject_dir, 'android')))
+            if os.path.isdir(os.path.join(subject_dir, 'trepn')):
+                row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
+            rows.append(row.copy())
+>>>>>>> 52db58ff10db592e4a05dbe1b47a89bbed774b6b:example/batterystats/aggregation.py
     return rows
 
 
@@ -64,5 +71,10 @@ def main(dummy, data_dir, result_file):
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD:example/web/Scripts/aggregate_android.py
     if len(sys.argv) == 3:
         main(sys.argv[1], sys.argv[2])
+=======
+    if len(sys.argv) == 2:
+        main(None, sys.argv[1])
+>>>>>>> 52db58ff10db592e4a05dbe1b47a89bbed774b6b:example/batterystats/aggregation.py

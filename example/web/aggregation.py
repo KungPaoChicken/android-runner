@@ -11,7 +11,7 @@ def list_subdir(a_dir):
             if os.path.isdir(os.path.join(a_dir, name))]
 
 
-def aggregate_android_final(logs_dir):
+def aggregate_android(logs_dir):
     def add_row(accum, new):
         row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
         count = accum['count'] + 1
@@ -29,6 +29,24 @@ def aggregate_android_final(logs_dir):
         sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
 
+def aggregate_trepn(logs_dir):
+    def format_stats(accum, new):
+        column_name = new['Name']
+        if '[' in new['Type']:
+            column_name += ' [' +new['Type'].split('[')[1]
+        accum.update({column_name: float(new['Average'])})
+        return accum
+    runs = []
+    for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
+        with open(os.path.join(logs_dir, run_file), 'rb') as run:
+            contents = run.read()   # Be careful with large files, this loads everything into memory
+            system_stats = contents.split('System Statistics:')[1].strip().splitlines()
+            reader = csv.DictReader(system_stats)
+            runs.append(reduce(format_stats, reader, {}))
+    runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
+    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+
+
 def aggregate(data_dir):
     rows = []
     for device in list_subdir(data_dir):
@@ -37,23 +55,15 @@ def aggregate(data_dir):
         for subject in list_subdir(device_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            if os.path.isdir(os.path.join(subject_dir, 'android')):
-<<<<<<< HEAD:example/plugin/Scripts/aggregate_android_plugin.py
-                row.update(aggregate_android_final(os.path.join(subject_dir, 'android')))
+            for browser in list_subdir(subject_dir):
+                row.update({'browser': browser})
+                browser_dir = os.path.join(subject_dir, browser)
+                if os.path.isdir(os.path.join(browser_dir, 'android')):
+                    row.update(aggregate_android(os.path.join(browser_dir, 'android')))
+                if os.path.isdir(os.path.join(browser_dir, 'trepn')):
+                    row.update(aggregate_trepn(os.path.join(browser_dir, 'trepn')))
                 rows.append(row.copy())
-            else:
-                for browser in list_subdir(subject_dir):
-                    row.update({'browser': browser})
-                    browser_dir = os.path.join(subject_dir, browser)
-                    if os.path.isdir(os.path.join(browser_dir, 'android')):
-                        row.update(aggregate_android_final(os.path.join(browser_dir, 'android')))
-                        rows.append(row.copy())
-=======
-                row.update(aggregate_android(os.path.join(subject_dir, 'android')))
-            if os.path.isdir(os.path.join(subject_dir, 'trepn')):
-                row.update(aggregate_trepn(os.path.join(subject_dir, 'trepn')))
-            rows.append(row.copy())
->>>>>>> 52db58ff10db592e4a05dbe1b47a89bbed774b6b:example/native/aggregation.py
+
     return rows
 
 
@@ -64,17 +74,14 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(dummy, data_dir, result_file):
-    print('Output file: {}'.format(result_file))
+def main(device, output_root):
+    print('Output root: {}'.format(output_root))
+    data_dir = os.path.join(output_root, 'data')
     rows = aggregate(data_dir)
-    write_to_file(result_file, rows)
+    filename = os.path.join(output_root, 'aggregated_results.csv')
+    write_to_file(filename, rows)
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD:example/plugin/Scripts/aggregate_android_plugin.py
-    if len(sys.argv) == 3:
-        main(sys.argv[1], sys.argv[2])
-=======
     if len(sys.argv) == 2:
         main(None, sys.argv[1])
->>>>>>> 52db58ff10db592e4a05dbe1b47a89bbed774b6b:example/native/aggregation.py
