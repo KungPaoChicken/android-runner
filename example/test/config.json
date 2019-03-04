@@ -1,0 +1,14 @@
+{
+  "type": "test",
+  "devices": ["nexus6p"],
+  "profilers":{
+ "trepn": {
+      "sample_interval": 100,
+      "data_points": ["battery_power", "mem_usage"]
+    },
+    "android": {
+      "sample_interval": 200,
+      "data_points": ["cpu", "mem"]
+    }
+  }
+}

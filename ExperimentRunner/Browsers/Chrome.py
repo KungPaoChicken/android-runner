@@ -7,3 +7,6 @@ class Chrome(Browser):
         self.package_name = 'com.android.chrome'
         # https://stackoverflow.com/a/28151563
         self.main_activity = 'com.google.android.apps.chrome.Main'
+
+    def to_string(self):
+        return self.package_name

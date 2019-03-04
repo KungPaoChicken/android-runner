@@ -8,5 +8,6 @@ class TestScript(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             Script('some_nonexistant_path')
 
+
 if __name__ == '__main__':
     unittest.main()

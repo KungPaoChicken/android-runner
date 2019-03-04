@@ -16,10 +16,15 @@ class Devices:
         for name, device_id in self._device_map.items():
             if not device_id:
                 raise ConfigError(name)
-        self._devices = [Device(name, device_id) for name, device_id in self._device_map.items()]
+        self.devices = [Device(name, device_id) for name, device_id in self._device_map.items()]
 
     def __iter__(self):
-        return iter(self._devices)
+        return iter(self.devices)
+
+    def get_device(self, name):
+        for device in self.devices:
+            if device.name == name:
+                return device
 
     def names(self):
         return self._device_map.keys()

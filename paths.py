@@ -4,3 +4,8 @@ import os.path as op
 ROOT_DIR = op.dirname(op.abspath(__file__))
 CONFIG_DIR = None
 OUTPUT_DIR = None
+BASE_OUTPUT_DIR = None
+
+
+def paths_dict():
+    return {'ROOT_DIR': ROOT_DIR, 'CONFIG_DIR': CONFIG_DIR, 'OUTPUT_DIR': OUTPUT_DIR}

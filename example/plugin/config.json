@@ -1,8 +1,7 @@
 {
   "type": "web",
   "devices": ["nexus6p"],
-  "replications": 3,
-  "randomization": "True",
+  "replications": 1,
   "browsers": ["firefox"],
   "paths": [
     "https://google.com/",
@@ -10,15 +9,9 @@
     "https://wikipedia.com/"
   ],
   "profilers":{
- "trepn": {
+    "android_plugin": {
       "subject_aggregation": "none",
-      "experiment_aggregation" : "Scripts/aggregate_trepn.py",
-      "sample_interval": 100,
-      "data_points": ["battery_power", "mem_usage"]
-     },
-    "android": {
-      "subject_aggregation": "none",
-      "experiment_aggregation" : "Scripts/aggregate_android.py",
+      "experiment_aggregation" : "Scripts/aggregate_android_plugin.py",
       "sample_interval": 200,
       "data_points": ["cpu", "mem"]
     }

@@ -8,10 +8,10 @@ import time
 
 
 class NativeExperiment(Experiment):
-    def __init__(self, config):
+    def __init__(self, config, progress):
         self.package = None
         self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
-        super(NativeExperiment, self).__init__(config)
+        super(NativeExperiment, self).__init__(config, progress)
         for apk in config.get('paths', []):
             if not op.isfile(apk):
                 raise ConfigError('File %s not found' % apk)
@@ -27,10 +27,9 @@ class NativeExperiment(Experiment):
     def before_first_run(self, device, path, *args, **kwargs):
         super(NativeExperiment, self).before_first_run(device, path)
         filename = op.basename(path)
-        paths.OUTPUT_DIR = op.join(paths.OUTPUT_DIR, slugify(filename))
-        makedirs(paths.OUTPUT_DIR)
         self.logger.info('APK: %s' % filename)
-        device.install(path)
+        if filename not in device.get_app_list():
+            device.install(path)
         self.package = op.splitext(op.basename(path))[0]
 
     def before_run(self, device, path, run, *args, **kwargs):
@@ -51,8 +50,6 @@ class NativeExperiment(Experiment):
         super(NativeExperiment, self).after_last_run(device, path)
         device.uninstall(self.package)
         self.package = None
-        # https://stackoverflow.com/a/2860193
-        paths.OUTPUT_DIR = op.abspath(op.join(paths.OUTPUT_DIR, os.pardir))
 
     def after_experiment(self, device, *args, **kwargs):
         super(NativeExperiment, self).after_experiment(device)

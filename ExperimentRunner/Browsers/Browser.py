@@ -24,3 +24,6 @@ class Browser(object):
         device.force_stop(self.package_name)
         if clear_data:
             device.clear_app_data(self.package_name)
+
+    def to_string(self):
+        return self.package_name
