@@ -9,6 +9,7 @@ You'll need:
 - Android SDK Tools (`sudo apt install monkeyrunner`)
 - JDK 8 (NOT JDK 9) (`sudo apt install openjdk-8-jre`)
 - lxml (`sudo apt install python-lxml`)
+- Pluginbase (`pip install pluginbase`)
 
 Additionally, the following are also required for the Batterystats method:
 - power_profile.xml (retrievable from the device using [APKTool](https://github.com/iBotPeaches/Apktool))
