@@ -40,26 +40,11 @@ class Progress(object):
     def build_progress_xml(self, config, config_file):
         config_hash_xml = '<configHash>{}</configHash>'.format(self.file_to_hash(config_file))
         output_dir_xml = '<outputDir>{}</outputDir>'.format(paths.OUTPUT_DIR)
-        subjects_xml = '<subjects>{}</subjects>'.format(self.build_aggregated_xml(config))
         runs_to_run_xml = '<runsToRun>{}</runsToRun>'.format(self.build_runs_xml(config))
         runs_done_xml = '<runsDone></runsDone>'
-        experiment_xml = '<experiment>{}{}{}{}{}</experiment>'.format(config_hash_xml, output_dir_xml, subjects_xml,
+        experiment_xml = '<experiment>{}{}{}{}</experiment>'.format(config_hash_xml, output_dir_xml,
                                                                       runs_to_run_xml, runs_done_xml)
         return et.fromstring(experiment_xml)
-
-    def build_aggregated_xml(self, config):
-        subjects_xml = ''
-        aggregated_xml = '<aggregated>0</aggregated>'
-        for device in config['devices']:
-            for path in config['paths']:
-                if config['type'] == 'web':
-                    for browser in config['browsers']:
-                        subjects_xml = subjects_xml + '<subject>{}{}</subject>'.format(
-                            self.build_subject_xml(device, path, browser), aggregated_xml)
-                else:
-                    subjects_xml = subjects_xml + '<subject>{}{}</subject>'.format(
-                        self.build_subject_xml(device, path), aggregated_xml)
-        return subjects_xml
 
     def build_subject_xml(self, device, path, browser=None):
         device_xml = '<device>{}</device>'.format(device)
@@ -121,7 +106,7 @@ class Progress(object):
             run['browser'] = run_xml.find('browser').text
         return run
 
-    """Move run from to do, to done"""
+    """Marks run as finished"""
     def run_finished(self, run_id):
         runs_to_run = self.progress_xml_content.find('runsToRun')
         runs_done = self.progress_xml_content.find('runsDone')
@@ -179,17 +164,6 @@ class Progress(object):
             return True
         else:
             return False
-
-    def subject_aggregated(self, device, path, browser=None):
-        subjects = self.progress_xml_content.find('subjects')
-        if browser is not None:
-            elements = subjects.xpath(
-                "subject[device='{}' and path='{}' and browser='{}']".format(device, path, browser))
-        else:
-            elements = subjects.xpath(
-                "subject[device='{}' and path='{}']".format(device, path))
-        if len(elements) == 1:
-            elements[0].find('aggregated').text = '1'
 
     def experiment_finished_check(self):
         runs_to_run = self.progress_xml_content.find('runsToRun')

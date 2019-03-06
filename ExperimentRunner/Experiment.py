@@ -4,6 +4,8 @@ import time
 
 import paths
 import Tests
+from threading import Thread
+from os import walk, remove, rmdir
 from Devices import Devices
 from Profilers import Profilers
 from Scripts import Scripts
@@ -28,6 +30,7 @@ class Experiment(object):
         self.time_between_run = Tests.is_integer(config.get('time_between_run', 0))
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
         self.output_root = paths.OUTPUT_DIR
+        self.result_file_structure = None
 
     def prepare(self, device):
         """Prepare the device for experiment"""
@@ -44,8 +47,16 @@ class Experiment(object):
     def get_progress_xml_file(self):
         return self.progress.progress_xml_file
 
+    def update_progress(self):
+        self.progress.write_progress_to_file()
+        result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
+        self.result_file_structure = walk(result_data_path)
+
     def start(self):
+        interrupted = False
         try:
+            result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
+            self.result_file_structure = walk(result_data_path)
             while not self.progress.experiment_finished_check():
                 current_run = self.get_experiment()
                 self.prepare_output_dir(current_run)
@@ -61,15 +72,44 @@ class Experiment(object):
                 self.progress.run_finished(current_run['runId'])
                 self.last_run(current_run)
                 self.last_run_device(current_run)
-                self.progress.write_progress_to_file()
+                a = Thread(target=self.update_progress)
+                a.start()
+                a.join()
         except Exception, e:
             import traceback
             print(traceback.format_exc())
             self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
+        except KeyboardInterrupt:
+            interrupted = True
         finally:
+            self.check_result_files(self.result_file_structure)
             for device in self.devices:
                 self.cleanup(device)
+            if interrupted:
+                raise KeyboardInterrupt
         self.aggregate_end()
+
+    def check_result_files(self, correct_file_structure):
+        result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
+        current_file_structure = walk(result_data_path)
+        correct_file_list = self.walk_to_list(correct_file_structure)
+        current_file_list = self.walk_to_list(current_file_structure)
+        for path in current_file_list:
+            if path not in correct_file_list:
+                if op.isfile(path):
+                    remove(path)
+                else:
+                    rmdir(path)
+
+    def walk_to_list(self, walk_result):
+        walk_list = list()
+        for (path, dirs, files) in walk_result:
+            for dir in dirs:
+                walk_list.append(op.join(path, dir))
+            for file in files:
+                walk_list.append(op.join(path, file))
+        walk_list.reverse()
+        return walk_list
 
     def get_experiment(self):
         if self.random:
@@ -92,7 +132,6 @@ class Experiment(object):
         if self.progress.subject_finished(current_run['device'], current_run['path']):
             self.after_last_run(self.devices.get_device(current_run['device']), current_run['path'])
             self.aggregate_subject()
-            self.progress.subject_aggregated(current_run['device'], current_run['path'])
 
     def prepare_output_dir(self, current_run):
         paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify(current_run['path']))

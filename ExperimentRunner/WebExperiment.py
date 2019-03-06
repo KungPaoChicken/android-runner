@@ -28,11 +28,9 @@ class WebExperiment(Experiment):
         self.after_run(device, path, run, browser)
 
     def last_run(self, current_run):
-        if self.progress.subject_finished(current_run['device'], current_run['path'],
-                                         current_run['browser']):
+        if self.progress.subject_finished(current_run['device'], current_run['path'], current_run['browser']):
             self.after_last_run(self.devices.get_device(current_run['device']), current_run['path'])
             self.aggregate_subject()
-            self.progress.subject_aggregated(current_run['device'], current_run['path'], current_run['browser'])
 
     def prepare_output_dir(self, current_run):
         paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify(current_run['path']),
