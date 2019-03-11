@@ -1,11 +1,5 @@
 import logging
-import os.path as op
 from util import ConfigError
-
-
-def valid_files(paths):
-    for f in filter(lambda x: not op.isfile(x), paths):
-        raise ConfigError("File %s not found" % f)
 
 
 def is_integer(number, minimum=0):
