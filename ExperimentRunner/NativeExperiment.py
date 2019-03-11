@@ -1,8 +1,7 @@
 import os
 import os.path as op
 from Experiment import Experiment
-from util import ConfigError, makedirs, slugify
-import paths
+from util import ConfigError
 import Tests
 import time
 

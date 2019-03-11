@@ -44,7 +44,7 @@ def makedirs(path):
 
 
 # https://stackoverflow.com/a/295466
-def slugify(value):
+def slugify_dir(value):
     """
     Normalizes string, converts to lowercase, removes non-alpha characters,
     and converts spaces to hyphens.

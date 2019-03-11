@@ -9,7 +9,7 @@ from os import walk, remove, rmdir
 from Devices import Devices
 from Profilers import Profilers
 from Scripts import Scripts
-from util import ConfigError, makedirs, slugify
+from util import ConfigError, makedirs, slugify_dir
 
 
 class Experiment(object):
@@ -134,7 +134,7 @@ class Experiment(object):
             self.aggregate_subject()
 
     def prepare_output_dir(self, current_run):
-        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify(current_run['path']))
+        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify_dir(current_run['path']))
         makedirs(paths.OUTPUT_DIR)
 
     """   def start(self):

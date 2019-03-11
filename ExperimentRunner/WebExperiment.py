@@ -5,7 +5,7 @@ import Tests
 import paths
 from Experiment import Experiment
 from BrowserFactory import BrowserFactory
-from util import makedirs, slugify
+from util import makedirs, slugify_dir
 
 
 class WebExperiment(Experiment):
@@ -33,7 +33,7 @@ class WebExperiment(Experiment):
             self.aggregate_subject()
 
     def prepare_output_dir(self, current_run):
-        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify(current_run['path']),
+        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify_dir(current_run['path']),
                                    current_run['browser'])
         makedirs(paths.OUTPUT_DIR)
 
