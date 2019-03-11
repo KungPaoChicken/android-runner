@@ -23,4 +23,4 @@ def check_dependencies(devices, dependencies):
         if not_installed_apps:
             for name in not_installed_apps:
                 logging.error('%s: Required package %s is not installed' % (device.id, name))
-            raise ConfigError('Required packages %s are not installed on %s' % (not_installed_apps, device))
+            raise ConfigError('Required packages %s are not installed on %s' % (not_installed_apps, device.id))
