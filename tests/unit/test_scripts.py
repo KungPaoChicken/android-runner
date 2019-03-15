@@ -11,10 +11,6 @@ from ExperimentRunner.util import ConfigError, FileNotFoundError
 from mock import patch, Mock
 
 
-class AnyStringWith(str):
-    def __eq__(self, other):
-        return self in other
-
 class TestScripts(object):
     @pytest.fixture()
     def paths_dict(self, tmpdir):
@@ -143,6 +139,7 @@ class TestPython2(object):
         fake_device = Mock()
         assert Python2(script_path).execute_script(fake_device) == 'succes'
 
+
 class TestMonkeyReplay(object):
     @pytest.fixture()
     def script_path(self, tmpdir):
@@ -203,20 +200,13 @@ class TestMonkeyrunner(object):
         assert runner_return == 0
 
     @patch('subprocess.call')
-    def test_execute_script_path_list_succes(self, mock_subprocess, script_path):
-        monkey_path = '/usr/lib/android-sdk/tools/monkeyrunner'
-        mock_subprocess.return_value = 0
-        runner_return = MonkeyRunner(script_path.split('/'), monkeyrunner_path=monkey_path).execute_script(Mock())
-        mock_subprocess.assert_called_once_with([monkey_path, script_path])
-        assert runner_return == 0
-
-    @patch('subprocess.call')
     def test_execute_script_error(self, mock_subprocess, script_path):
         monkey_path = '/usr/lib/android-sdk/tools/monkeyrunner'
         mock_subprocess.return_value = 1
         runner_return = MonkeyRunner(script_path, monkeyrunner_path=monkey_path).execute_script(Mock())
         mock_subprocess.assert_called_once_with([monkey_path, script_path])
         assert runner_return == 1
+
 
 class TestScript(object):
     @pytest.fixture()
@@ -232,14 +222,6 @@ class TestScript(object):
     def error_script_path(self, tmpdir):
         temp_file = tmpdir.join("script.py")
         temp_file.write('\n'.join(['from time import sleep',
-                                   'def main(device_id):\n',
-                                   '    raise NotImplementedError\n']))
-        return str(temp_file)
-    @pytest.fixture()
-    def init_error_script_path(self, tmpdir):
-        temp_file = tmpdir.join("script.py")
-        temp_file.write('\n'.join(['from time import sleep\n',
-                                   'import nonexisting\n',
                                    'def main(device_id):\n',
                                    '    raise NotImplementedError\n']))
         return str(temp_file)
