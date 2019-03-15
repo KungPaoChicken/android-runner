@@ -6,7 +6,8 @@ from FakeDevice import FakeDevice
 
 class TestMonkeyReplay(unittest.TestCase):
     def setUp(self):
-        self.monkey = '/opt/platform-tools/bin/monkeyrunner'
+        """"self.monkey = '/opt/platform-tools/bin/monkeyrunner'"""
+        self.monkey = '/usr/lib/android-sdk/tools/monkeyrunner'
         self.device = FakeDevice('fake_id')
         self.current_activity = 'fake_activity'
         self.file = tempfile.NamedTemporaryFile()

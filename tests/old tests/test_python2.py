@@ -9,7 +9,7 @@ class TestPython2(unittest.TestCase):
         self.device = FakeDevice('fake_id')
         self.file = tempfile.NamedTemporaryFile()
         self.file.write('\n'.join(['from time import sleep',
-                                   'def main(device_id, current_activity):\n',
+                                   'def main(device_id):\n',
                                    '    sleep(0.5)\n'])
                         )
         self.file.flush()

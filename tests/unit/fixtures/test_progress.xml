@@ -1,0 +1,61 @@
+<experiment>
+  <configHash>7d490f79d238b64084ca72959cae6738</configHash>
+  <outputDir>test/output/dir</outputDir>
+  <runsToRun>
+    <run runId="0">
+      <device>nexus6p</device>
+      <path>https://google.com/</path>
+      <browser>firefox</browser>
+      <runCount>1</runCount>
+    </run>
+    <run runId="1">
+      <device>nexus6p</device>
+      <path>https://google.com/</path>
+      <browser>firefox</browser>
+      <runCount>2</runCount>
+    </run>
+    <run runId="2">
+      <device>nexus6p</device>
+      <path>https://google.com/</path>
+      <browser>firefox</browser>
+      <runCount>3</runCount>
+    </run>
+    <run runId="3">
+      <device>nexus6p</device>
+      <path>https://apple.com/</path>
+      <browser>firefox</browser>
+      <runCount>1</runCount>
+    </run>
+    <run runId="4">
+      <device>nexus6p</device>
+      <path>https://apple.com/</path>
+      <browser>firefox</browser>
+      <runCount>2</runCount>
+    </run>
+    <run runId="5">
+      <device>nexus6p</device>
+      <path>https://apple.com/</path>
+      <browser>firefox</browser>
+      <runCount>3</runCount>
+    </run>
+    <run runId="6">
+      <device>nexus6p</device>
+      <path>https://wikipedia.com/</path>
+      <browser>firefox</browser>
+      <runCount>1</runCount>
+    </run>
+    <run runId="7">
+      <device>nexus6p</device>
+      <path>https://wikipedia.com/</path>
+      <browser>firefox</browser>
+      <runCount>2</runCount>
+    </run>
+    <run runId="8">
+      <device>nexus6p</device>
+      <path>https://wikipedia.com/</path>
+      <browser>firefox</browser>
+      <runCount>3</runCount>
+    </run>
+  </runsToRun>
+  <runsDone/>
+</experiment>
