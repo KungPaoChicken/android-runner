@@ -25,7 +25,7 @@ class Profilers(object):
         if device.name not in self.loaded_devices:
             for p in self.profilers:
                 p.load(device)
-                self.loaded_devices.append(device.name)
+            self.loaded_devices.append(device.name)
 
     def start_profiling(self, device, **kwargs):
         self.logger.info('Start profiling')
