@@ -62,7 +62,7 @@ class PluginHandler(object):
 
     def set_output(self):
         # TODO clean up!
-        self.paths['OUTPUT_DIR'] = os.path.join(paths.OUTPUT_DIR, self.nameLower + '/')
+        self.paths['OUTPUT_DIR'] = os.path.join(paths.OUTPUT_DIR, self.nameLower)
         makedirs(self.paths['OUTPUT_DIR'])
         self.logger.debug('%s: Setting output: %s' % (self.moduleName, self.paths['OUTPUT_DIR']))
         self.currentProfiler.set_output(self.paths['OUTPUT_DIR'])
@@ -116,11 +116,15 @@ class PluginHandler(object):
             device_dir = os.path.join(data_dir, device)
             for subject in self.list_subdir(device_dir):
                 subject_dir = os.path.join(device_dir, subject)
-                for browser in self.list_subdir(subject_dir):
-                    browser_dir = os.path.join(subject_dir, browser)
-                    if os.path.isdir(os.path.join(browser_dir, self.nameLower)):
-                        self.currentProfiler.set_output(os.path.join(browser_dir, self.nameLower))
-                        self.currentProfiler.aggregate_subject()
+                if os.path.isdir(os.path.join(subject_dir, self.nameLower)):
+                    self.currentProfiler.set_output(os.path.join(subject_dir, self.nameLower))
+                    self.currentProfiler.aggregate_subject()
+                else:
+                    for browser in self.list_subdir(subject_dir):
+                        browser_dir = os.path.join(subject_dir, browser)
+                        if os.path.isdir(os.path.join(browser_dir, self.nameLower)):
+                            self.currentProfiler.set_output(os.path.join(browser_dir, self.nameLower))
+                            self.currentProfiler.aggregate_subject()
 
     def list_subdir(self, a_dir):
         """List immediate subdirectories of a_dir"""
