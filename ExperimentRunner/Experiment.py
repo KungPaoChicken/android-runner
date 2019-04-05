@@ -50,13 +50,13 @@ class Experiment(object):
     def update_progress(self):
         self.progress.write_progress_to_file()
         result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
-        self.result_file_structure = walk(result_data_path)
+        self.result_file_structure = self.walk_to_list(walk(result_data_path))
 
     def start(self):
         interrupted = False
         try:
             result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
-            self.result_file_structure = walk(result_data_path)
+            self.result_file_structure = self.walk_to_list(walk(result_data_path))
             while not self.progress.experiment_finished_check():
                 current_run = self.get_experiment()
                 self.prepare_output_dir(current_run)
@@ -89,10 +89,9 @@ class Experiment(object):
                 raise KeyboardInterrupt
         self.aggregate_end()
 
-    def check_result_files(self, correct_file_structure):
+    def check_result_files(self, correct_file_list):
         result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
         current_file_structure = walk(result_data_path)
-        correct_file_list = self.walk_to_list(correct_file_structure)
         current_file_list = self.walk_to_list(current_file_structure)
         for path in current_file_list:
             if path not in correct_file_list:
