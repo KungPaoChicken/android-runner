@@ -9,7 +9,7 @@ from Devices import Devices
 from util import makedirs
 
 
-class Tests(object):
+class PluginTests(object):
 
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)

@@ -3,7 +3,7 @@ import shutil
 import paths
 import os.path as op
 import util
-from PluginTests import Tests
+from PluginTests import PluginTests
 from Progress import Progress
 from Experiment import Experiment
 from NativeExperiment import NativeExperiment
@@ -30,6 +30,6 @@ class ExperimentFactory(object):
         elif experiment_type == 'web':
             return WebExperiment(config, progress)
         elif experiment_type == 'test':
-            return Tests(config)
+            return PluginTests(config)
         else:
             return Experiment(config, progress)
