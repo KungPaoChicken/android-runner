@@ -82,9 +82,9 @@ class Experiment(object):
         except KeyboardInterrupt:
             interrupted = True
         finally:
-            self.check_result_files(self.result_file_structure)
             for device in self.devices:
                 self.cleanup(device)
+            self.check_result_files(self.result_file_structure)
             if interrupted:
                 raise KeyboardInterrupt
         self.aggregate_end()
