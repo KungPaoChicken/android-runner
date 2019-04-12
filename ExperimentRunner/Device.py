@@ -54,10 +54,10 @@ class Device:
 
     def plug(self):
         """Reset the power status of the device"""
-        if self.get_api_level() < 23:
+        #if self.get_api_level() < 23:
             # API level < 23, 4.4.3+ tested, WARNING: hardcoding
             # reset only restarts auto-update
-            Adb.shell(self.id, 'dumpsys battery set usb 1')
+        #    Adb.shell(self.id, 'dumpsys battery set usb 1')
         # API level 23+ (Android 6.0+)
         Adb.shell(self.id, 'dumpsys battery reset')
 
