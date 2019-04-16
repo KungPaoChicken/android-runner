@@ -36,4 +36,4 @@ class Devices:
         return self._device_map[name]
 
     def get_name(self, device_id):
-        return (k for k, v in self._device_map if v == device_id)
+        return (k for k, v in self._device_map.items() if v == device_id)
