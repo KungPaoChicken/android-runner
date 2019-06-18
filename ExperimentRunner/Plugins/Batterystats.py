@@ -144,7 +144,8 @@ class Batterystats(Profiler):
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 #FIX
-        runs = [{'Joule calculated': 0.0}]
+        runs = []
+	runs_total = dict()
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if ('Joule' in run_file) and joules:
                 with open(os.path.join(logs_dir, run_file), 'rb') as run:
@@ -152,7 +153,7 @@ class Batterystats(Profiler):
                     init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                     run_total = reduce(add_row, reader, init)
                     runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
-        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()},runs)
+        	runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()},runs)
         return OrderedDict(
             sorted({'batterystats_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
