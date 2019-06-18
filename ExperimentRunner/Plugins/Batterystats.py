@@ -21,7 +21,8 @@ class Batterystats(Profiler):
         self.cleanup = config.get('cleanup')
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
-        config_file = self.load_json(op.join(self.paths.CONFIG_DIR, 'config.json'))
+	#FIX
+        config_file = self.load_json(op.join(self.paths["CONFIG_DIR"], 'config.json'))
         self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
@@ -61,9 +62,8 @@ class Batterystats(Profiler):
         """Runs the systrace method for self.duration seconds in a separate thread"""
         # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
-        sysproc = Popen('{} freq idle -e {} -a {} -t {} -b 50000 -o {}'.format
-                        (self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
-
+        sysproc = Popen('{} freq idle -e {} -a {} -t {} -o {}'.format(self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
+#FIX
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
@@ -97,8 +97,8 @@ class Batterystats(Profiler):
                 ['Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)'])
             writer.writerow(batterystats_results)
             writer.writerow(systrace_results)
-
-        with open(op.join(self.output_dir, 'Joule_{}'.format(results_file_name))) as out:
+	#FIX
+        with open(op.join(self.output_dir, 'Joule_{}'.format(results_file_name)),'w+') as out:
             out.write('Joule calculated\n{}\n'.format(energy_consumed_J))
 
         # Remove log files
@@ -128,7 +128,8 @@ class Batterystats(Profiler):
         self.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
-        rows = self.aggregate(data_dir)
+	#FIX
+        rows = self.aggregate_final(data_dir)
         self.write_to_file(output_file, rows)
 
     def write_to_file(self, filename, rows):
@@ -142,16 +143,16 @@ class Batterystats(Profiler):
             row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
-
-        runs = []
+#FIX
+        runs = [{'Joule calculated': 0.0}]
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            if run_file.contains('Joule') and joules:
+            if ('Joule' in run_file) and joules:
                 with open(os.path.join(logs_dir, run_file), 'rb') as run:
                     reader = csv.DictReader(run)
                     init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                     run_total = reduce(add_row, reader, init)
                     runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
-        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
+        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()},runs)
         return OrderedDict(
             sorted({'batterystats_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
 
