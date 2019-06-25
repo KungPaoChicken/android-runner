@@ -84,7 +84,7 @@ class Batterystats(Profiler):
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
         energy_consumed_Wh = float(charge) * float(volt) / 10000.0
-        energy_consumed_J = energy_consumed_Wh * 3600.0
+        energy_consumed_J = energy_consumed_Wh / 3600.0
 
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
