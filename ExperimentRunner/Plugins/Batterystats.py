@@ -80,7 +80,6 @@ class Batterystats(Profiler):
 
         # Estimate total consumption
         # charge is given in mAh
-	# volt is given in mV
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
         energy_consumed_Wh = float(charge) * float(volt) / 10000.0
