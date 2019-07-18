@@ -1,7 +1,7 @@
 import logging
 import os.path as op
 import time
-
+import traceback
 import paths
 import Tests
 from Devices import Devices
@@ -63,7 +63,6 @@ class Experiment(object):
                 self.last_run_device(current_run)
                 self.progress.write_progress_to_file()
         except Exception, e:
-            import traceback
             print(traceback.format_exc())
             self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
         finally:
@@ -98,29 +97,6 @@ class Experiment(object):
         paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify(current_run['path']))
         makedirs(paths.OUTPUT_DIR)
 
-    """   def start(self):
-        #Runs the experiment
-        for device in self.devices:
-            try:
-                paths.OUTPUT_DIR = op.join(self.output_root, 'data/', device.name)
-                makedirs(paths.OUTPUT_DIR)
-                self.prepare(device)
-                self.before_experiment(device)
-                for path in self.paths:
-                    self.before_first_run(device, path)
-                    for run in range(self.replications):
-                        self.run(device, path, run)
-                    self.after_last_run(device, path)
-                    self.aggregate_subject()
-                self.after_experiment(device)
-            except Exception, e:
-                import traceback
-                print(traceback.format_exc())
-                self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
-            finally:
-                self.cleanup(device)
-        self.aggregate_end()
-    """
     def run(self, device, path, run, dummy):
         self.before_run(device, path, run)
         self.start_profiling(device, path, run)
@@ -181,4 +157,3 @@ class Experiment(object):
 
     def aggregate_end(self):
         self.profilers.aggregate_end(self.output_root)
-
