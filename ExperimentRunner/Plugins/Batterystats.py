@@ -4,7 +4,7 @@ import time
 import csv
 import json
 import errno
-import Parser
+import BatterystatsParser
 
 from collections import OrderedDict
 from subprocess import Popen
@@ -52,6 +52,7 @@ class Batterystats(Profiler):
         logcat_file = '{}logcat_{}_{}.txt'.format(self.output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         batterystats_file = op.join(self.output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
             '%Y.%m.%d_%H%M%S')))
+        print(batterystats_file)
         results_file_name = 'results_{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         results_file = op.join(self.output_dir, results_file_name)
 
@@ -227,5 +228,3 @@ class FileFormatError(Exception):
 
 class ConfigError(Exception):
     pass
-
-

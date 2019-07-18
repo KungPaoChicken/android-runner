@@ -321,7 +321,7 @@ def convert_to_s(line):
         return 0
 
 
-''' 
+'''
 Systrace
 '''
 
