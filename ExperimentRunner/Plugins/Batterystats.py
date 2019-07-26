@@ -77,7 +77,7 @@ class Batterystats(Profiler):
         # Get BatteryStats data
         with open(batterystats_file, 'w+') as f:
             f.write(device.shell('dumpsys batterystats --history'))
-        batterystats_results = Parser.parse_batterystats(app, batterystats_file, self.powerprofile)
+        batterystats_results = BatterystatsParser.parse_batterystats(app, batterystats_file, self.powerprofile)
 
         # Estimate total consumption
         # charge is given in mAh
@@ -89,7 +89,7 @@ class Batterystats(Profiler):
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
-        systrace_results = Parser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile,
+        systrace_results = BatterystatsParser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile,
                                                  cores)
 
         with open(results_file, 'w+') as results:
