@@ -17,6 +17,7 @@ def main():
 
     config_file = op.abspath(args['file'])
     paths.CONFIG_DIR = op.dirname(config_file)
+    paths.ORIGINAL_CONFIG_DIR = config_file
     if 'progress' in args:
         progress = Progress(progress_file=args['progress'], config_file=config_file, load_progress=True)
         log_dir = progress.get_output_dir()
