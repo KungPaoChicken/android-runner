@@ -22,7 +22,7 @@ class Batterystats(Profiler):
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
 	#FIX
-        config_file = self.load_json(op.join(self.paths["CONFIG_DIR"], 'config.json'))
+        config_file = self.load_json(op.join(self.paths["CONFIG_DIR"], self.paths['ORIGINAL_CONFIG_DIR']))
         self.type = config_file['type']
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
