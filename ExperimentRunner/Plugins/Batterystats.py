@@ -67,7 +67,7 @@ class Batterystats(Profiler):
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         # Pull logcat file from device
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
         device.pull('/mnt/sdcard/logcat.txt', logcat_file)

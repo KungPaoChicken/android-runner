@@ -1,6 +1,9 @@
+import logging
+
 class Profiler(object):
 
     def __init__(self, config, paths):
+        self.logger = logging.getLogger(self.__class__.__name__)
         pass
 
     def dependencies(self):

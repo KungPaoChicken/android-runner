@@ -37,10 +37,10 @@ class Profilers(object):
         for p in self.profilers:
             p.stop_profiling(device, **kwargs)
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         self.logger.info('Collecting results')
         for p in self.profilers:
-            p.collect_results(device, path)
+            p.collect_results(device)
 
     def unload(self, device):
         self.logger.info('Unloading')

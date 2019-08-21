@@ -32,7 +32,10 @@ class Android(Profiler):
     def get_cpu_usage(self, device):
         """Get CPU usage in percentage"""
         # return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
-        return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
+        shell_result = device.shell('dumpsys cpuinfo | grep TOTAL')
+        shell_splitted = shell_result.split('%')[0]
+        return shell_splitted
+        # return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
 
     def get_mem_usage(self, device, app):
         """Get memory usage in KB for app, if app is None system usage is used"""
@@ -42,8 +45,10 @@ class Android(Profiler):
             return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
-            if 'No process found' in result:
-                raise Exception('Android Profiler: {}'.format(result))
+            if result == '':
+                result = device.shell('dumpsys meminfo {}'.format(app))
+                if 'No process found' in result:
+                    raise Exception('Android Profiler: {}'.format(result))
             return ' '.join(result.strip().split()).split()[1]
 
     def start_profiling(self, device, **kwargs):
@@ -70,7 +75,7 @@ class Android(Profiler):
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         filename = '{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         with open(op.join(self.output_dir, filename), 'w+') as f:
             writer = csv.writer(f)

@@ -69,7 +69,7 @@ class Trepn(Profiler):
     def stop_profiling(self, device, **kwargs):
         device.shell('am broadcast -a com.quicinc.trepn.stop_profiling')
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         # Gives the latest result
         db = device.shell('ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()
         newest_db = db[len(db)-1]

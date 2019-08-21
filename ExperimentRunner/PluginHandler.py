@@ -10,26 +10,28 @@ from util import makedirs
 
 class PluginHandler(object):
     def __init__(self, name, params):
-        # TODO: remove unnecessary self usage
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.plugginParams = params
+        self.pluginParams = params
         self.nameLower = name.lower()
         self.moduleName = self.nameLower.capitalize()
         self.subject_aggregated = False
         self.subject_aggregated_default = False
 
-        self.plugin_base = PluginBase(package='ExperimentRunner.plugins')
+        plugin_base = PluginBase(package='ExperimentRunner.plugins')
         if self.nameLower == 'android' or self.nameLower == 'trepn' or self.nameLower == 'batterystats':
-            self.pluginPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
+            pluginPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
         else:
-            self.pluginPath = os.path.join(paths.CONFIG_DIR, 'Plugins')
-            copyfile(os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins', 'Profiler.py'), os.path.join(
-                self.pluginPath, 'Profiler.py'))
+            pluginPath = os.path.join(paths.CONFIG_DIR, 'Plugins')
+            if os.path.isdir(pluginPath):
+                copyfile(os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins', 'Profiler.py'), os.path.join(
+                    pluginPath, 'Profiler.py'))
+            else:
+                raise ImportError
 
-        self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[self.pluginPath])
-        self.pluginModule = self.plugin_source.load_plugin(self.moduleName)
+        plugin_source = plugin_base.make_plugin_source(searchpath=[pluginPath])
+        pluginModule = plugin_source.load_plugin(self.moduleName)
         self.paths = paths.paths_dict()
-        self.currentProfiler = getattr(self.pluginModule, self.moduleName)(params, self.paths)
+        self.currentProfiler = getattr(pluginModule, self.moduleName)(params, self.paths)
         self.logger.debug('%s: Initialized' % self.moduleName)
 
     def dependencies(self):
@@ -50,10 +52,10 @@ class PluginHandler(object):
         self.logger.debug('%s: %s: Stop profiling' % (self.moduleName, device))
         self.currentProfiler.stop_profiling(device, **kwargs)
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         """Collect the data and clean up extra files on the device"""
         self.logger.debug('%s: %s: Collecting data' % (self.moduleName, device))
-        self.currentProfiler.collect_results(device, path)
+        self.currentProfiler.collect_results(device)
 
     def unload(self, device):
         """Stop the profiler, removing configuration files on device"""
@@ -68,7 +70,7 @@ class PluginHandler(object):
         self.currentProfiler.set_output(self.paths['OUTPUT_DIR'])
 
     def aggregate_subject(self):
-        aggregate_subject_function = self.plugginParams.get('subject_aggregation', 'default')
+        aggregate_subject_function = self.pluginParams.get('subject_aggregation', 'default')
         aggregate_subject_function_lower = aggregate_subject_function.lower()
 
         if aggregate_subject_function_lower == 'none':
@@ -86,7 +88,7 @@ class PluginHandler(object):
             aggregate_subject_script.run(None,  self.paths['OUTPUT_DIR'])
 
     def aggregate_data_end(self, output_dir):
-        aggregate_function = self.plugginParams.get('experiment_aggregation', 'default')
+        aggregate_function = self.pluginParams.get('experiment_aggregation', 'default')
         aggregate_function_lower = aggregate_function.lower()
 
         data_dir = os.path.join(output_dir, 'data')
