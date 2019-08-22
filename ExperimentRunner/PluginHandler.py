@@ -17,7 +17,7 @@ class PluginHandler(object):
         self.subject_aggregated = False
         self.subject_aggregated_default = False
 
-        plugin_base = PluginBase(package='ExperimentRunner.plugins')
+        self.plugin_base = PluginBase(package='ExperimentRunner.plugins')
         if self.nameLower == 'android' or self.nameLower == 'trepn' or self.nameLower == 'batterystats':
             pluginPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
         else:
@@ -28,10 +28,10 @@ class PluginHandler(object):
             else:
                 raise ImportError
 
-        plugin_source = plugin_base.make_plugin_source(searchpath=[pluginPath])
-        pluginModule = plugin_source.load_plugin(self.moduleName)
+        self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[pluginPath])
+        self.pluginModule = self.plugin_source.load_plugin(self.moduleName)
         self.paths = paths.paths_dict()
-        self.currentProfiler = getattr(pluginModule, self.moduleName)(params, self.paths)
+        self.currentProfiler = getattr(self.pluginModule, self.moduleName)(params, self.paths)
         self.logger.debug('%s: Initialized' % self.moduleName)
 
     def dependencies(self):
