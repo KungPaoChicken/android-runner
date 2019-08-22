@@ -32,7 +32,7 @@ class Experiment(object):
         self.output_root = paths.OUTPUT_DIR
         self.result_file_structure = None
 
-    def prepare(self, device):
+    def prepare_device(self, device):
         """Prepare the device for experiment"""
         self.logger.info('Device: %s' % device)
         self.profilers.load(device)
@@ -53,41 +53,62 @@ class Experiment(object):
         self.result_file_structure = self.walk_to_list(walk(result_data_path))
 
     def start(self):
-        interrupted = False
         try:
             result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
             self.result_file_structure = self.walk_to_list(walk(result_data_path))
             while not self.progress.experiment_finished_check():
                 current_run = self.get_experiment()
-                self.prepare_output_dir(current_run)
-
-                self.first_run_device(current_run)
-                self.first_run(current_run)
-                if 'browser' in current_run:
-                    self.run(self.devices.get_device(current_run['device']), current_run['path'],
-                             int(current_run['runCount']), current_run['browser'])
-                else:
-                    self.run(self.devices.get_device(current_run['device']), current_run['path'],
-                             int(current_run['runCount']), None)
-                self.progress.run_finished(current_run['runId'])
-                self.last_run(current_run)
-                self.last_run_device(current_run)
-                a = Thread(target=self.update_progress)
-                a.start()
-                a.join()
+                self.run_experiment(current_run)
+                self.save_progress()
         except Exception, e:
             import traceback
             print(traceback.format_exc())
             self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
+            self.finish_experiment(True, False)
+            raise e
         except KeyboardInterrupt:
-            interrupted = True
-        finally:
-            for device in self.devices:
+            self.finish_experiment(False, True)
+            raise KeyboardInterrupt
+        else:
+            self.finish_experiment(False, False)
+
+    def finish_experiment(self, error, interrupted):
+        self.check_result_files(self.result_file_structure)
+        for device in self.devices:
+            try:
                 self.cleanup(device)
-            self.check_result_files(self.result_file_structure)
-            if interrupted:
-                raise KeyboardInterrupt
-        self.aggregate_end()
+            except Exception, e:
+                e.__class__.__name__
+        if not error and not interrupted:
+            self.aggregate_end()
+
+    def run_experiment(self, current_run):
+        self.prepare_run(current_run)
+        self.run_run(current_run)
+        self.finish_run(current_run)
+
+    def prepare_run(self, current_run):
+        self.prepare_output_dir(current_run)
+        self.first_run_device(current_run)
+        self.first_run(current_run)
+
+    def run_run(self, current_run):
+        if 'browser' in current_run:
+            self.run(self.devices.get_device(current_run['device']), current_run['path'],
+                     int(current_run['runCount']), current_run['browser'])
+        else:
+            self.run(self.devices.get_device(current_run['device']), current_run['path'],
+                     int(current_run['runCount']), None)
+
+    def finish_run(self, current_run):
+        self.progress.run_finished(current_run['runId'])
+        self.last_run(current_run)
+        self.last_run_device(current_run)
+
+    def save_progress(self):
+        a = Thread(target=self.update_progress)
+        a.start()
+        a.join()
 
     def check_result_files(self, correct_file_list):
         result_data_path = op.join(paths.BASE_OUTPUT_DIR, 'data')
@@ -117,8 +138,9 @@ class Experiment(object):
             return self.progress.get_next_run()
 
     def first_run_device(self, current_run):
-        self.prepare(self.devices.get_device(current_run['device']))
-        self.before_experiment(self.devices.get_device(current_run['device']))
+        device = self.devices.get_device(current_run['device'])
+        self.prepare_device(device)
+        self.before_experiment(device)
 
     def first_run(self, current_run):
         self.before_first_run(self.devices.get_device(current_run['device']), current_run['path'])
@@ -136,29 +158,6 @@ class Experiment(object):
         paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify_dir(current_run['path']))
         makedirs(paths.OUTPUT_DIR)
 
-    """   def start(self):
-        #Runs the experiment
-        for device in self.devices:
-            try:
-                paths.OUTPUT_DIR = op.join(self.output_root, 'data/', device.name)
-                makedirs(paths.OUTPUT_DIR)
-                self.prepare(device)
-                self.before_experiment(device)
-                for path in self.paths:
-                    self.before_first_run(device, path)
-                    for run in range(self.replications):
-                        self.run(device, path, run)
-                    self.after_last_run(device, path)
-                    self.aggregate_subject()
-                self.after_experiment(device)
-            except Exception, e:
-                import traceback
-                print(traceback.format_exc())
-                self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
-            finally:
-                self.cleanup(device)
-        self.aggregate_end()
-    """
     def run(self, device, path, run, dummy):
         self.before_run(device, path, run)
         self.start_profiling(device, path, run)
