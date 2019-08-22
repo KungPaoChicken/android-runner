@@ -15,7 +15,6 @@ class ConfigError(Exception):
 
 class Android(Profiler):
     def __init__(self, config, paths):
-        # TODO check super call
         super(Android, self).__init__(config, paths)
         self.output_dir = ''
         self.paths = paths
@@ -34,6 +33,8 @@ class Android(Profiler):
         # return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
         shell_result = device.shell('dumpsys cpuinfo | grep TOTAL')
         shell_splitted = shell_result.split('%')[0]
+        if '.-' in shell_splitted:
+            shell_splitted = shell_splitted.replace('.-','.')
         return shell_splitted
         # return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
 
