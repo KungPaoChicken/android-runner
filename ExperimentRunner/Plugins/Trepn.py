@@ -22,6 +22,7 @@ class Trepn(Profiler):
         self.paths = paths
         self.pref_dir = None
         self.remote_pref_dir = op.join(Trepn.DEVICE_PATH, 'saved_preferences/')
+        self.data_points = []
         self.build_preferences(config)
 
     def build_preferences(self, params):
@@ -42,9 +43,10 @@ class Trepn(Profiler):
 
         datapoints_file = et.parse(op.join(current_dir, 'trepn/data_points.xml'))
         dp_root = datapoints_file.getroot()
-        data_points = self.load_json(op.join(current_dir, 'trepn/data_points.json'))
+        data_points_dict = self.load_json(op.join(current_dir, 'trepn/data_points.json'))
         for dp in params['data_points']:
-            dp = str(data_points[dp])
+            dp = str(data_points_dict[dp])
+            self.data_points.append(dp)
             dp_root.append(et.Element('int', {'name': dp, 'value': dp}))
         datapoints_file.write(op.join(self.pref_dir, 'com.quicinc.preferences.saved_data_points.xml'), encoding='utf-8',
                               xml_declaration=True, standalone=True)
@@ -84,6 +86,60 @@ class Trepn(Profiler):
             # Delete the originals
             device.shell('rm %s' % op.join(Trepn.DEVICE_PATH, newest_db))
             device.shell('rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
+        self.filter_results(op.join(self.output_dir, csv_filename))
+
+    def csv_reader(self, filename):
+        result = []
+        with open(filename, mode='r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row in csv_reader:
+                result.append(row)
+        return result
+
+    def filter_results(self, filename):
+        file_content = self.csv_reader(filename)[3:]
+        split_line = file_content.index(['System Statistics:'])
+        data = file_content[:split_line - 2]
+        system_statistics = file_content[split_line + 2:]
+        system_statistics_dict = {str(statistic[0]): statistic[1] for statistic in system_statistics if not statistic == []}
+        wanted_statistics = [system_statistics_dict[data_point] for data_point in self.data_points]
+        filtered_data = self.filter_data(wanted_statistics, data)
+        self.write_list_to_file(filename, filtered_data)
+
+    def write_list_to_file(self, filename, rows):
+        with open(filename, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(rows)
+
+    def filter_data(self, wanted_statistics, data):
+        wanted_columns = self.get_wanted_columns(wanted_statistics, data[0])
+        filtered_data = self.filter_columns(wanted_columns, data)
+        return filtered_data
+
+    def filter_columns(self, wanted_columns, data):
+        remaining_data = []
+        for row in data:
+            new_row = [row[column] for column in wanted_columns]
+            remaining_data.append(new_row)
+        return remaining_data
+
+    def get_wanted_columns(self, statistics, header_row):
+        wanted_columns = []
+        last_time = None
+        for statistic in statistics:
+            last_time_added = False
+            for i in range(len(header_row)):
+                header_item = header_row[i].split('[')[0].strip()
+                if header_item == 'Time':
+                    last_time = i
+                if header_item == statistic:
+                    if not last_time_added:
+                        wanted_columns.append(last_time)
+                        last_time_added = True
+                    wanted_columns.append(i)
+        wanted_columns.sort()
+        return wanted_columns
+
 
     def unload(self, device):
         device.shell('am stopservice com.quicinc.trepn/.TrepnService')
@@ -109,22 +165,35 @@ class Trepn(Profiler):
             writer.writerows(rows)
 
     def aggregate_trepn_subject(self, logs_dir):
-        def format_stats(accum, new):
-            column_name = new['Name']
-            if '[' in new['Type']:
-                column_name += ' [' + new['Type'].split('[')[1]
-            accum.update({column_name: float(new['Average'])})
-            return accum
+        def add_row(accum, new):
+            row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
+            count = accum['count'] + 1
+            return dict(row, **{'count': count})
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             with open(os.path.join(logs_dir, run_file), 'rb') as run:
-                contents = run.read()  # Be careful with large files, this loads everything into memory
-                system_stats = contents.split('System Statistics:')[1].strip().splitlines()
-                reader = csv.DictReader(system_stats)
-                runs.append(reduce(format_stats, reader, {}))
-        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
-        return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+                run_dict = {}
+                reader = csv.DictReader(run)
+                column_readers = self.split_reader(reader)
+                for k, v in column_readers.items():
+                    init = dict({k: 0}, **{'count': 0})
+                    run_total = reduce(add_row, v, init)
+                    if not run_total['count'] == 0:
+                        run_dict[k] = run_total[k] / run_total['count']
+                runs.append(run_dict)
+        init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
+        runs_total = reduce(add_row, runs, init)
+        return OrderedDict(
+            sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+
+    def split_reader(self, reader):
+        column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
+        for row in reader:
+            for k, v in row.items():
+                if not k.split('[')[0].strip() == 'Time' and not v == '':
+                    column_dicts[k].append({k: v})
+        return column_dicts
 
     def aggregate_final(self, data_dir):
         rows = []

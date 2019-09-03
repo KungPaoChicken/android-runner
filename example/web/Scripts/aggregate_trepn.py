@@ -12,22 +12,34 @@ def list_subdir(a_dir):
 
 
 def aggregate_trepn_final(logs_dir):
-    def format_stats(accum, new):
-        column_name = new['Name']
-        if '[' in new['Type']:
-            column_name += ' [' + new['Type'].split('[')[1]
-        accum.update({column_name: float(new['Average'])})
-        return accum
+    def add_row(accum, new):
+        row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
+        count = accum['count'] + 1
+        return dict(row, **{'count': count})
+
     runs = []
     for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
         with open(os.path.join(logs_dir, run_file), 'rb') as run:
-            contents = run.read()   # Be careful with large files, this loads everything into memory
-            system_stats = contents.split('System Statistics:')[1].strip().splitlines()
-            reader = csv.DictReader(system_stats)
-            runs.append(reduce(format_stats, reader, {}))
-    runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
-    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+            run_dict = {}
+            reader = csv.DictReader(run)
+            column_readers = split_reader(reader)
+            for k,v in column_readers.items():
+                init = dict({k: 0}, **{'count': 0})
+                run_total = reduce(add_row, v, init)
+                if not run_total['count'] == 0:
+                    run_dict[k] = run_total[k] / run_total['count']
+            runs.append(run_dict)
+    init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
+    runs_total = reduce(add_row, runs, init)
+    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
 
+def split_reader(reader):
+    column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
+    for row in reader:
+        for k,v in row.items():
+            if not k.split('[')[0].strip() == 'Time' and not v == '':
+                column_dicts[k].append({k:v})
+    return column_dicts
 
 def aggregate(data_dir):
     rows = []
