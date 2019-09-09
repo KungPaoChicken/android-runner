@@ -61,20 +61,21 @@ Batterystats
 def parse_batterystats(app, batterystats_file, power_profile):
     """ Parse Batterystats history and calculate results """
     with open(batterystats_file, 'r') as bs_file:
-        voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
-        app_pattern = re.compile('(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
-        screen_pattern = re.compile('(0|\+\d.*ms).*([+-])screen')
-        brightness_pattern = re.compile('(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
-        wifi_pattern = re.compile('(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
-        camera_pattern = re.compile('(0|\+\d.*ms).*([+-])(camera)')
-        flashlight_pattern = re.compile('(0|\+\d.*ms).*([+-])(flashlight)')
-        gps_pattern = re.compile('(0|\+\d.*ms).*([+-])(gps)')
-        audio_pattern = re.compile('(0|\+\d.*ms).*([+-])(audio)')
-        video_pattern = re.compile('(0|\+\d.*ms).*([+-])(video)')
-        bluetooth_pattern = re.compile('(0|\+\d.*ms).*([+-])(bluetooth)')
-        phone_scanning_pattern = re.compile('(0|\+\d.*ms).*([+-])(phone_scanning)')
-        time_pattern = re.compile('(0|\+\d.*ms).*')
-
+        voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
+        app_pattern = re.compile(r'(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
+        print("Current app: "+str(format(app)))
+        screen_pattern = re.compile(r'(0|\+\d.*ms).*([+-])screen')
+        brightness_pattern = re.compile(r'(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
+        wifi_pattern = re.compile(r'(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
+        camera_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(camera)')
+        flashlight_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(flashlight)')
+        gps_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(gps)')
+        audio_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(audio)')
+        video_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(video)')
+        bluetooth_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(bluetooth)')
+        phone_scanning_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(phone_scanning)')
+        time_pattern = re.compile(r'(0|\+\d.*ms).*')
+#        t.sleep(10)
         f = bs_file.read()
         app_start_time = convert_to_s(re.findall(app_pattern, f)[0][0])
         app_end_time = convert_to_s(re.findall(app_pattern, f)[-1][0])
@@ -280,11 +281,11 @@ def calculate_energy_usage(intensity, voltage, duration):
 
 def convert_to_s(line):
     """ Convert Batterystats timestamps to seconds """
-    milliseconds_pattern = re.compile('\+(\d{3})ms')
-    seconds_pattern = re.compile('\+(\d{1,2})s(\d{3})ms')
-    minutes_pattern = re.compile('\+(\d{1,2})m(\d{2})s(\d{3})ms')
-    hours_pattern = re.compile('\+(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
-    days_pattern = re.compile('\+(\d)d(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
+    milliseconds_pattern = re.compile(r'\+(\d{3})ms')
+    seconds_pattern = re.compile(r'\+(\d{1,2})s(\d{3})ms')
+    minutes_pattern = re.compile(r'\+(\d{1,2})m(\d{2})s(\d{3})ms')
+    hours_pattern = re.compile(r'\+(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
+    days_pattern = re.compile(r'\+(\d)d(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
 
     milliseconds_matches = milliseconds_pattern.search(line)
     seconds_matches = seconds_pattern.search(line)
@@ -329,7 +330,7 @@ Systrace
 def parse_systrace(app, systrace_file, logcat, batterystats, power_profile, core_amount):
     """ Parse systrace file and calculate results """
     with open(batterystats, 'r') as bs:
-        voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
+        voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
         voltage = float(re.findall(voltage_pattern, bs.read())[0][1]) / 1000.0
 
     with open(systrace_file, 'r') as sys:
@@ -440,7 +441,8 @@ def parse_logcat(app, logcat_file):
     with open(logcat_file, 'r') as f:
         logcat = f.read()
         app_start_pattern = re.compile(
-            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % app)
+            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % str(app))
+        print("App used for logcat: "+str(app))
         app_start_date = re.findall(app_start_pattern, logcat)[0][0]
         year = dt.datetime.now().year
         time_tuple = t.strptime('{}-{}'.format(year, app_start_date), '%Y-%m-%d %H:%M:%S')

@@ -9,7 +9,7 @@ import BatterystatsParser
 from collections import OrderedDict
 from subprocess import Popen
 from Profiler import Profiler
-
+from BrowserFactory import BrowserFactory
 
 class Batterystats(Profiler):
 
@@ -27,6 +27,8 @@ class Batterystats(Profiler):
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
         self.duration = self.is_integer(config_file.get('duration', 0)) / 1000
+        if self.type == 'web':
+            self.browsers = [BrowserFactory.get_browser(b)(config_file) for b in config_file.get('browsers', ['chrome'])]
 
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
@@ -43,9 +45,13 @@ class Batterystats(Profiler):
 
         if self.type == 'native':
             app = kwargs.get('app', None)
-        # TODO: add support for other browsers, required form: app = 'package.name'
+
+        # TODO: add support for multiple browsers
         elif self.type == 'web':
-            app = 'com.android.chrome'
+            app = self.browsers[0].to_string()
+            print("Current app: "+str(app))
+
+            #app = 'com.android.chrome'
 
         # Create files on system
         systrace_file = '{}systrace_{}_{}.html'.format(self.output_dir, device.id, time.strftime('%Y.%m.%d_%H%M%S'))

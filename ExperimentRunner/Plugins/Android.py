@@ -42,6 +42,8 @@ class Android(Profiler):
             return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
+#            print('result'+ str(result))
+            print(' '.join(result.strip().split()).split())
             if 'No process found' in result:
                 raise Exception('Android Profiler: {}'.format(result))
             return ' '.join(result.strip().split()).split()[1]
