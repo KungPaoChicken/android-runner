@@ -9,14 +9,14 @@ from util import load_json, ConfigError
 
 
 class Devices:
-    def __init__(self, names, adb_path='adb'):
+    def __init__(self, devices, adb_path='adb'):
         Adb.setup(adb_path)
         mapping_file = load_json(op.join(ROOT_DIR, 'devices.json'))
-        self._device_map = {n: mapping_file.get(n, None) for n in names}
+        self._device_map = {n: mapping_file.get(n, None) for n in devices}
         for name, device_id in self._device_map.items():
             if not device_id:
                 raise ConfigError(name)
-        self.devices = [Device(name, device_id) for name, device_id in self._device_map.items()]
+        self.devices = [Device(name, device_id, devices[name]) for name, device_id in self._device_map.items()]
 
     def __iter__(self):
         return iter(self.devices)
