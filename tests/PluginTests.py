@@ -7,7 +7,6 @@ import traceback
 from ExperimentRunner.Devices import Devices
 from ExperimentRunner.PluginHandler import PluginHandler
 from ExperimentRunner.util import makedirs
-
 import paths
 
 
@@ -33,8 +32,8 @@ class PluginTests(object):
         self.check_init_profilers()
         default_profilers = ['android', 'batterystats', 'trepn']
         for profiler in self.profilers:
-            if profiler.nameLower not in default_profilers:
-                self.check_profiler(profiler.currentProfiler, profiler.moduleName)
+            if profiler.name.lower() not in default_profilers:
+                self.check_profiler(profiler.currentProfiler, profiler.name)
 
     def check_init_profilers(self):
         self.profilers = []
@@ -67,9 +66,9 @@ class PluginTests(object):
 
     def set_dirs(self, device, profiler_name):
         self.dirs['subject'] = os.path.join(self.output_root, 'data', device.name, 'test_dir_1', 'test_dir_2',
-                                            profiler_name.lower())
+                                            profiler_name)
         self.dirs['aggregated'] = os.path.join(paths.OUTPUT_DIR, '{}_aggregated.csv'.format(profiler_name))
-        self.dirs['base'] = os.path.join(paths.OUTPUT_DIR, 'data')
+        self.dirs['data_folder'] = os.path.join(paths.OUTPUT_DIR, 'data')
         makedirs(self.dirs['subject'])
 
     def check_profiler_method(self, device, profiler, current_method, profiler_name):
@@ -83,7 +82,7 @@ class PluginTests(object):
             elif current_method == 'aggregate_subject':
                 method_result = getattr(profiler, current_method)()
             elif current_method == 'aggregate_end':
-                method_result = getattr(profiler, current_method)(self.dirs['base'], self.dirs['aggregated'])
+                method_result = getattr(profiler, current_method)(self.dirs['data_folder'], self.dirs['aggregated'])
             else:
                 method_result = getattr(profiler, current_method)(device)
 

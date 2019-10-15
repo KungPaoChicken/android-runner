@@ -8,6 +8,7 @@ from Experiment import Experiment
 from NativeExperiment import NativeExperiment
 from Progress import Progress
 from WebExperiment import WebExperiment
+from tests.PluginTests import PluginTests
 
 logger = logging.getLogger('ExperimentFactory')
 
@@ -23,6 +24,8 @@ class ExperimentFactory(object):
         shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
         experiment_type = config['type']
+        if experiment_type == 'plugintest':
+            return PluginTests(config)
         if progress is None:
             progress = Progress(config_file=path, config=config, load_progress=False)
         if experiment_type == 'native':

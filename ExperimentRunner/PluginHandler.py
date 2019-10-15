@@ -26,6 +26,7 @@ class PluginHandler(object):
             self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[plugin_path])
             self.pluginModule = self.plugin_source.load_plugin(self.moduleName)
             self.currentProfiler = getattr(self.pluginModule, self.moduleName)(params, self.paths)
+            self.name = self.name_lower
         else:
             plugin_path = os.path.join(paths.CONFIG_DIR, 'Plugins')
             if os.path.isdir(plugin_path):
@@ -68,7 +69,7 @@ class PluginHandler(object):
 
     def set_output(self):
         # TODO clean up!
-        self.paths['OUTPUT_DIR'] = os.path.join(paths.OUTPUT_DIR, self.name_lower)
+        self.paths['OUTPUT_DIR'] = os.path.join(paths.OUTPUT_DIR, self.name)
         makedirs(self.paths['OUTPUT_DIR'])
         self.logger.debug('%s: Setting output: %s' % (self.moduleName, self.paths['OUTPUT_DIR']))
         self.currentProfiler.set_output(self.paths['OUTPUT_DIR'])
@@ -122,14 +123,14 @@ class PluginHandler(object):
             device_dir = os.path.join(data_dir, device)
             for subject in self.list_subdir(device_dir):
                 subject_dir = os.path.join(device_dir, subject)
-                if os.path.isdir(os.path.join(subject_dir, self.name_lower)):
-                    self.currentProfiler.set_output(os.path.join(subject_dir, self.name_lower))
+                if os.path.isdir(os.path.join(subject_dir, self.name)):
+                    self.currentProfiler.set_output(os.path.join(subject_dir, self.name))
                     self.currentProfiler.aggregate_subject()
                 else:
                     for browser in self.list_subdir(subject_dir):
                         browser_dir = os.path.join(subject_dir, browser)
-                        if os.path.isdir(os.path.join(browser_dir, self.name_lower)):
-                            self.currentProfiler.set_output(os.path.join(browser_dir, self.name_lower))
+                        if os.path.isdir(os.path.join(browser_dir, self.name)):
+                            self.currentProfiler.set_output(os.path.join(browser_dir, self.name))
                             self.currentProfiler.aggregate_subject()
 
     @staticmethod
