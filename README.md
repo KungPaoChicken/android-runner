@@ -57,8 +57,32 @@ Number of times an experiment is run.
 **duration** *positive integer*
 The duration of each run in milliseconds.
 
-**devices** *Array\<String\>*
-The names of devices to use. They will be translated into ids defined in devices.json.
+**devices** *JSON*
+A JSON object to describe the devices to be used and their arguments. Below are several examples:
+```json
+  "devices": {
+    "nexus6p": {
+      "root_disable_charging": "True"
+      "charging_disabled_value": 0
+      "usb_charging_disabled_file": "/sys/class/power_supply/usb/device/charge"
+    }
+  }
+```
+
+```json
+  "devices": {
+    "nexus6p": {
+      "root_disable_charging": "False"
+    }
+  }
+```
+
+```json
+  "devices": {
+    "nexus6p": {}
+  }
+```
+Note that the last two examples result in the same behaviour.
 
 **paths** *Array\<String\>*
 The paths to the APKs/URLs to test with.
@@ -122,6 +146,14 @@ Below are the supported types:
   executes after a run completes
 - after_experiment
   executes once after the last run
+
+## Plugin profilers
+It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
+that it uses [this profiler.py class](Experimentrunner/Plugins/Profiler.py) as parent class. You can use your own
+profiler in the same way as the default profilers, you just need to make sure that:
+- The profiler name is the same as your python file and class name.
+- Your python file isn't called 'Profiler.py' as this file will be overwritten.
+- The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
 ## Detailed documentation
 The original thesis can be found here:
