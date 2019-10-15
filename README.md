@@ -155,6 +155,8 @@ profiler in the same way as the default profilers, you just need to make sure th
 - Your python file isn't called 'Profiler.py' as this file will be overwritten.
 - The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
+To test your own profiler, you can make us of the 'plugintest' experiment type as can be seen [this profiler.py class](Example/plugintest/)
+
 ## Detailed documentation
 The original thesis can be found here:
 https://drive.google.com/file/d/0B7Fel9yGl5-xc2lEWmNVYkU5d2c/view?usp=sharing
