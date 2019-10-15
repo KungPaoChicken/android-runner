@@ -15,7 +15,7 @@ class Device:
         self.id = device_id
         self.root_unplug = settings.get('root_disable_charging', False)
         self.root_unplug_value = settings.get('charging_disabled_value', None)
-        self.root_unplug_file = settings.get('usb_charging_enabled_file', None)
+        self.root_unplug_file = settings.get('usb_charging_disabled_file', None)
         self.root_plug_value = None
         Adb.connect(device_id)
 
