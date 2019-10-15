@@ -4,7 +4,7 @@ import ExperimentRunner.Adb as Adb
 from ExperimentRunner.Device import Device
 from ExperimentRunner.Devices import Devices
 from ExperimentRunner.util import ConfigError
-from mock import patch, Mock, MagicMock
+from mock import patch, Mock, MagicMock, call
 
 
 class TestDevice(object):
@@ -14,18 +14,35 @@ class TestDevice(object):
     def device(self, adb_connect):
         name = 'fake_device'
         device_id = 123456789
+        device_settings = {}
 
-        return Device(name, device_id)
+        return Device(name, device_id, device_settings)
+
+    @pytest.fixture()
+    @patch('ExperimentRunner.Adb.connect')
+    def device_root(self, adb_connect):
+        name = 'fake_device'
+        device_id = 123456789
+        device_settings = {'root_disable_charging': True,
+                           'charging_disabled_value': '0', 'usb_charging_enabled_file': 'test/file'}
+
+        return Device(name, device_id, device_settings)
 
     @patch('ExperimentRunner.Adb.connect')
     def test_init(self, adb_connect):
         name = 'fake_device'
         device_id = 123456789
+        device_settings = {'root_disable_charging': True,
+                           'charging_disabled_value': '0', 'usb_charging_enabled_file': 'test/file' }
 
-        device = Device(name, device_id)
+        device = Device(name, device_id, device_settings)
 
         assert device.name == name
         assert device.id == device_id
+        assert device.root_plug_value == None
+        assert device.root_unplug_file == 'test/file'
+        assert device.root_unplug_value == '0'
+        assert device.root_unplug == True
         adb_connect.assert_called_once_with(device_id)
 
     @patch('ExperimentRunner.Adb.shell')
@@ -84,27 +101,106 @@ class TestDevice(object):
 
         adb_uninstall.assert_called_once_with(123456789, app_name)
 
+    @patch('ExperimentRunner.Device.Device.su_unplug')
     @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
-    def test_unplug_api_lower_23(self, adb_shell, get_api_level, device):
+    def test_unplug_api_lower_23_no_root(self, adb_shell, get_api_level, su_unplug, device):
         get_api_level.return_value = 22
         device.unplug()
 
+        assert su_unplug.call_count == 0
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery set usb 0')
 
+    @patch('ExperimentRunner.Device.Device.su_unplug')
     @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
-    def test_unplug_api_higher_equal_23(self, adb_shell, get_api_level, device):
+    def test_unplug_api_higher_equal_23_no_root(self, adb_shell, get_api_level, su_unplug, device):
         get_api_level.return_value = 23
         device.unplug()
 
+        assert su_unplug.call_count == 0
+        adb_shell.assert_called_once_with(123456789, 'dumpsys battery unplug')
+
+    @patch('ExperimentRunner.Device.Device.su_unplug')
+    @patch('ExperimentRunner.Device.Device.get_api_level')
+    @patch('ExperimentRunner.Adb.shell')
+    def test_unplug_api_lower_23_root(self, adb_shell, get_api_level, su_unplug, device_root):
+        get_api_level.return_value = 22
+        device_root.unplug()
+
+        su_unplug.assert_called_once()
+        adb_shell.assert_called_once_with(123456789, 'dumpsys battery set usb 0')
+
+    @patch('ExperimentRunner.Device.Device.su_unplug')
+    @patch('ExperimentRunner.Device.Device.get_api_level')
+    @patch('ExperimentRunner.Adb.shell')
+    def test_unplug_api_higher_equal_23_root(self, adb_shell, get_api_level, su_unplug, device_root):
+        get_api_level.return_value = 23
+        device_root.unplug()
+
+        su_unplug.assert_called_once()
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery unplug')
 
     @patch('ExperimentRunner.Adb.shell')
-    def test_plug(self, adb_shell, device):
+    def test_su_unplug_no_error(self, adb_shell, device_root):
+        adb_shell.side_effect = ['', 'default_return', '']
+
+        device_root.su_unplug()
+
+        expected_calls = [call(device_root.id, 'su'),
+                          call(device_root.id, 'cat %s' % device_root.root_unplug_file),
+                          call(device_root.id, 'echo %s > %s' %
+                               (device_root.root_unplug_value, device_root.root_unplug_file))]
+        assert adb_shell.mock_calls == expected_calls
+        assert device_root.root_plug_value == 'default_return'
+
+    @patch('ExperimentRunner.Adb.shell')
+    def test_su_unplug_not_rooted(self, adb_shell, device_root):
+        adb_shell.side_effect = ['su: not found', 'default_return', 'No such file or directory']
+        with pytest.raises(Adb.AdbError):
+            device_root.su_unplug()
+
+        expected_calls = [call(device_root.id, 'su')]
+        assert adb_shell.mock_calls == expected_calls
+        assert device_root.root_plug_value is None
+
+    @patch('ExperimentRunner.Adb.shell')
+    def test_su_unplug_invalid_root_unplug_file(self, adb_shell, device_root):
+        adb_shell.side_effect = ['', 'No such file or directory', '']
+        with pytest.raises(ConfigError):
+            device_root.su_unplug()
+
+        expected_calls = [call(device_root.id, 'su'),
+                          call(device_root.id, 'cat %s' % device_root.root_unplug_file)]
+        assert adb_shell.mock_calls == expected_calls
+        assert device_root.root_plug_value == 'No such file or directory'
+
+    @patch('ExperimentRunner.Device.Device.su_plug')
+    @patch('ExperimentRunner.Adb.shell')
+    def test_plug_no_root(self, adb_shell, su_plug, device):
         device.plug()
 
+        assert su_plug.call_count == 0
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery reset')
+
+    @patch('ExperimentRunner.Device.Device.su_plug')
+    @patch('ExperimentRunner.Adb.shell')
+    def test_plug_root(self, adb_shell, su_plug, device_root):
+        device_root.plug()
+
+        su_plug.assert_called_once()
+        adb_shell.assert_called_once_with(123456789, 'dumpsys battery reset')
+
+    @patch('ExperimentRunner.Adb.shell')
+    def test_su_plug(self, adb_shell, device_root):
+        device_root.root_plug_value = '123456'
+
+        device_root.su_plug()
+
+        expected_calls = [call(device_root.id, 'su'),
+                          call(device_root.id, 'echo %s > %s' %
+                               (device_root.root_plug_value, device_root.root_unplug_file))]
+        assert adb_shell.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.shell')
     def test_current_activity_current_focus(self, adb_shell, device):
@@ -206,7 +302,7 @@ class TestDevice(object):
         adb_shell.assert_called_once_with(123456789, 'am force-stop {}'.format(name))
 
     @patch('ExperimentRunner.Adb.clear_app_data')
-    def test_clear_app_date(self, adb_clear_app_data, device):
+    def test_clear_app_data(self, adb_clear_app_data, device):
         name = 'fake_app'
 
         device.clear_app_data(name)
@@ -214,7 +310,7 @@ class TestDevice(object):
         adb_clear_app_data.assert_called_once_with(123456789, name)
 
     @patch('ExperimentRunner.Adb.logcat')
-    def test_logcat(self, adb_logcat, device, tmpdir):
+    def test_logcat_to_file(self, adb_logcat, device, tmpdir):
         path = os.path.join(str(tmpdir), 'logcat')
         logcat_result = "test file content: 123dsfg564sdfhg"
         adb_logcat.return_value = logcat_result
@@ -304,10 +400,11 @@ class TestDevices(object):
     def test_init_succes(self, adb_setup, load_json, device):
         device.return_value = None
         load_json.return_value = {'fake_device': 123456789}
-        devices = Devices(['fake_device'], 'adb/path')
+        mock_device_settings = Mock()
+        devices = Devices({'fake_device': mock_device_settings}, 'adb/path')
 
         adb_setup.assert_called_once_with('adb/path')
-        device.assert_called_once_with('fake_device', 123456789)
+        device.assert_called_once_with('fake_device', 123456789, mock_device_settings)
         assert len(devices.devices) == 1
         assert isinstance(devices.devices[0], Device)
 
@@ -438,12 +535,11 @@ class TestAdb(object):
         mock_adb = Mock()
         mock_adb.shell_command.return_value = "succes         "
         Adb.adb = mock_adb
-
         result = Adb.shell(123, "test_command")
 
+        expected_calls = [call.set_target_by_name(123), call.shell_command('test_command')]
+        assert mock_adb.mock_calls == expected_calls
         assert result == 'succes'
-        mock_adb.set_target_by_name.assert_called_once_with(123)
-        mock_adb.shell_command('test_command')
 
     def test_shell_error(self):
         mock_adb = Mock()
@@ -453,8 +549,8 @@ class TestAdb(object):
         with pytest.raises(Adb.AdbError):
             Adb.shell(123, "test_command")
 
-        mock_adb.set_target_by_name.assert_called_once_with(123)
-        mock_adb.shell_command('test_command')
+        expected_calls = [call.set_target_by_name(123), call.shell_command('test_command')]
+        assert mock_adb.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.shell')
     def test_list_apps(self, adb_shell):
@@ -477,9 +573,9 @@ class TestAdb(object):
 
         result = Adb.install(device_id, apk)
 
-        result = 'succes'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('install -r -g {}'.format(apk))
+        assert result == 'succes'
+        expected_calls = [call.set_target_by_name(device_id), call.run_cmd('install -r -g {}'.format(apk))]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_install_no_replace(self):
         mock_adb = Mock()
@@ -490,9 +586,9 @@ class TestAdb(object):
 
         result = Adb.install(device_id, apk, replace=False)
 
-        result = 'succes'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('install -g {}'.format(apk))
+        assert result == 'succes'
+        expected_calls = [call.set_target_by_name(device_id), call.run_cmd('install -g {}'.format(apk))]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_install_not_all_permissions(self):
         mock_adb = Mock()
@@ -503,9 +599,9 @@ class TestAdb(object):
 
         result = Adb.install(device_id, apk, all_permissions=False)
 
-        result = 'succes'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('install -r {}'.format(apk))
+        assert result == 'succes'
+        expected_calls = [call.set_target_by_name(device_id), call.run_cmd('install -r {}'.format(apk))]
+        assert mock_adb.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.success_or_exception')
     def test_uninstall_delete_data(self, s_or_e):
@@ -515,11 +611,17 @@ class TestAdb(object):
         device_id = 123
         name = 'app_name'
 
+        manager = Mock()
+        manager.attach_mock(s_or_e, "s_or_e_mock")
+        manager.mock_adb = mock_adb
+
         Adb.uninstall(device_id, name)
 
-        mock_adb.uninstall.assert_called_once_with(package=name, keepdata=True)
-        s_or_e.assert_called_once_with('succes', '{}: "{}" uninstalled'.format(device_id, name),
-                                       '{}: Failed to uninstall "{}"'.format(device_id, name))
+        expected_calls = [call.mock_adb.set_target_by_name(123),
+                          call.mock_adb.uninstall(package=name, keepdata=True),
+                          call.s_or_e_mock('succes', '{}: "{}" uninstalled'.format(device_id, name),
+                                       '{}: Failed to uninstall "{}"'.format(device_id, name))]
+        assert manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.success_or_exception')
     def test_uninstall_keep_data(self, s_or_e):
@@ -529,11 +631,17 @@ class TestAdb(object):
         device_id = 123
         name = 'app_name'
 
+        manager = Mock()
+        manager.attach_mock(s_or_e, "s_or_e_mock")
+        manager.mock_adb = mock_adb
+
         Adb.uninstall(device_id, name, True)
 
-        mock_adb.uninstall.assert_called_once_with(package=name, keepdata=False)
-        s_or_e.assert_called_once_with('succes', '{}: "{}" uninstalled'.format(device_id, name),
-                                       '{}: Failed to uninstall "{}"'.format(device_id, name))
+        expected_calls = [call.mock_adb.set_target_by_name(123),
+                          call.mock_adb.uninstall(package=name, keepdata=False),
+                          call.s_or_e_mock('succes', '{}: "{}" uninstalled'.format(device_id, name),
+                                       '{}: Failed to uninstall "{}"'.format(device_id, name))]
+        assert manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.success_or_exception')
     def test_clear_app_data(self, s_or_e):
@@ -543,12 +651,17 @@ class TestAdb(object):
         device_id = 123
         name = 'app_name'
 
+        manager = Mock()
+        manager.attach_mock(s_or_e, "s_or_e_mock")
+        manager.mock_adb = mock_adb
+
         Adb.clear_app_data(device_id, name)
 
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.shell_command.assert_called_once_with('pm clear {}'.format(name))
-        s_or_e.assert_called_once_with('succes', '{}: Data of "{}" cleared'.format(device_id, name),
-                                       '{}: Failed to clear data for "{}"'.format(device_id, name))
+        expected_calls = [call.mock_adb.set_target_by_name(123),
+                          call.mock_adb.shell_command('pm clear app_name'),
+                          call.s_or_e_mock('succes', '{}: Data of "{}" cleared'.format(device_id, name),
+                                       '{}: Failed to clear data for "{}"'.format(device_id, name))]
+        assert manager.mock_calls == expected_calls
 
     @patch('logging.Logger.info')
     def test_success_or_exception_succes(self, logger):
@@ -583,8 +696,8 @@ class TestAdb(object):
         result = Adb.push(device_id, local_path, remote_path)
 
         assert result == 'push output'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('push {} {}'.format(local_path, remote_path))
+        expected_calls = [call.set_target_by_name(device_id), call.run_cmd('push {} {}'.format(local_path, remote_path))]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_pull_no_error(self):
         mock_adb = Mock()
@@ -599,8 +712,9 @@ class TestAdb(object):
         result = Adb.pull(device_id, remote_path, local_path)
 
         assert result == 'pull output'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('pull {} {}'.format(remote_path, local_path))
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.run_cmd('pull {} {}'.format(remote_path, local_path))]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_pull_error_no_bytes_in(self):
         mock_adb = Mock()
@@ -615,10 +729,11 @@ class TestAdb(object):
         result = Adb.pull(device_id, remote_path, local_path)
 
         assert result == 'pull output'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('pull {} {}'.format(remote_path, local_path))
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.run_cmd('pull {} {}'.format(remote_path, local_path))]
+        assert mock_adb.mock_calls == expected_calls
 
-    def test_pull_error_no_bytes_in(self):
+    def test_pull_error_with_bytes_in(self):
         mock_adb = Mock()
         mock_adb._ADB__output = 'pull output'
         mock_adb._ADB__error = 'bytes in error'
@@ -631,8 +746,9 @@ class TestAdb(object):
         result = Adb.pull(device_id, remote_path, local_path)
 
         assert result == 'bytes in error'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.run_cmd.assert_called_once_with('pull {} {}'.format(remote_path, local_path))
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.run_cmd('pull {} {}'.format(remote_path, local_path))]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_logcat_no_regex(self):
         mock_adb = Mock()
@@ -644,8 +760,9 @@ class TestAdb(object):
         result = Adb.logcat(device_id)
 
         assert result == 'get_logcat output'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.get_logcat.assert_called_once_with(lcfilter='-d')
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.get_logcat(lcfilter='-d')]
+        assert mock_adb.mock_calls == expected_calls
 
     def test_logcat_with_regex(self):
         mock_adb = Mock()
@@ -658,5 +775,6 @@ class TestAdb(object):
         result = Adb.logcat(device_id, test_regex)
 
         assert result == 'get_logcat output'
-        mock_adb.set_target_by_name.assert_called_once_with(device_id)
-        mock_adb.get_logcat.assert_called_once_with(lcfilter='-d -e {}'.format(test_regex))
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.get_logcat(lcfilter='-d -e {}'.format(test_regex))]
+        assert mock_adb.mock_calls == expected_calls

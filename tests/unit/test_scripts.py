@@ -8,7 +8,7 @@ from ExperimentRunner.Python2 import Python2
 from ExperimentRunner.MonkeyReplay import MonkeyReplay, MonkeyReplayError
 from ExperimentRunner.MonkeyRunner import MonkeyRunner
 from ExperimentRunner.util import ConfigError, FileNotFoundError
-from mock import patch, Mock
+from mock import patch, Mock, call
 
 
 class TestScripts(object):
@@ -25,7 +25,7 @@ class TestScripts(object):
             return Scripts(test_config)
 
     @patch('ExperimentRunner.Python2.Python2.__init__')
-    def test_experiment_script(self, mock, paths_dict):
+    def test_experiment_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
@@ -37,7 +37,7 @@ class TestScripts(object):
             assert type(script) == Python2
 
     @patch('ExperimentRunner.Python2.Python2.__init__')
-    def test_python2_interaction_script(self, mock, paths_dict):
+    def test_python2_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
@@ -54,7 +54,7 @@ class TestScripts(object):
             assert type(script) == Python2
 
     @patch('ExperimentRunner.MonkeyReplay.MonkeyReplay.__init__')
-    def test_monkeyreplay_interaction_script(self, mock, paths_dict):
+    def test_monkeyreplay_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
@@ -71,7 +71,7 @@ class TestScripts(object):
             assert type(script) == MonkeyReplay
 
     @patch('ExperimentRunner.MonkeyRunner.MonkeyRunner.__init__')
-    def test_monkeyrunner_interaction_script(self, mock, paths_dict):
+    def test_monkeyrunner_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
@@ -89,7 +89,7 @@ class TestScripts(object):
         for script in scripts.scripts['interaction']:
             assert type(script) == MonkeyRunner
 
-    def test_unknown_interaction_script(self, paths_dict):
+    def test_unknown_interaction_script_init(self, paths_dict):
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
         test_config['type'] = 'unknownScript'
@@ -104,12 +104,14 @@ class TestScripts(object):
     @patch('ExperimentRunner.Script.Script.run')
     def test_run(self, mock, scripts):
         fake_device = Mock()
-
-        assert mock.call_count == 0
-        scripts.run('testscript1', fake_device)
-        assert mock.call_count == 0
         scripts.run('testscript', fake_device)
         mock.assert_called_once_with(fake_device)
+
+    @patch('ExperimentRunner.Script.Script.run')
+    def test_run_empty_script_set(self, mock, scripts):
+        fake_device = Mock()
+        scripts.run('testscript1', fake_device)
+        assert mock.call_count == 0
 
 
 class TestPython2(object):
@@ -233,9 +235,16 @@ class TestScript(object):
     def test_logcat_regex(self, script):
         fake_device = Mock()
         test_queue = Mock()
+        manager = Mock()
+
+        manager.fake_device_mock = fake_device
+        manager.test_queu_mock = test_queue
+
         script.mp_logcat_regex(test_queue, fake_device, 'test_regex')
-        fake_device.logcat_regex.assert_called_once_with('test_regex')
-        test_queue.put.assert_called_once_with('logcat')
+
+        expected_calls = [call.fake_device_mock.logcat_regex('test_regex'),call.test_queu_mock.put('logcat')]
+
+        assert manager.mock_calls == expected_calls
 
     def test_script_not_found_init(self):
         with pytest.raises(FileNotFoundError):
