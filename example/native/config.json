@@ -1,9 +1,11 @@
 {
   "type": "native",
-  "devices": ["5x"],
-  "replications": 2,
+  "devices": {
+    "nexus6p": {}
+  },
+  "replications": 1,
   "paths": [
-    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
+    "/home/randy/Desktop/UbunWind/app-debug.apk"
   ],
   "profilers": {
     "trepn": {

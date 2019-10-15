@@ -1,6 +1,8 @@
 {
   "type": "web",
-  "devices": ["nexus6p"],
+  "devices": {
+    "nexus6p": {}
+  },
   "replications": 1,
   "browsers": ["firefox"],
   "paths": [
