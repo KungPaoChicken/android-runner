@@ -1,17 +1,19 @@
 import logging
 import os.path as op
 import time
-
-import paths
-import Tests
+import traceback
+from os import remove, rmdir, walk
 from threading import Thread
-from os import walk, remove, rmdir
+
+import Tests
+import paths
 from Devices import Devices
 from Profilers import Profilers
 from Scripts import Scripts
 from util import ConfigError, makedirs, slugify_dir
 
 
+# noinspection PyUnusedLocal
 class Experiment(object):
     def __init__(self, config, progress):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -77,8 +79,8 @@ class Experiment(object):
         for device in self.devices:
             try:
                 self.cleanup(device)
-            except Exception, e:
-                e.__class__.__name__
+            except Exception:
+                continue
         if not error and not interrupted:
             self.aggregate_end()
 
@@ -90,7 +92,7 @@ class Experiment(object):
     def prepare_run(self, current_run):
         self.prepare_output_dir(current_run)
         self.first_run_device(current_run)
-        self.first_run(current_run)
+        self.before_every_run_subject(current_run)
 
     def run_run(self, current_run):
         if 'browser' in current_run:
@@ -102,7 +104,7 @@ class Experiment(object):
 
     def finish_run(self, current_run):
         self.progress.run_finished(current_run['runId'])
-        self.last_run(current_run)
+        self.last_run_subject(current_run)
         self.last_run_device(current_run)
 
     def save_progress(self):
@@ -121,13 +123,14 @@ class Experiment(object):
                 else:
                     rmdir(path)
 
-    def walk_to_list(self, walk_result):
+    @staticmethod
+    def walk_to_list(walk_result):
         walk_list = list()
         for (path, dirs, files) in walk_result:
-            for dir in dirs:
-                walk_list.append(op.join(path, dir))
-            for file in files:
-                walk_list.append(op.join(path, file))
+            for dr in dirs:
+                walk_list.append(op.join(path, dr))
+            for fl in files:
+                walk_list.append(op.join(path, fl))
         walk_list.reverse()
         return walk_list
 
@@ -139,23 +142,25 @@ class Experiment(object):
 
     def first_run_device(self, current_run):
         device = self.devices.get_device(current_run['device'])
-        self.prepare_device(device)
-        self.before_experiment(device)
+        if self.progress.device_first(current_run['device']):
+            self.prepare_device(device)
+            self.before_experiment(device)
 
-    def first_run(self, current_run):
-        self.before_first_run(self.devices.get_device(current_run['device']), current_run['path'])
+    def before_every_run_subject(self, current_run):
+        self.before_run_subject(self.devices.get_device(current_run['device']), current_run['path'])
 
     def last_run_device(self, current_run):
         if self.progress.device_finished(current_run['device']):
             self.after_experiment(self.devices.get_device(current_run['device']))
 
-    def last_run(self, current_run):
+    def last_run_subject(self, current_run):
         if self.progress.subject_finished(current_run['device'], current_run['path']):
             self.after_last_run(self.devices.get_device(current_run['device']), current_run['path'])
             self.aggregate_subject()
 
     def prepare_output_dir(self, current_run):
-        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'], slugify_dir(current_run['path']))
+        paths.OUTPUT_DIR = op.join(paths.BASE_OUTPUT_DIR, 'data/', current_run['device'],
+                                   slugify_dir(current_run['path']))
         makedirs(paths.OUTPUT_DIR)
 
     def run(self, device, path, run, dummy):
@@ -166,10 +171,10 @@ class Experiment(object):
         self.after_run(device, path, run)
 
     def before_experiment(self, device, *args, **kwargs):
-        """Hook executed before the start of experiment"""
+        """Hook executed before the first run of a device in current experiment"""
         self.scripts.run('before_experiment', device, *args, **kwargs)
 
-    def before_first_run(self, device, path, *args, **kwargs):
+    def before_run_subject(self, device, path, *args, **kwargs):
         """Hook executed before the first run for a subject"""
         pass
 
@@ -182,7 +187,7 @@ class Experiment(object):
         self.scripts.run('before_run', device, *args, **kwargs)
 
     def after_launch(self, device, path, run, *args, **kwargs):
-        self.scripts.run('after_launch', device, *args, **kwargs)
+        self.scripts.run('after_launch', device, device.id, device.current_activity())
 
     def start_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.start_profiling(device)
@@ -195,7 +200,7 @@ class Experiment(object):
         self.profilers.stop_profiling(device)
 
     def before_close(self, device, path, run, *args, **kwargs):
-        self.scripts.run('before_close', device, *args, **kwargs)
+        self.scripts.run('before_close', device, device.id, device.current_activity())
 
     def after_run(self, device, path, run, *args, **kwargs):
         """Hook executed after a run"""
@@ -209,7 +214,7 @@ class Experiment(object):
         pass
 
     def after_experiment(self, device, *args, **kwargs):
-        """Hook executed after the end of experiment"""
+        """Hook executed after the last run for device of experiment"""
         self.logger.info('Experiment completed, start cleanup')
         self.scripts.run('after_experiment', device, *args, **kwargs)
 
@@ -218,4 +223,3 @@ class Experiment(object):
 
     def aggregate_end(self):
         self.profilers.aggregate_end(self.output_root)
-

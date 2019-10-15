@@ -1,12 +1,13 @@
-import os.path as op
-import os
-import time
-import lxml.etree as et
-import json
-import errno
 import csv
-
+import errno
+import json
+import os
+import os.path as op
+import time
 from collections import OrderedDict
+
+import lxml.etree as et
+
 from Profiler import Profiler
 
 
@@ -73,8 +74,8 @@ class Trepn(Profiler):
 
     def collect_results(self, device):
         # Gives the latest result
-        db = device.shell('ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()
-        newest_db = db[len(db)-1]
+        db = device.shell(r'ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()
+        newest_db = db[len(db) - 1]
         csv_filename = '%s_%s.csv' % (device.id, op.splitext(newest_db)[0])
         if newest_db:
             device.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
@@ -88,7 +89,8 @@ class Trepn(Profiler):
             device.shell('rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
         self.filter_results(op.join(self.output_dir, csv_filename))
 
-    def read_csv(self, filename):
+    @staticmethod
+    def read_csv(filename):
         result = []
         with open(filename, mode='r') as csv_file:
             csv_reader = csv.reader(csv_file)
@@ -101,12 +103,14 @@ class Trepn(Profiler):
         split_line = file_content.index(['System Statistics:'])
         data = file_content[:split_line - 2]
         system_statistics = file_content[split_line + 2:]
-        system_statistics_dict = {str(statistic[0]): statistic[1] for statistic in system_statistics if not statistic == []}
+        system_statistics_dict = {str(statistic[0]): statistic[1] for statistic in system_statistics if
+                                  not statistic == []}
         wanted_statistics = [system_statistics_dict[data_point] for data_point in self.data_points]
         filtered_data = self.filter_data(wanted_statistics, data)
         self.write_list_to_file(filename, filtered_data)
 
-    def write_list_to_file(self, filename, rows):
+    @staticmethod
+    def write_list_to_file(filename, rows):
         with open(filename, 'w') as f:
             writer = csv.writer(f)
             writer.writerows(rows)
@@ -116,14 +120,16 @@ class Trepn(Profiler):
         filtered_data = self.filter_columns(wanted_columns, data)
         return filtered_data
 
-    def filter_columns(self, wanted_columns, data):
+    @staticmethod
+    def filter_columns(wanted_columns, data):
         remaining_data = []
         for row in data:
             new_row = [row[column] for column in wanted_columns]
             remaining_data.append(new_row)
         return remaining_data
 
-    def get_wanted_columns(self, statistics, header_row):
+    @staticmethod
+    def get_wanted_columns(statistics, header_row):
         wanted_columns = []
         last_time = None
         for statistic in statistics:
@@ -157,7 +163,8 @@ class Trepn(Profiler):
         rows = self.aggregate_final(data_dir)
         self.write_to_file(output_file, rows)
 
-    def write_to_file(self, filename, rows):
+    @staticmethod
+    def write_to_file(filename, rows):
         with open(filename, 'w') as f:
             writer = csv.DictWriter(f, rows[0].keys())
             writer.writeheader()
@@ -165,7 +172,7 @@ class Trepn(Profiler):
 
     def aggregate_trepn_subject(self, logs_dir):
         def add_row(accum, new):
-            row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
+            row = {key: value + float(new[key]) for key, value in accum.items() if key not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
@@ -186,7 +193,8 @@ class Trepn(Profiler):
         return OrderedDict(
             sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
 
-    def split_reader(self, reader):
+    @staticmethod
+    def split_reader(reader):
         column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
         for row in reader:
             for k, v in row.items():
@@ -214,7 +222,8 @@ class Trepn(Profiler):
                             rows.append(row.copy())
         return rows
 
-    def aggregate_trepn_final(self, logs_dir):
+    @staticmethod
+    def aggregate_trepn_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
                 with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
@@ -225,23 +234,25 @@ class Trepn(Profiler):
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
 
-    def list_subdir(self, a_dir):
+    @staticmethod
+    def list_subdir(a_dir):
         """List immediate subdirectories of a_dir"""
         # https://stackoverflow.com/a/800201
         return [name for name in os.listdir(a_dir)
                 if os.path.isdir(os.path.join(a_dir, name))]
 
-    def makedirs(self, path):
+    @staticmethod
+    def makedirs(path):
         """Create a directory on path if it does not exist"""
         # https://stackoverflow.com/a/5032238
         try:
             os.makedirs(path)
         except OSError as e:
             if e.errno != errno.EEXIST:
-
                 raise
 
-    def load_json(self, path):
+    @staticmethod
+    def load_json(path):
         """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
         try:
             with open(path, 'r') as f:

@@ -5,7 +5,7 @@ import time
 
 import Adb
 from Adb import AdbError
-from util import makedirs, ConfigError
+from util import ConfigError, makedirs
 
 
 class Device:
@@ -73,12 +73,12 @@ class Device:
     def su_plug(self):
         Adb.shell(self.id, 'su')
         Adb.shell(self.id, 'echo %s > %s' % (self.root_plug_value, self.root_unplug_file))
-        
+
     def plug(self):
         """Reset the power status of the device"""
-        #if self.get_api_level() < 23:
-            # API level < 23, 4.4.3+ tested, WARNING: hardcoding
-            # reset only restarts auto-update
+        # if self.get_api_level() < 23:
+        # API level < 23, 4.4.3+ tested, WARNING: hardcoding
+        # reset only restarts auto-update
         #    Adb.shell(self.id, 'dumpsys battery set usb 1')
         # API level 23+ (Android 6.0+)
         if self.root_unplug:

@@ -1,12 +1,13 @@
 import argparse
 import logging
-import time
 import os.path as op
 import sys
-from ExperimentRunner.Progress import Progress
-from ExperimentRunner.ExperimentFactory import ExperimentFactory
-from ExperimentRunner.util import makedirs
+import time
+
 import paths
+from ExperimentRunner.ExperimentFactory import ExperimentFactory
+from ExperimentRunner.Progress import Progress
+from ExperimentRunner.util import makedirs
 
 
 def main():
@@ -18,7 +19,7 @@ def main():
 
     try:
         progress_file = progress.get_progress_xml_file()
-    except:
+    except Exception:
         progress_file = ' No progress file created'
 
     try:
@@ -85,6 +86,7 @@ def set_stdout_logger():
     stdout_logger.setLevel(logging.INFO)
     stdout_logger.setFormatter(logging.Formatter('%(name)s: %(message)s'))
     return stdout_logger
+
 
 if __name__ == "__main__":
     main()

@@ -1,11 +1,12 @@
-import pytest
-from mock import patch, Mock, MagicMock
-from shutil import copyfile
 import os
+from shutil import copyfile
+
+import pytest
+from mock import MagicMock, Mock, patch
 
 import paths
-from ExperimentRunner.Profilers import Profilers
 from ExperimentRunner.PluginHandler import PluginHandler
+from ExperimentRunner.Profilers import Profilers
 from ExperimentRunner.util import load_json, makedirs
 
 
@@ -27,7 +28,7 @@ class TestProfilers(object):
         current_profiler = Profilers(config)
         mock.assert_called_once_with('testPlugin', params)
         assert len(current_profiler.profilers) == 1
-        assert  type(current_profiler.profilers[0]) == PluginHandler
+        assert type(current_profiler.profilers[0]) == PluginHandler
 
     @patch('ExperimentRunner.PluginHandler.PluginHandler.__init__')
     def test_init_error(self, mock):
@@ -170,7 +171,7 @@ class TestPluginHandler(object):
         paths.CONFIG_DIR = tmpdir
         os.makedirs(os.path.join(tmpdir, 'Plugins'))
         copyfile(os.path.join(fixture_dir, 'Android1.py'), os.path.join(tmpdir, 'Plugins', 'Android1.py'))
-        plugin_handler = PluginHandler('android1', android_config)
+        plugin_handler = PluginHandler('Android1', android_config)
         return plugin_handler
 
     @patch("pluginbase.PluginBase.make_plugin_source")
@@ -183,11 +184,11 @@ class TestPluginHandler(object):
         make_plugin_source_mock.return_value = mock_plugin_source
 
         android_config = load_json(os.path.join(fixture_dir, 'test_config.json'))['profilers']['android']
-        plugin_handler = PluginHandler('android', android_config)
+        plugin_handler = PluginHandler('Android', android_config)
         plugin_base_init_mock.assert_called_once()
-        make_plugin_source_mock.assert_called_once_with(searchpath=[os.path.join(paths.ROOT_DIR,'ExperimentRunner', 'Plugins')])
+        make_plugin_source_mock.assert_called_once_with(
+            searchpath=[os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins')])
         mock_plugin_source.load_plugin.assert_called_once_with('Android')
-
 
     def test_handler_init_plugin(self, tmpdir, fixture_dir):
         android_config = load_json(os.path.join(fixture_dir, 'test_config.json'))['profilers']['android']
@@ -195,7 +196,7 @@ class TestPluginHandler(object):
         paths.CONFIG_DIR = tmpdir
         os.makedirs(os.path.join(tmpdir, 'Plugins'))
         copyfile(os.path.join(fixture_dir, 'Android1.py'), os.path.join(tmpdir, 'Plugins', 'Android1.py'))
-        plugin_handler = PluginHandler('android1', android_config)
+        plugin_handler = PluginHandler('Android1', android_config)
         assert plugin_handler.currentProfiler.__class__.__name__ == 'Android1'
         assert plugin_handler.currentProfiler.data_points == ['cpu', 'mem']
 
@@ -403,7 +404,8 @@ class TestPluginHandler(object):
     @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
     @patch('ExperimentRunner.Python2.Python2.run')
     @patch('ExperimentRunner.Python2.Python2.__init__')
-    def test_aggregate_data_end_user_script(self, python_init, python_run, aggregate_subjects, android_test_plugin_handler):
+    def test_aggregate_data_end_user_script(self, python_init, python_run, aggregate_subjects,
+                                            android_test_plugin_handler):
         python_init.return_value = None
         android_test_plugin_handler.pluginParams = {'experiment_aggregation': 'user_script'}
         mock_profiler = Mock()
@@ -445,7 +447,8 @@ class TestPluginHandler(object):
 
     def test_aggregate_subject_default_web_experiment(self, android_test_plugin_handler, tmpdir):
         tmpdir = str(tmpdir)
-        paths_ends = ['device1/subject1/browser1/android1', 'device1/subject2/browser1/android1', 'device1/subject3/browser1/android1']
+        paths_ends = ['device1/subject1/browser1/android1', 'device1/subject2/browser1/android1',
+                      'device1/subject3/browser1/android1']
         created_paths = self.make_paths(tmpdir, paths_ends)
 
         mock_profiler = Mock()
@@ -458,4 +461,3 @@ class TestPluginHandler(object):
         mock_profiler.set_output.called_with(created_paths[1])
         mock_profiler.set_output.called_with(created_paths[2])
         assert mock_profiler.aggregate_subject.call_count == 3
-

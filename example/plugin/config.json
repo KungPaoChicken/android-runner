@@ -11,7 +11,7 @@
     "https://wikipedia.com/"
   ],
   "profilers":{
-    "android_plugin": {
+    "AndroidPlugin": {
       "subject_aggregation": "none",
       "experiment_aggregation" : "Scripts/aggregate_android_plugin.py",
       "sample_interval": 200,

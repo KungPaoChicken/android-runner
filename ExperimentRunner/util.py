@@ -1,8 +1,8 @@
-from collections import OrderedDict
-import json
 import errno
+import json
 import os
 import re
+from collections import OrderedDict
 
 
 class ConfigError(Exception):
@@ -44,6 +44,7 @@ def makedirs(path):
 
 
 # https://stackoverflow.com/a/295466
+# noinspection PyTypeChecker
 def slugify_dir(value):
     """
     Normalizes string, converts to lowercase, removes non-alpha characters,
@@ -52,5 +53,5 @@ def slugify_dir(value):
     import unicodedata
     value = value.decode('unicode-escape')
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
-    return unicode(re.sub('[-\s]+', '-', value))
+    value = unicode(re.sub(r'[^\w\s-]', '', value).strip().lower())
+    return unicode(re.sub(r'[-\s]+', '-', value))

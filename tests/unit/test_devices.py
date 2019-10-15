@@ -1,10 +1,12 @@
 import os
+
 import pytest
+from mock import MagicMock, Mock, call, patch
+
 import ExperimentRunner.Adb as Adb
 from ExperimentRunner.Device import Device
 from ExperimentRunner.Devices import Devices
 from ExperimentRunner.util import ConfigError
-from mock import patch, Mock, MagicMock, call
 
 
 class TestDevice(object):
@@ -24,7 +26,7 @@ class TestDevice(object):
         name = 'fake_device'
         device_id = 123456789
         device_settings = {'root_disable_charging': True,
-                           'charging_disabled_value': '0', 'usb_charging_enabled_file': 'test/file'}
+                           'charging_disabled_value': '0', 'usb_charging_disabled_file': 'test/file'}
 
         return Device(name, device_id, device_settings)
 
@@ -33,16 +35,16 @@ class TestDevice(object):
         name = 'fake_device'
         device_id = 123456789
         device_settings = {'root_disable_charging': True,
-                           'charging_disabled_value': '0', 'usb_charging_enabled_file': 'test/file' }
+                           'charging_disabled_value': '0', 'usb_charging_disabled_file': 'test/file'}
 
         device = Device(name, device_id, device_settings)
 
         assert device.name == name
         assert device.id == device_id
-        assert device.root_plug_value == None
+        assert device.root_plug_value is None
         assert device.root_unplug_file == 'test/file'
         assert device.root_unplug_value == '0'
-        assert device.root_unplug == True
+        assert device.root_unplug is True
         adb_connect.assert_called_once_with(device_id)
 
     @patch('ExperimentRunner.Adb.shell')
@@ -218,7 +220,7 @@ class TestDevice(object):
         assert current_activity == 'com.android.chrome'
 
     @patch('ExperimentRunner.Adb.shell')
-    def test_current_activity_None(self, adb_shell, device):
+    def test_current_activity_none(self, adb_shell, device):
         adb_shell.return_value = 'mFocusedApp=null'
         current_activity = device.current_activity()
         assert current_activity is None
@@ -291,7 +293,8 @@ class TestDevice(object):
 
         device.launch_activity(package, activity, from_scratch=True)
 
-        adb_shell.assert_called_once_with(123456789, 'am start -n {}/{} --activity-clear-task'.format(package, activity))
+        adb_shell.assert_called_once_with(123456789,
+                                          'am start -n {}/{} --activity-clear-task'.format(package, activity))
 
     @patch('ExperimentRunner.Adb.shell')
     def test_force_stop(self, adb_shell, device):
@@ -320,8 +323,8 @@ class TestDevice(object):
         files_in_path = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
         assert len(files_in_path) == 1
-        with open(os.path.join(path, files_in_path[0]), 'r') as file:
-            file_content = file.read()
+        with open(os.path.join(path, files_in_path[0]), 'r') as fl:
+            file_content = fl.read()
             assert file_content == logcat_result
         adb_logcat.assert_called_once_with(123456789)
 
@@ -377,6 +380,7 @@ class TestDevice(object):
         device_string = str(device)
 
         assert device_string == 'fake_device (123456789, Android 9, API level 28)'
+
 
 class TestDevices(object):
     @pytest.fixture()
@@ -458,9 +462,9 @@ class TestDevices(object):
         device_names = {'a': 1, 'b': 2, 'c': 3, 'd': 4}
         devices._device_map = device_names
 
-        id = devices.get_id('c')
+        device_id = devices.get_id('c')
 
-        assert id == 3
+        assert device_id == 3
 
     def test_get_name(self, devices):
         device_names = {'a': 1, 'b': 2, 'c': 3, 'd': 4}
@@ -470,35 +474,36 @@ class TestDevices(object):
 
         assert 'c' == name
 
+
 class TestAdb(object):
 
     @patch('ExperimentRunner.Adb.ADB')
-    def test_setup_succes_custom_path(self, ADB):
-        ADB_instance = MagicMock()
-        ADB_instance._ADB__error = None
-        ADB.return_value = ADB_instance
+    def test_setup_succes_custom_path(self, adb):
+        adb_instance = MagicMock()
+        adb_instance._ADB__error = None
+        adb.return_value = adb_instance
 
         Adb.setup('adb/path')
 
         assert isinstance(Adb.adb, MagicMock)
-        ADB.assert_called_once_with(adb_path='adb/path')
+        adb.assert_called_once_with(adb_path='adb/path')
 
     @patch('ExperimentRunner.Adb.ADB')
-    def test_setup_succes_default_path(self, ADB):
-        ADB_instance = MagicMock()
-        ADB_instance._ADB__error = None
-        ADB.return_value = ADB_instance
+    def test_setup_succes_default_path(self, adb):
+        adb_instance = MagicMock()
+        adb_instance._ADB__error = None
+        adb.return_value = adb_instance
 
         Adb.setup()
 
         assert isinstance(Adb.adb, MagicMock)
-        ADB.assert_called_once_with(adb_path='adb')
+        adb.assert_called_once_with(adb_path='adb')
 
     @patch('ExperimentRunner.Adb.ADB')
-    def test_setup_error(self, ADB):
-        ADB_instance = MagicMock()
-        ADB_instance._ADB__error = True
-        ADB.return_value = ADB_instance
+    def test_setup_error(self, adb):
+        adb_instance = MagicMock()
+        adb_instance._ADB__error = True
+        adb.return_value = adb_instance
         with pytest.raises(Adb.AdbError):
             Adb.setup()
 
@@ -620,7 +625,7 @@ class TestAdb(object):
         expected_calls = [call.mock_adb.set_target_by_name(123),
                           call.mock_adb.uninstall(package=name, keepdata=True),
                           call.s_or_e_mock('succes', '{}: "{}" uninstalled'.format(device_id, name),
-                                       '{}: Failed to uninstall "{}"'.format(device_id, name))]
+                                           '{}: Failed to uninstall "{}"'.format(device_id, name))]
         assert manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.success_or_exception')
@@ -640,7 +645,7 @@ class TestAdb(object):
         expected_calls = [call.mock_adb.set_target_by_name(123),
                           call.mock_adb.uninstall(package=name, keepdata=False),
                           call.s_or_e_mock('succes', '{}: "{}" uninstalled'.format(device_id, name),
-                                       '{}: Failed to uninstall "{}"'.format(device_id, name))]
+                                           '{}: Failed to uninstall "{}"'.format(device_id, name))]
         assert manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.success_or_exception')
@@ -660,29 +665,29 @@ class TestAdb(object):
         expected_calls = [call.mock_adb.set_target_by_name(123),
                           call.mock_adb.shell_command('pm clear app_name'),
                           call.s_or_e_mock('succes', '{}: Data of "{}" cleared'.format(device_id, name),
-                                       '{}: Failed to clear data for "{}"'.format(device_id, name))]
+                                           '{}: Failed to clear data for "{}"'.format(device_id, name))]
         assert manager.mock_calls == expected_calls
 
     @patch('logging.Logger.info')
     def test_success_or_exception_succes(self, logger):
-        input = 'Success'
+        input_string = 'Success'
         succes_msg = 'action succes'
         fail_msg = 'action fail'
 
-        Adb.success_or_exception(input, succes_msg, fail_msg)
+        Adb.success_or_exception(input_string, succes_msg, fail_msg)
 
         logger.assert_called_once_with(succes_msg)
 
     @patch('logging.Logger.info')
     def test_success_or_exception_exception(self, logger):
-        input = 'fail'
+        input_string = 'fail'
         succes_msg = 'action succes'
         fail_msg = 'action fail'
 
         with pytest.raises(Adb.AdbError):
-            Adb.success_or_exception(input, succes_msg, fail_msg)
+            Adb.success_or_exception(input_string, succes_msg, fail_msg)
 
-        logger.assert_called_once_with(fail_msg + '\nMessage returned:\n{}'.format(input))
+        logger.assert_called_once_with(fail_msg + '\nMessage returned:\n{}'.format(input_string))
 
     def test_push(self):
         mock_adb = Mock()
@@ -696,7 +701,8 @@ class TestAdb(object):
         result = Adb.push(device_id, local_path, remote_path)
 
         assert result == 'push output'
-        expected_calls = [call.set_target_by_name(device_id), call.run_cmd('push {} {}'.format(local_path, remote_path))]
+        expected_calls = [call.set_target_by_name(device_id),
+                          call.run_cmd('push {} {}'.format(local_path, remote_path))]
         assert mock_adb.mock_calls == expected_calls
 
     def test_pull_no_error(self):

@@ -1,6 +1,6 @@
-import sys
-import os
 import csv
+import os
+import sys
 from collections import OrderedDict
 
 
@@ -13,7 +13,7 @@ def list_subdir(a_dir):
 
 def aggregate_trepn_final(logs_dir):
     def add_row(accum, new):
-        row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
+        row = {key: value + float(new[key]) for key, value in accum.items() if key not in ['Component', 'count']}
         count = accum['count'] + 1
         return dict(row, **{'count': count})
 
@@ -23,7 +23,7 @@ def aggregate_trepn_final(logs_dir):
             run_dict = {}
             reader = csv.DictReader(run)
             column_readers = split_reader(reader)
-            for k,v in column_readers.items():
+            for k, v in column_readers.items():
                 init = dict({k: 0}, **{'count': 0})
                 run_total = reduce(add_row, v, init)
                 if not run_total['count'] == 0:
@@ -31,15 +31,18 @@ def aggregate_trepn_final(logs_dir):
             runs.append(run_dict)
     init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
     runs_total = reduce(add_row, runs, init)
-    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+    return OrderedDict(
+        sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+
 
 def split_reader(reader):
     column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
     for row in reader:
-        for k,v in row.items():
+        for k, v in row.items():
             if not k.split('[')[0].strip() == 'Time' and not v == '':
-                column_dicts[k].append({k:v})
+                column_dicts[k].append({k: v})
     return column_dicts
+
 
 def aggregate(data_dir):
     rows = []
@@ -69,6 +72,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
+# noinspection PyUnusedLocal
 def main(dummy, data_dir, result_file):
     print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
@@ -77,4 +81,5 @@ def main(dummy, data_dir, result_file):
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
+        # noinspection PyArgumentList
         main(sys.argv[1], sys.argv[2])

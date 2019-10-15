@@ -1,14 +1,16 @@
-import pytest
 import collections
-import paths
 import os.path as op
-from ExperimentRunner.Scripts import Scripts
-from ExperimentRunner.Script import Script, ScriptError
-from ExperimentRunner.Python2 import Python2
+
+import pytest
+from mock import Mock, call, patch
+
+import paths
 from ExperimentRunner.MonkeyReplay import MonkeyReplay, MonkeyReplayError
 from ExperimentRunner.MonkeyRunner import MonkeyRunner
+from ExperimentRunner.Python2 import Python2
+from ExperimentRunner.Script import Script, ScriptError
+from ExperimentRunner.Scripts import Scripts
 from ExperimentRunner.util import ConfigError, FileNotFoundError
-from mock import patch, Mock, call
 
 
 class TestScripts(object):
@@ -18,7 +20,7 @@ class TestScripts(object):
 
     @pytest.fixture()
     def scripts(self, paths_dict):
-        with patch('ExperimentRunner.Python2.Python2.__init__', return_value = None):
+        with patch('ExperimentRunner.Python2.Python2.__init__', return_value=None):
             test_path = 'test/path/to/script.py'
             test_config = collections.OrderedDict()
             test_config['testscript'] = test_path
@@ -162,7 +164,8 @@ class TestMonkeyReplay(object):
         subprocess_mock.wait.return_value = 0
         mock.return_value = subprocess_mock
         monkey_path = '/usr/lib/android-sdk/tools/monkeyrunner'
-        monkey_command = "{} -plugin jyson-1.0.2.jar MonkeyPlayer/replayLogic.py {}".format(monkey_path, script_path).split(" ")
+        monkey_command = "{} -plugin jyson-1.0.2.jar MonkeyPlayer/replayLogic.py {}".format(monkey_path,
+                                                                                            script_path).split(" ")
         assert MonkeyReplay(script_path, monkeyrunner_path=monkey_path).execute_script(Mock()) == 0
         mock.assert_called_once_with(monkey_command, cwd=paths.ROOT_DIR, shell=False, stderr=-2, stdout=-1)
 
@@ -242,7 +245,7 @@ class TestScript(object):
 
         script.mp_logcat_regex(test_queue, fake_device, 'test_regex')
 
-        expected_calls = [call.fake_device_mock.logcat_regex('test_regex'),call.test_queu_mock.put('logcat')]
+        expected_calls = [call.fake_device_mock.logcat_regex('test_regex'), call.test_queu_mock.put('logcat')]
 
         assert manager.mock_calls == expected_calls
 
@@ -284,5 +287,3 @@ class TestScript(object):
         assert test_queue.put.call_count == 2
         assert 'NotImplementedError' in str(test_queue.put.call_args_list)
         assert 'script' in str(test_queue.put.call_args_list[1][0])
-
-

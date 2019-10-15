@@ -1,9 +1,9 @@
-import os
 import os.path as op
+import time
+
+import Tests
 from Experiment import Experiment
 from util import ConfigError
-import Tests
-import time
 
 
 class NativeExperiment(Experiment):
@@ -23,8 +23,8 @@ class NativeExperiment(Experiment):
     def before_experiment(self, device, *args, **kwargs):
         super(NativeExperiment, self).before_experiment(device)
 
-    def before_first_run(self, device, path, *args, **kwargs):
-        super(NativeExperiment, self).before_first_run(device, path)
+    def before_run_subject(self, device, path, *args, **kwargs):
+        super(NativeExperiment, self).before_run_subject(device, path)
         filename = op.basename(path)
         self.logger.info('APK: %s' % filename)
         if filename not in device.get_app_list():
@@ -34,14 +34,14 @@ class NativeExperiment(Experiment):
     def before_run(self, device, path, run, *args, **kwargs):
         super(NativeExperiment, self).before_run(device, path, run)
         device.launch_package(self.package)
-        self.scripts.run('after_launch', device, device.id, device.current_activity())
+        self.after_launch(device, path, run)
 
     def start_profiling(self, device, path, run, *args, **kwargs):
         self.profilers.start_profiling(device, app=self.package)
         time.sleep(self.duration)
 
     def after_run(self, device, path, run, *args, **kwargs):
-        self.scripts.run('before_close', device, device.id, device.current_activity())
+        self.before_close(device, path, run)
         device.force_stop(self.package)
         super(NativeExperiment, self).after_run(device, path, run)
 

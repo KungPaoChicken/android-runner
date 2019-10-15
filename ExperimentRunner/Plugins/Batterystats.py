@@ -1,12 +1,13 @@
-import os.path as op
-import os
-import time
 import csv
-import json
 import errno
-import BatterystatsParser
+import json
+import os
+import os.path as op
 import subprocess
+import time
 from collections import OrderedDict
+
+import BatterystatsParser
 from Profiler import Profiler
 
 
@@ -27,6 +28,7 @@ class Batterystats(Profiler):
         self.powerprofile = config_file['powerprofile_path']
         self.duration = self.is_integer(config_file.get('duration', 0)) / 1000
 
+    # noinspection PyGlobalUndefined
     def start_profiling(self, device, **kwargs):
         # Reset logs on the device
         device.shell('dumpsys batterystats --reset')
@@ -47,7 +49,8 @@ class Batterystats(Profiler):
             app = 'com.android.chrome'
 
         # Create files on system
-        systrace_file = op.join(self.output_dir, 'systrace_{}_{}.html'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
+        systrace_file = op.join(self.output_dir,
+                                'systrace_{}_{}.html'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
         logcat_file = op.join(self.output_dir, 'logcat_{}_{}.txt'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S')))
         batterystats_file = op.join(self.output_dir, 'batterystats_history_{}_{}.txt'.format(device.id, time.strftime(
             '%Y.%m.%d_%H%M%S')))
@@ -58,18 +61,23 @@ class Batterystats(Profiler):
         self.profile = True
         self.get_data(device, app)
 
-    def get_data(self, device, app):
+    # noinspection PyGlobalUndefined
+    def get_data(self, device, application):
         """Runs the systrace method for self.duration seconds in a separate thread"""
         # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
-        sysproc = subprocess.Popen('{} freq idle -e {} -a {} -t {} -o {}'.format(self.systrace, device.id, app, int(self.duration + 5), systrace_file), shell=True)
-#FIX
+        sysproc = subprocess.Popen(
+            '{} freq idle -e {} -a {} -t {} -o {}'.format(self.systrace, device.id, application, int(self.duration + 5),
+                                                          systrace_file), shell=True)
+
+    # FIX
 
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
     # Pull logcat file from device
-    def pull_logcat(self, device):
+    @staticmethod
+    def pull_logcat(device):
         device.shell('logcat -f /mnt/sdcard/logcat.txt -d')
         device.pull('/mnt/sdcard/logcat.txt', logcat_file)
         device.shell('rm -f /mnt/sdcard/logcat.txt')
@@ -82,22 +90,24 @@ class Batterystats(Profiler):
         return batterystats_results
 
     # Estimate total consumption, charge is given in mAh, volt in mV
-    def get_consumed_joules(self, device):
+    @staticmethod
+    def get_consumed_joules(device):
         charge = device.shell('dumpsys batterystats | grep "Computed drain:"').split(',')[1].split(':')[1]
         volt = device.shell('dumpsys batterystats | grep "volt="').split('volt=')[1].split()[0]
-        energy_consumed_Wh = float(charge) * float(volt) / 1000000.0
-        energy_consumed_J = energy_consumed_Wh * 3600.0
-        return energy_consumed_J
+        energy_consumed_wh = float(charge) * float(volt) / 1000000.0
+        energy_consumed_j = energy_consumed_wh * 3600.0
+        return energy_consumed_j
 
     def get_systrace_results(self, device):
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
-        systrace_results = BatterystatsParser.parse_systrace(app, systrace_file, logcat_file, batterystats_file, self.powerprofile,
-                                                 cores)
+        systrace_results = BatterystatsParser.parse_systrace(app, systrace_file, logcat_file, batterystats_file,
+                                                             self.powerprofile,
+                                                             cores)
         return systrace_results
 
-    def write_results(self, batterystats_results, systrace_results, energy_consumed_J):
+    def write_results(self, batterystats_results, systrace_results, energy_consumed_j):
         with open(results_file, 'w+') as results:
             writer = csv.writer(results, delimiter="\n")
             writer.writerow(
@@ -106,7 +116,7 @@ class Batterystats(Profiler):
             writer.writerow(systrace_results)
         # FIX
         with open(op.join(self.output_dir, 'Joule_{}'.format(results_file_name)), 'w+') as out:
-            out.write('Joule_calculated\n{}\n'.format(energy_consumed_J))
+            out.write('Joule_calculated\n{}\n'.format(energy_consumed_j))
 
     def cleanup_logs(self):
         if self.cleanup is True:
@@ -118,9 +128,9 @@ class Batterystats(Profiler):
     def collect_results(self, device, path=None):
         self.pull_logcat(device)
         batterystats_results = self.get_batterystats_results(device)
-        energy_consumed_J = self.get_consumed_joules(device)
+        energy_consumed_j = self.get_consumed_joules(device)
         systrace_results = self.get_systrace_results(device)
-        self.write_results(batterystats_results, systrace_results, energy_consumed_J)
+        self.write_results(batterystats_results, systrace_results, energy_consumed_j)
         self.cleanup_logs()
 
     def set_output(self, output_dir):
@@ -144,17 +154,19 @@ class Batterystats(Profiler):
         self.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
-        #FIX
+        # FIX
         rows = self.aggregate_final(data_dir)
         self.write_to_file(output_file, rows)
 
-    def write_to_file(self, filename, rows):
+    @staticmethod
+    def write_to_file(filename, rows):
         with open(filename, 'w') as f:
             writer = csv.DictWriter(f, rows[0].keys())
             writer.writeheader()
             writer.writerows(rows)
 
-    def aggregate_battery_subject(self, logs_dir, joules):
+    @staticmethod
+    def aggregate_battery_subject(logs_dir, joules):
         def add_row(accum, new):
             row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
             count = accum['count'] + 1
@@ -194,7 +206,8 @@ class Batterystats(Profiler):
                             rows.append(row.copy())
         return rows
 
-    def aggregate_battery_final(self, logs_dir):
+    @staticmethod
+    def aggregate_battery_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
                 with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
@@ -205,20 +218,23 @@ class Batterystats(Profiler):
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
 
-    def list_subdir(self, a_dir):
+    @staticmethod
+    def list_subdir(a_dir):
         """List immediate subdirectories of a_dir"""
         # https://stackoverflow.com/a/800201
         return [name for name in os.listdir(a_dir)
                 if os.path.isdir(os.path.join(a_dir, name))]
 
-    def is_integer(self, number, minimum=0):
+    @staticmethod
+    def is_integer(number, minimum=0):
         if not isinstance(number, (int, long)):
             raise ConfigError('%s is not an integer' % number)
         if number < minimum:
             raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
         return number
 
-    def load_json(self, path):
+    @staticmethod
+    def load_json(path):
         """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
         try:
             with open(path, 'r') as f:

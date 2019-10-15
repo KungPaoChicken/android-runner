@@ -1,20 +1,23 @@
-import pytest
-import paths
-import os
 import filecmp
+import os
 from collections import OrderedDict
+
+import pytest
+from mock import MagicMock, Mock, call, patch
+
+import paths
 from ExperimentRunner.Devices import Devices
-from ExperimentRunner.Scripts import Scripts
-from ExperimentRunner.Profilers import Profilers
-from ExperimentRunner.ExperimentFactory import ExperimentFactory
 from ExperimentRunner.Experiment import Experiment
+from ExperimentRunner.ExperimentFactory import ExperimentFactory
 from ExperimentRunner.NativeExperiment import NativeExperiment
-from ExperimentRunner.WebExperiment import WebExperiment
+from ExperimentRunner.Profilers import Profilers
 from ExperimentRunner.Progress import Progress
-from mock import patch, Mock, MagicMock, call
+from ExperimentRunner.Scripts import Scripts
+from ExperimentRunner.WebExperiment import WebExperiment
 from ExperimentRunner.util import ConfigError, makedirs
 
 
+# noinspection PyUnusedLocal
 class TestExperiment(object):
 
     @pytest.fixture()
@@ -118,7 +121,8 @@ class TestExperiment(object):
 
         default_experiment.cleanup(fake_device)
 
-        expected_calls = [call.fake_device.plug(), call.mock_profilers.stop_profiling(fake_device), call.mock_profilers.unload(fake_device)]
+        expected_calls = [call.fake_device.plug(), call.mock_profilers.stop_profiling(fake_device),
+                          call.mock_profilers.unload(fake_device)]
         assert mock_manager.mock_calls == expected_calls
 
     def test_get_progress_xml_file(self, default_experiment):
@@ -192,7 +196,8 @@ class TestExperiment(object):
         open(os.path.join(folder_path1, "test.txt"), "w+")
         open(os.path.join(folder_path2, "test.txt"), "w+")
 
-        correct_file_structure_list1 = default_experiment.walk_to_list(os.walk(os.path.join(paths.BASE_OUTPUT_DIR, 'data')))
+        correct_file_structure_list1 = default_experiment.walk_to_list(
+            os.walk(os.path.join(paths.BASE_OUTPUT_DIR, 'data')))
         correct_file_structure_list2 = list(os.walk(os.path.join(paths.BASE_OUTPUT_DIR, 'data')))
 
         makedirs(folder_path3)
@@ -227,6 +232,9 @@ class TestExperiment(object):
     @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
     @patch('ExperimentRunner.Experiment.Experiment.before_experiment')
     def test_first_run_device(self, before_experiment, prepare_device, default_experiment):
+        mock_progress = Mock()
+        mock_progress.device_first.return_value = True
+        default_experiment.progress = mock_progress
         mock_devices = Mock()
         mock_device = Mock()
         mock_devices.get_device.return_value = mock_device
@@ -240,17 +248,17 @@ class TestExperiment(object):
         expected_calls = [call.prepare_device_managed(mock_device), call.before_experiment_managed(mock_device)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_first_run')
-    def test_first_run(self, before_first_run, default_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    def test_before_every_run_subject(self, before_run_subject, default_experiment):
         mock_devices = Mock()
         mock_device = Mock()
         mock_devices.get_device.return_value = mock_device
         default_experiment.devices = mock_devices
         fake_dict = {'device': 'fake_device', 'path': 'test/path'}
 
-        default_experiment.first_run(fake_dict)
+        default_experiment.before_every_run_subject(fake_dict)
 
-        before_first_run.assert_called_once_with(mock_device, fake_dict['path'])
+        before_run_subject.assert_called_once_with(mock_device, fake_dict['path'])
 
     @patch('ExperimentRunner.Experiment.Experiment.after_experiment')
     def test_last_run_device_false(self, after_experiment, default_experiment):
@@ -286,7 +294,7 @@ class TestExperiment(object):
         default_experiment.progress = mock_progress
         fake_dict = {'device': 'fake_device', 'path': 'test/path'}
 
-        default_experiment.last_run(fake_dict)
+        default_experiment.last_run_subject(fake_dict)
 
         assert after_last_run.call_count == 0
         assert aggregate_subject.call_count == 0
@@ -303,7 +311,7 @@ class TestExperiment(object):
         mock_devices.get_device.return_value = mock_device
         default_experiment.devices = mock_devices
 
-        default_experiment.last_run(fake_dict)
+        default_experiment.last_run_subject(fake_dict)
 
         after_last_run.assert_called_once_with(mock_device, fake_dict['path'])
         aggregate_subject.assert_called_once()
@@ -358,7 +366,7 @@ class TestExperiment(object):
         mock_device = Mock()
         path = 'test/path'
 
-        default_experiment.before_first_run(mock_device, path, *args, **kwargs)
+        default_experiment.before_run_subject(mock_device, path, *args, **kwargs)
 
     @patch('ExperimentRunner.Profilers.Profilers.set_output')
     @patch('ExperimentRunner.Scripts.Scripts.run')
@@ -384,12 +392,15 @@ class TestExperiment(object):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
+        mock_device.id = 123
+        current_activity = 'Working on theses'
+        mock_device.current_activity.return_value = current_activity
         path = 'test/path'
         run = 1234566789
 
         default_experiment.after_launch(mock_device, path, run, *args, **kwargs)
 
-        script_run.assert_called_once_with('after_launch', mock_device, *args, **kwargs)
+        script_run.assert_called_once_with('after_launch', mock_device, 123, current_activity)
 
     @patch('ExperimentRunner.Profilers.Profilers.start_profiling')
     def test_start_profiling(self, start_profiling, default_experiment):
@@ -432,12 +443,15 @@ class TestExperiment(object):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
+        mock_device.id = 123
+        current_activity = 'Working on theses'
+        mock_device.current_activity.return_value = current_activity
         path = 'test/path'
         run = 1234566789
 
         default_experiment.before_close(mock_device, path, run, *args, **kwargs)
 
-        script_run.assert_called_once_with('before_close', mock_device, *args, **kwargs)
+        script_run.assert_called_once_with('before_close', mock_device, 123, current_activity)
 
     @patch('time.sleep')
     @patch('ExperimentRunner.Profilers.Profilers.collect_results')
@@ -460,7 +474,6 @@ class TestExperiment(object):
                           call.collect_results_managed(mock_device),
                           call.sleep_managed(2)]
         assert mock_manager.mock_calls == expected_calls
-
 
     def test_after_last_run(self, default_experiment):
         args = (1, 2, 3)
@@ -515,7 +528,8 @@ class TestExperiment(object):
     @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
     @patch('ExperimentRunner.Experiment.Experiment.cleanup')
     @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
-    def test_finish_experiment_regular_multiple_devices(self, check_result_files, cleanup, aggregate_end, default_experiment):
+    def test_finish_experiment_regular_multiple_devices(self, check_result_files, cleanup, aggregate_end,
+                                                        default_experiment):
         fake_file_structure = 'test_structure'
         default_experiment.result_file_structure = fake_file_structure
         default_experiment.devices = ['1', '2', '3']
@@ -592,11 +606,11 @@ class TestExperiment(object):
 
     @patch('ExperimentRunner.Experiment.Experiment.prepare_output_dir')
     @patch('ExperimentRunner.Experiment.Experiment.first_run_device')
-    @patch('ExperimentRunner.Experiment.Experiment.first_run')
-    def test_prepare_run(self, first_run, first_run_device, prepare_output_dir, default_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.before_every_run_subject')
+    def test_prepare_run(self, before_every_run_subject, first_run_device, prepare_output_dir, default_experiment):
         test_run = Mock()
         mock_manager = Mock()
-        mock_manager.attach_mock(first_run, "first_run_managed")
+        mock_manager.attach_mock(before_every_run_subject, "before_every_run_subject_managed")
         mock_manager.attach_mock(first_run_device, "first_run_device_managed")
         mock_manager.attach_mock(prepare_output_dir, "prepare_output_dir_managed")
 
@@ -604,9 +618,8 @@ class TestExperiment(object):
 
         expected_calls = [call.prepare_output_dir_managed(test_run),
                           call.first_run_device_managed(test_run),
-                          call.first_run_managed(test_run)]
+                          call.before_every_run_subject_managed(test_run)]
         assert mock_manager.mock_calls == expected_calls
-
 
     @patch('ExperimentRunner.Experiment.Experiment.run')
     def test_run_run_w_browser(self, run, default_experiment):
@@ -614,7 +627,7 @@ class TestExperiment(object):
         mock_devices = Mock()
         mock_devices.get_device.return_value = mock_device
         default_experiment.devices = mock_devices
-        test_run = {'device': 'test_device','path': 'test_path','runCount': '123', 'browser': 'test_browser'}
+        test_run = {'device': 'test_device', 'path': 'test_path', 'runCount': '123', 'browser': 'test_browser'}
         default_experiment.run_run(test_run)
 
         run.assert_called_once_with(mock_device, test_run['path'], int(test_run['runCount']), test_run['browser'])
@@ -631,14 +644,14 @@ class TestExperiment(object):
         run.assert_called_once_with(mock_device, test_run['path'], int(test_run['runCount']), None)
 
     @patch('ExperimentRunner.Experiment.Experiment.last_run_device')
-    @patch('ExperimentRunner.Experiment.Experiment.last_run')
-    def test_finish_run(self, last_run, last_run_device, default_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.last_run_subject')
+    def test_finish_run(self, last_run_subject, last_run_device, default_experiment):
         mock_progres = Mock()
         default_experiment.progress = mock_progres
-        test_run = {'device': 'test_device','path': 'test_path','runId': '123'}
+        test_run = {'device': 'test_device', 'path': 'test_path', 'runId': '123'}
         mock_manager = Mock()
         mock_manager.attach_mock(mock_progres, "mock_progres_managed")
-        mock_manager.attach_mock(last_run, "last_run_managed")
+        mock_manager.attach_mock(last_run_subject, "last_run_managed")
         mock_manager.attach_mock(last_run_device, "last_run_device_managed")
 
         default_experiment.finish_run(test_run)
@@ -666,20 +679,19 @@ class TestExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
-    def test_start_error(self, finish_experiment_mock, capsys , default_experiment):
+    def test_start_error(self, finish_experiment_mock, capsys, default_experiment):
         mock_logger = Mock()
         default_experiment.logger = mock_logger
-        paths.BASE_OUTPUT_DIR = None #raises AttributeError
+        paths.BASE_OUTPUT_DIR = None  # raises AttributeError
         with pytest.raises(Exception):
             default_experiment.start()
-        captured = capsys.readouterr() #Catch std out
+        captured = capsys.readouterr()  # Catch std out
         finish_experiment_mock.assert_called_once_with(True, False)
-        mock_logger.error.assert_called_once_with\
-            ("AttributeError: 'NoneType' object has no attribute 'endswith'")
+        mock_logger.error.assert_called_once_with("AttributeError: 'NoneType' object has no attribute 'endswith'")
 
     @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
-    def test_start_interupt(self, finish_experiment_mock, walk_to_list_mock , default_experiment):
+    def test_start_interupt(self, finish_experiment_mock, walk_to_list_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
         walk_to_list_mock.side_effect = KeyboardInterrupt
         with pytest.raises(KeyboardInterrupt):
@@ -705,8 +717,7 @@ class TestExperiment(object):
 
         default_experiment.start()
 
-        assert get_experiment_mock.call_count == run_experiment_mock.call_count \
-               == save_progress_mock.call_count == 0
+        assert get_experiment_mock.call_count == run_experiment_mock.call_count == save_progress_mock.call_count == 0
         walk_to_list_mock.assert_called_once_with(mock_walk_result)
         finish_experiment_mock.assert_called_once_with(False, False)
 
@@ -717,7 +728,7 @@ class TestExperiment(object):
     @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
     def test_start_experiment_one_run(self, finish_experiment_mock, walk_to_list_mock, save_progress_mock,
-                                       run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
+                                      run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
         mock_walk_to_list_result = Mock()
         walk_to_list_mock.return_value = mock_walk_to_list_result
@@ -755,23 +766,21 @@ class TestExperiment(object):
     @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
     def test_start_experiment_multiple_runs(self, finish_experiment_mock, walk_to_list_mock, save_progress_mock,
-                                      run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
+                                            run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
         mock_walk_to_list_result = Mock()
         walk_to_list_mock.return_value = mock_walk_to_list_result
         mock_walk_result = Mock()
         walk_mock.return_value = mock_walk_result
         mock_progress = Mock()
-        mock_progress.experiment_finished_check.side_effect = [False]*9+[True]
+        mock_progress.experiment_finished_check.side_effect = [False] * 9 + [True]
         default_experiment.progress = mock_progress
         mock_get_experiment_result = Mock()
         get_experiment_mock.return_value = mock_get_experiment_result
 
         default_experiment.start()
 
-        assert get_experiment_mock.call_count == run_experiment_mock.call_count \
-               == save_progress_mock.call_count == 9
-
+        assert get_experiment_mock.call_count == run_experiment_mock.call_count == save_progress_mock.call_count == 9
 
 
 class TestWebExperiment(object):
@@ -810,7 +819,7 @@ class TestWebExperiment(object):
         assert check_dependencies.call_count == 2
         assert web_experiment.duration == 1
         assert len(web_experiment.browsers) == 2
-        expected_calls = [call('firefox'),call()(device_config), call('opera'), call()(device_config)]
+        expected_calls = [call('firefox'), call()(device_config), call('opera'), call()(device_config)]
         assert get_browser.mock_calls == expected_calls
 
     @patch('ExperimentRunner.WebExperiment.WebExperiment.after_run')
@@ -820,7 +829,8 @@ class TestWebExperiment(object):
     @patch('ExperimentRunner.WebExperiment.WebExperiment.start_profiling')
     @patch('ExperimentRunner.WebExperiment.WebExperiment.after_launch')
     @patch('ExperimentRunner.WebExperiment.WebExperiment.before_run')
-    def test_run(self, before_run, after_launch, start_profiling, interaction, stop_profiling, before_close, after_run, web_experiment):
+    def test_run(self, before_run, after_launch, start_profiling, interaction, stop_profiling, before_close, after_run,
+                 web_experiment):
         mock_device = Mock()
         path = "test/path"
         run = 123456789
@@ -857,9 +867,10 @@ class TestWebExperiment(object):
         web_experiment.progress = mock_progress
         fake_dict = {'device': 'fake_device', 'path': 'test/path', 'browser': 'fake_browser'}
 
-        web_experiment.last_run(fake_dict)
+        web_experiment.last_run_subject(fake_dict)
 
-        mock_progress.subject_finished.assert_called_once_with(fake_dict['device'], fake_dict['path'], fake_dict['browser'])
+        mock_progress.subject_finished.assert_called_once_with(fake_dict['device'], fake_dict['path'],
+                                                               fake_dict['browser'])
         assert after_last_run.call_count == 0
         assert aggregate_subject.call_count == 0
 
@@ -878,13 +889,13 @@ class TestWebExperiment(object):
         mock_manager.attach_mock(after_last_run, "after_last_run_managed")
         mock_manager.attach_mock(aggregate_subject, "aggregate_subject_managed")
 
-        web_experiment.last_run(fake_dict)
+        web_experiment.last_run_subject(fake_dict)
 
-        mock_progress.subject_finished.assert_called_once_with(fake_dict['device'], fake_dict['path'], fake_dict['browser'])
+        mock_progress.subject_finished.assert_called_once_with(fake_dict['device'], fake_dict['path'],
+                                                               fake_dict['browser'])
         expected_calls = [call.after_last_run_managed(mock_device, fake_dict['path']),
-                         call.aggregate_subject_managed()]
+                          call.aggregate_subject_managed()]
         assert mock_manager.mock_calls == expected_calls
-
 
     def test_prepare_output_dir(self, tmpdir, web_experiment):
         paths.BASE_OUTPUT_DIR = str(tmpdir)
@@ -893,23 +904,23 @@ class TestWebExperiment(object):
         web_experiment.prepare_output_dir(fake_dict)
 
         assert os.path.isdir(paths.OUTPUT_DIR)
-        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path', 'fake_browser')
+        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path',
+                                                'fake_browser')
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_first_run')
-    def test_before_first_run(self, before_first_run, web_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    def test_before_run_subject(self, before_run_subject, web_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
         path = 'test/path'
 
-        web_experiment.before_first_run(mock_device, path, *args, **kwargs)
+        web_experiment.before_run_subject(mock_device, path, *args, **kwargs)
 
-        before_first_run.assert_called_once_with(mock_device, path)
+        before_run_subject.assert_called_once_with(mock_device, path)
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Scripts.Scripts.run')
     @patch('ExperimentRunner.Experiment.Experiment.before_run')
-    def test_before_run(self, before_run, scripts_run, sleep, web_experiment):
+    def test_before_run(self, before_run, sleep, web_experiment):
         mock_browser = Mock()
         args = (mock_browser, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -923,14 +934,12 @@ class TestWebExperiment(object):
         mock_manager.attach_mock(before_run, "before_run_managed")
         mock_manager.attach_mock(mock_browser, "mock_browser_managed")
         mock_manager.attach_mock(sleep, "sleep_managed")
-        mock_manager.attach_mock(scripts_run, "scripts_run_managed")
 
         web_experiment.before_run(mock_device, path, run, *args, **kwargs)
 
         expected_calls = [call.before_run_managed(mock_device, path, run),
                           call.mock_browser_managed.start(mock_device),
-                          call.sleep_managed(5),
-                          call.scripts_run_managed('after_launch', mock_device, 'id', current_activity)]
+                          call.sleep_managed(5)]
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
@@ -956,9 +965,8 @@ class TestWebExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Scripts.Scripts.run')
     @patch('ExperimentRunner.Experiment.Experiment.after_run')
-    def test_after_run(self, after_run, scripts_run, sleep, web_experiment):
+    def test_after_run(self, after_run,  sleep, web_experiment):
         mock_browser = Mock()
         args = (mock_browser, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -972,16 +980,13 @@ class TestWebExperiment(object):
         mock_manager.attach_mock(mock_browser, "mock_browser_managed")
         mock_manager.attach_mock(sleep, "sleep_managed")
         mock_manager.attach_mock(after_run, "after_run_managed")
-        mock_manager.attach_mock(scripts_run, "scripts_run_managed")
 
         web_experiment.after_run(mock_device, path, run, *args, **kwargs)
 
-        expected_calls = [call.scripts_run_managed('before_close', mock_device, 'id', current_activity),
-                          call.mock_browser_managed.stop(mock_device, clear_data=True),
+        expected_calls = [call.mock_browser_managed.stop(mock_device, clear_data=True),
                           call.sleep_managed(3),
                           call.after_run_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
-
 
     @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run(self, after_last_run, web_experiment):
@@ -1041,8 +1046,8 @@ class TestNativeExperiment(object):
     @patch('os.path.isfile')
     @patch('ExperimentRunner.Experiment.Experiment.__init__')
     def test_init_non_empty_config_all_files_found(self, experiment, isfile):
-        paths = ['path1', 'path2', 'path3']
-        config = {'paths': paths, 'duration': 1000}
+        test_paths = ['path1', 'path2', 'path3']
+        config = {'paths': test_paths, 'duration': 1000}
         isfile.return_value = True
 
         native_experiment = NativeExperiment(config, None)
@@ -1050,19 +1055,19 @@ class TestNativeExperiment(object):
         experiment.assert_called_once_with(config, None)
         assert native_experiment.duration == 1
         assert isfile.call_count == 3
-        isfile.has_calls([call(paths[0]), call(paths[1]), call(paths[2])])
+        isfile.has_calls([call(test_paths[0]), call(test_paths[1]), call(test_paths[2])])
 
     @patch('os.path.isfile')
     @patch('ExperimentRunner.Experiment.Experiment.__init__')
     def test_init_non_empty_config_file_not_found(self, experiment, isfile):
-        paths = ['path1']
-        config = {'paths': paths}
+        test_paths = ['path1']
+        config = {'paths': test_paths}
         isfile.return_value = False
         with pytest.raises(ConfigError):
             NativeExperiment(config, None)
 
         experiment.assert_called_once_with(config, None)
-        isfile.assert_called_once_with(paths[0])
+        isfile.assert_called_once_with(test_paths[0])
 
     @patch('ExperimentRunner.Experiment.Experiment.cleanup')
     def test_cleanup_app_not_installed(self, cleanup, native_experiment):
@@ -1099,8 +1104,8 @@ class TestNativeExperiment(object):
 
         before_experiment.assert_called_once_with(mock_device)
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_first_run')
-    def test_before_first_run_app_installed(self, before_first_run, native_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    def test_before_run_subject_app_installed(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1108,15 +1113,15 @@ class TestNativeExperiment(object):
         path = os.path.join('test', test_package)
         mock_device.get_app_list.return_value = [test_package]
 
-        native_experiment.before_first_run(mock_device, path, *args, **kwargs)
+        native_experiment.before_run_subject(mock_device, path, *args, **kwargs)
 
-        before_first_run.assert_called_once_with(mock_device, path)
+        before_run_subject.assert_called_once_with(mock_device, path)
         mock_device.get_app_list.assert_called_once()
         assert mock_device.install.call_count == 0
         assert native_experiment.package == 'com.test.app'
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_first_run')
-    def test_before_first_run_app_not_installed(self, before_first_run, native_experiment):
+    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    def test_before_run_subject_app_not_installed(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1124,16 +1129,16 @@ class TestNativeExperiment(object):
         path = os.path.join('test', test_package_file)
         mock_device.get_app_list.return_value = []
 
-        native_experiment.before_first_run(mock_device, path, *args, **kwargs)
+        native_experiment.before_run_subject(mock_device, path, *args, **kwargs)
 
-        before_first_run.assert_called_once_with(mock_device, path)
+        before_run_subject.assert_called_once_with(mock_device, path)
         mock_device.get_app_list.assert_called_once()
         mock_device.install.assert_called_once_with(path)
         assert native_experiment.package == 'com.test.app'
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('ExperimentRunner.Experiment.Experiment.after_launch')
     @patch('ExperimentRunner.Experiment.Experiment.before_run')
-    def test_before_run(self, before_run, scripts_run, native_experiment):
+    def test_before_run(self, before_run, after_launch, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1144,16 +1149,15 @@ class TestNativeExperiment(object):
         run = 123456789
         native_experiment.package = 'com.test.app'
         mock_manager = Mock()
-        mock_manager.attach_mock(before_run,'before_run_managed')
+        mock_manager.attach_mock(before_run, 'before_run_managed')
         mock_manager.attach_mock(mock_device, 'mock_device_managed')
-        mock_manager.attach_mock(scripts_run, 'scripts_run_managed')
+        mock_manager.attach_mock(after_launch, 'after_launch_managed')
 
         native_experiment.before_run(mock_device, path, run, *args, **kwargs)
 
         expected_calls = [call.before_run_managed(mock_device, path, run),
                           call.mock_device_managed.launch_package('com.test.app'),
-                          call.mock_device_managed.current_activity(),
-                          call.scripts_run_managed('after_launch', mock_device, 'id', current_activity)]
+                          call.after_launch_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
@@ -1166,7 +1170,7 @@ class TestNativeExperiment(object):
         run = 123456789
         native_experiment.package = 'com.test.app'
         mock_manager = Mock()
-        mock_manager.attach_mock(start_profiling,'start_profiling_managed')
+        mock_manager.attach_mock(start_profiling, 'start_profiling_managed')
         mock_manager.attach_mock(sleep, 'sleep_managed')
 
         native_experiment.start_profiling(mock_device, path, run, *args, **kwargs)
@@ -1175,9 +1179,8 @@ class TestNativeExperiment(object):
                           call.sleep_managed(native_experiment.duration)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
     @patch('ExperimentRunner.Experiment.Experiment.after_run')
-    def test_after_run(self, after_run, scripts_run, native_experiment):
+    def test_after_run(self, after_run, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1188,14 +1191,12 @@ class TestNativeExperiment(object):
         run = 123456789
         native_experiment.package = 'com.test.app'
         mock_manager = Mock()
-        mock_manager.attach_mock(scripts_run,'scripts_run_managed')
         mock_manager.attach_mock(mock_device, 'mock_device_managed')
         mock_manager.attach_mock(after_run, 'after_run_managed')
 
         native_experiment.after_run(mock_device, path, run, *args, **kwargs)
 
         expected_calls = [call.mock_device_managed.current_activity(),
-                          call.scripts_run_managed('before_close', mock_device, 'id', current_activity),
                           call.mock_device_managed.force_stop(native_experiment.package),
                           call.after_run_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
@@ -1208,7 +1209,7 @@ class TestNativeExperiment(object):
         path = 'test/path'
         native_experiment.package = 'com.test.app'
         mock_manager = Mock()
-        mock_manager.attach_mock(after_last_run,'after_last_run_managed')
+        mock_manager.attach_mock(after_last_run, 'after_last_run_managed')
         mock_manager.attach_mock(mock_device, 'mock_device_managed')
 
         native_experiment.after_last_run(mock_device, path, *args, **kwargs)
@@ -1227,6 +1228,7 @@ class TestNativeExperiment(object):
         native_experiment.after_experiment(mock_device, *args, **kwargs)
 
         after_experiment.assert_called_once_with(mock_device)
+
 
 class TestExperimentFactory(object):
     def test_init(self):
@@ -1286,7 +1288,6 @@ class TestExperimentFactory(object):
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
 
-
     @patch('ExperimentRunner.Progress.Progress.__init__')
     @patch('ExperimentRunner.Experiment.Experiment.__init__')
     def test_from_json_experiment_no_progres(self, mock_experiment, mock_progress, tmpdir):
@@ -1300,10 +1301,10 @@ class TestExperimentFactory(object):
 
         experiment = ExperimentFactory.from_json(str(tmp_file), None)
 
-        mock_progress.assert_called_once_with(config_file=str(tmp_file), config={'type': 'regular'}, load_progress=False)
+        mock_progress.assert_called_once_with(config_file=str(tmp_file), config={'type': 'regular'},
+                                              load_progress=False)
         mock_experiment.assert_called_once()
         assert isinstance(experiment, Experiment)
         assert isinstance(mock_experiment.mock_calls[0][1][1], Progress)
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
-

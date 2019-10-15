@@ -1,6 +1,6 @@
 {
   "type": "web",
-  "devices": ["nexus6p"],
+  "devices": {"nexus6p": {}},
   "replications": 1,
   "randomization": "False",
   "browsers": ["firefox"],

@@ -1,11 +1,11 @@
 import os.path as op
-from paths import ROOT_DIR
 
 # This is basically a singleton
 # https://stackoverflow.com/a/10936915
 import Adb
 from Device import Device
-from util import load_json, ConfigError
+from paths import ROOT_DIR
+from util import ConfigError, load_json
 
 
 class Devices:

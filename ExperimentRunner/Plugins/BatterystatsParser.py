@@ -1,7 +1,7 @@
-from xml.dom import minidom
+import datetime as dt
 import re
 import time as t
-import datetime as dt
+from xml.dom import minidom
 
 SECONDS_IN_MS = 1000.0
 SECONDS_IN_M = 60.0
@@ -61,19 +61,19 @@ Batterystats
 def parse_batterystats(app, batterystats_file, power_profile):
     """ Parse Batterystats history and calculate results """
     with open(batterystats_file, 'r') as bs_file:
-        voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
-        app_pattern = re.compile('(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
-        screen_pattern = re.compile('(0|\+\d.*ms).*([+-])screen')
-        brightness_pattern = re.compile('(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
-        wifi_pattern = re.compile('(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
-        camera_pattern = re.compile('(0|\+\d.*ms).*([+-])(camera)')
-        flashlight_pattern = re.compile('(0|\+\d.*ms).*([+-])(flashlight)')
-        gps_pattern = re.compile('(0|\+\d.*ms).*([+-])(gps)')
-        audio_pattern = re.compile('(0|\+\d.*ms).*([+-])(audio)')
-        video_pattern = re.compile('(0|\+\d.*ms).*([+-])(video)')
-        bluetooth_pattern = re.compile('(0|\+\d.*ms).*([+-])(bluetooth)')
-        phone_scanning_pattern = re.compile('(0|\+\d.*ms).*([+-])(phone_scanning)')
-        time_pattern = re.compile('(0|\+\d.*ms).*')
+        voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
+        app_pattern = re.compile(r'(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
+        screen_pattern = re.compile(r'(0|\+\d.*ms).*([+-])screen')
+        brightness_pattern = re.compile(r'(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
+        wifi_pattern = re.compile(r'(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
+        camera_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(camera)')
+        flashlight_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(flashlight)')
+        gps_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(gps)')
+        audio_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(audio)')
+        video_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(video)')
+        bluetooth_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(bluetooth)')
+        phone_scanning_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(phone_scanning)')
+        time_pattern = re.compile(r'(0|\+\d.*ms).*')
 
         f = bs_file.read()
         app_start_time = convert_to_s(re.findall(app_pattern, f)[0][0])
@@ -253,13 +253,14 @@ def parse_batterystats(app, batterystats_file, power_profile):
 
 def get_voltage(line):
     """ Obtain voltage value """
-    pattern = re.compile('volt=(\d+)')
+    pattern = re.compile(r'volt=(\d+)')
     match = pattern.search(line)
     return float(match.group(1)) / 1000.0
 
 
 def get_screen_intensity(brightness, power_profile):
     """ Calculate screen intensity """
+    screen_intensity = None
     intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(power_profile, 'screen.on')
     if brightness == 'dark':
         screen_intensity = get_amp_value(power_profile, 'screen.on')
@@ -280,11 +281,11 @@ def calculate_energy_usage(intensity, voltage, duration):
 
 def convert_to_s(line):
     """ Convert Batterystats timestamps to seconds """
-    milliseconds_pattern = re.compile('\+(\d{3})ms')
-    seconds_pattern = re.compile('\+(\d{1,2})s(\d{3})ms')
-    minutes_pattern = re.compile('\+(\d{1,2})m(\d{2})s(\d{3})ms')
-    hours_pattern = re.compile('\+(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
-    days_pattern = re.compile('\+(\d)d(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
+    milliseconds_pattern = re.compile(r'\+(\d{3})ms')
+    seconds_pattern = re.compile(r'\+(\d{1,2})s(\d{3})ms')
+    minutes_pattern = re.compile(r'\+(\d{1,2})m(\d{2})s(\d{3})ms')
+    hours_pattern = re.compile(r'\+(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
+    days_pattern = re.compile(r'\+(\d)d(\d{1,2})h(\d{1,2})m(\d{2})s(\d{3})ms')
 
     milliseconds_matches = milliseconds_pattern.search(line)
     seconds_matches = seconds_pattern.search(line)
@@ -329,13 +330,13 @@ Systrace
 def parse_systrace(app, systrace_file, logcat, batterystats, power_profile, core_amount):
     """ Parse systrace file and calculate results """
     with open(batterystats, 'r') as bs:
-        voltage_pattern = re.compile('(0|\+\d.*ms).*volt=(\d+)')
+        voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
         voltage = float(re.findall(voltage_pattern, bs.read())[0][1]) / 1000.0
 
     with open(systrace_file, 'r') as sys:
         f = sys.read()
-        pattern = re.compile('(?:<.{3,4}>-\d{1,4}|kworker.+-\d{3}).*\s(\d+\.\d+): (cpu_.*): state=(.*) cpu_id=(\d)')
-        unix_time_pattern = re.compile('(\d+\.\d+):\stracing_mark_write:\strace_event_clock_sync:\srealtime_ts=(\d+)')
+        pattern = re.compile(r'(?:<.{3,4}>-\d{1,4}|kworker.+-\d{3}).*\s(\d+\.\d+): (cpu_.*): state=(.*) cpu_id=(\d)')
+        unix_time_pattern = re.compile(r'(\d+\.\d+):\stracing_mark_write:\strace_event_clock_sync:\srealtime_ts=(\d+)')
         logcat_time = parse_logcat(app, logcat)
         systrace_time = float(unix_time_pattern.search(f).group(2))
         start_time = (logcat_time[0] - systrace_time) / 1000 + float(unix_time_pattern.search(f).group(1))
@@ -440,14 +441,14 @@ def parse_logcat(app, logcat_file):
     with open(logcat_file, 'r') as f:
         logcat = f.read()
         app_start_pattern = re.compile(
-            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % app)
+            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % app)
         app_start_date = re.findall(app_start_pattern, logcat)[0][0]
         year = dt.datetime.now().year
         time_tuple = t.strptime('{}-{}'.format(year, app_start_date), '%Y-%m-%d %H:%M:%S')
         unix_start_time = int(t.mktime(time_tuple)) * 1000 + int(app_start_pattern.search(logcat).group(2))
 
         app_stop_pattern = re.compile(
-            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
+            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
         app_stop_date = re.findall(app_stop_pattern, logcat)[-1][0]
         time_tuple = t.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
         unix_end_time = int(t.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))

@@ -1,12 +1,12 @@
 import logging
-import shutil
-import paths
 import os.path as op
-import util
+import shutil
 
-from Progress import Progress
+import paths
+import util
 from Experiment import Experiment
 from NativeExperiment import NativeExperiment
+from Progress import Progress
 from WebExperiment import WebExperiment
 
 logger = logging.getLogger('ExperimentFactory')

@@ -1,7 +1,8 @@
 import pytest
-from mock import patch, Mock
+from mock import Mock, patch
+
 from ExperimentRunner.BrowserFactory import BrowserFactory
-from ExperimentRunner.Browsers import Browser, Chrome, Opera, Firefox
+from ExperimentRunner.Browsers import Browser, Chrome, Firefox, Opera
 
 
 class TestBrowsers(object):
@@ -72,7 +73,8 @@ class TestBrowsers(object):
         mock_device.id = "fake_device"
         browser.start(mock_device)
         mock_log.assert_called_once_with('fake_device: Start')
-        mock_device.launch_activity.assert_called_once_with(mock_package_name, mock_main_activity, from_scratch=True, force_stop=True,
+        mock_device.launch_activity.assert_called_once_with(mock_package_name, mock_main_activity, from_scratch=True,
+                                                            force_stop=True,
                                                             action='android.intent.action.VIEW')
 
     @patch('logging.Logger.info')

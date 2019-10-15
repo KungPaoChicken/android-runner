@@ -1,5 +1,6 @@
 import logging
 import os.path as op
+
 from pyand import ADB
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ class ConnectionError(Exception):
 adb = None
 
 
+# noinspection PyProtectedMember
 def setup(path='adb'):
     global adb
     adb = ADB(adb_path=path)
@@ -49,6 +51,7 @@ def list_apps(device_id):
     return shell(device_id, 'pm list packages').replace('package:', '').split()
 
 
+# noinspection PyProtectedMember
 def install(device_id, apk, replace=True, all_permissions=True):
     filename = op.basename(apk)
     logger.debug('%s: Installing "%s"' % (device_id, filename))
@@ -95,6 +98,7 @@ def success_or_exception(result, success_msg, fail_msg):
 
 # Same with push_local_file(), but with the quotes removed
 # adb doesn't want quotes for some reason
+# noinspection PyProtectedMember
 def push(device_id, local, remote):
     adb.set_target_by_name(device_id)
     adb.run_cmd('push %s %s' % (local, remote))
@@ -104,6 +108,7 @@ def push(device_id, local, remote):
 
 # Same with get_remote_file(), but with the quotes removed
 # adb doesn't want quotes for some reason
+# noinspection PyProtectedMember
 def pull(device_id, remote, local):
     adb.set_target_by_name(device_id)
     adb.run_cmd('pull %s %s' % (remote, local))

@@ -1,12 +1,14 @@
 import imp
-import os.path as op
-import paths
-import sys
 import logging
+import os.path as op
+import sys
+
 import pytest
-main = imp.load_source('runner_main', op.join(op.dirname(paths.__file__), '__main__.py'))
+
+import paths
 from mock import patch, Mock, call
 from ExperimentRunner.util import makedirs
+main = imp.load_source('runner_main', op.join(op.dirname(paths.__file__), '__main__.py'))
 
 
 class TestRunnerMain(object):
@@ -14,10 +16,10 @@ class TestRunnerMain(object):
     @patch('runner_main.set_stdout_logger')
     @patch('runner_main.set_file_logger')
     @patch('logging.getLogger')
-    def test_setup_logger(self, getLogger_mock, set_file_logger_mock, set_stdout_logger_mock):
+    def test_setup_logger(self, get_logger_mock, set_file_logger_mock, set_stdout_logger_mock):
         test_filename = "asdfvgbnsaq"
         logger_mock = Mock()
-        getLogger_mock.return_value = logger_mock
+        get_logger_mock.return_value = logger_mock
         file_logger_mock = Mock()
         set_file_logger_mock.return_value = file_logger_mock
         stdout_logger_mock = Mock()
@@ -34,39 +36,39 @@ class TestRunnerMain(object):
 
     @patch('logging.Formatter')
     @patch('logging.FileHandler')
-    def test_set_file_logger(self, fileHandler_mock, formatter_mock):
+    def test_set_file_logger(self, filehandler_mock, formatter_mock):
         test_filename = "asdfvgbnsaq"
         handler_mock = Mock()
-        fileHandler_mock.return_value = handler_mock
+        filehandler_mock.return_value = handler_mock
         formatter_result_mock = Mock()
-        formatter_mock.return_value =formatter_result_mock
+        formatter_mock.return_value = formatter_result_mock
 
         result_file_handler = main.set_file_logger(test_filename)
 
         assert result_file_handler == handler_mock
         handler_mock.setLevel.assert_called_once_with(logging.DEBUG)
         handler_mock.setFormatter.assert_called_once_with(formatter_result_mock)
-        fileHandler_mock.assert_called_once_with(test_filename)
+        filehandler_mock.assert_called_once_with(test_filename)
 
     @patch('logging.Formatter')
     @patch('logging.StreamHandler')
-    def test_set_stdout_logger(self, streamHandler_mock, formatter_mock):
+    def test_set_stdout_logger(self, streamhandler_mock, formatter_mock):
         handler_mock = Mock()
-        streamHandler_mock.return_value = handler_mock
+        streamhandler_mock.return_value = handler_mock
         formatter_result_mock = Mock()
-        formatter_mock.return_value =formatter_result_mock
+        formatter_mock.return_value = formatter_result_mock
 
         result_file_handler = main.set_stdout_logger()
 
         assert result_file_handler == handler_mock
         handler_mock.setLevel.assert_called_once_with(logging.INFO)
         handler_mock.setFormatter.assert_called_once_with(formatter_result_mock)
-        streamHandler_mock.assert_called_once_with(sys.stdout)
+        streamhandler_mock.assert_called_once_with(sys.stdout)
 
     def test_setup_paths(self, tmpdir):
         temp_config_dir = op.join(str(tmpdir), 'config')
         makedirs(temp_config_dir)
-        temp_config_file = op.join(temp_config_dir,'config.json')
+        temp_config_file = op.join(temp_config_dir, 'config.json')
         open(temp_config_file, "w+")
         temp_log_dir = op.join(str(tmpdir), 'log')
 
@@ -81,7 +83,7 @@ class TestRunnerMain(object):
     def test_parse_arguments_empty_args(self, capsys):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
             main.parse_arguments([])
-        capsys.readouterr() #Catch print
+        capsys.readouterr()  # Catch print
         assert pytest_wrapped_e.type == SystemExit
         assert pytest_wrapped_e.value.code == 2
 
@@ -106,7 +108,7 @@ class TestRunnerMain(object):
         open(temp_config_file, "w+")
         args = {"file": temp_config_file}
         result_progress, result_log_dir = main.set_progress(args)
-        assert result_progress == None
+        assert result_progress is None
         assert result_log_dir.startswith(op.join(op.dirname(temp_config_file), 'output'))
 
     @patch('ExperimentRunner.Progress.Progress.get_output_dir')
@@ -124,7 +126,7 @@ class TestRunnerMain(object):
         result_progress, result_log_dir = main.set_progress(args)
 
         mock_progress_init.assert_called_once_with(progress_file=temp_progress_file,
-                                                          config_file=temp_config_file, load_progress=True)
+                                                   config_file=temp_config_file, load_progress=True)
         assert result_log_dir == mock_output_dir
 
     @patch('runner_main.parse_arguments')
@@ -132,7 +134,7 @@ class TestRunnerMain(object):
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
-    def test_main_exception(self, from_json_mock, setup_logger_mock,setup_paths_mock, set_progress_mock,
+    def test_main_exception(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
@@ -155,7 +157,7 @@ class TestRunnerMain(object):
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
-    def test_main_interrupt(self, from_json_mock, setup_logger_mock,setup_paths_mock, set_progress_mock,
+    def test_main_interrupt(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
@@ -180,8 +182,8 @@ class TestRunnerMain(object):
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
-    def test_main_succes(self, from_json_mock, setup_logger_mock,setup_paths_mock, set_progress_mock,
-                            parse_arguments_mock, tmpdir):
+    def test_main_succes(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
+                         parse_arguments_mock, tmpdir):
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
         mock_experiment = Mock()

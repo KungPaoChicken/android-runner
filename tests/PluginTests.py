@@ -1,14 +1,17 @@
-import logging
-import paths
 import inspect
+import logging
 import os
 import time
 import traceback
-from PluginHandler import PluginHandler
-from Devices import Devices
-from util import makedirs
+
+from ExperimentRunner.Devices import Devices
+from ExperimentRunner.PluginHandler import PluginHandler
+from ExperimentRunner.util import makedirs
+
+import paths
 
 
+# noinspection PyUnusedLocal
 class PluginTests(object):
 
     def __init__(self, config):
@@ -22,7 +25,8 @@ class PluginTests(object):
         self.result_file = os.path.join(self.output_root, 'Test_results.txt')
         self.dirs = {}
 
-    def get_progress_xml_file(self):
+    @staticmethod
+    def get_progress_xml_file():
         return "Testing, no progress file has been made"
 
     def check_profilers(self):
@@ -63,7 +67,7 @@ class PluginTests(object):
 
     def set_dirs(self, device, profiler_name):
         self.dirs['subject'] = os.path.join(self.output_root, 'data', device.name, 'test_dir_1', 'test_dir_2',
-                                       profiler_name.lower())
+                                            profiler_name.lower())
         self.dirs['aggregated'] = os.path.join(paths.OUTPUT_DIR, '{}_aggregated.csv'.format(profiler_name))
         self.dirs['base'] = os.path.join(paths.OUTPUT_DIR, 'data')
         makedirs(self.dirs['subject'])

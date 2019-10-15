@@ -1,14 +1,17 @@
-import mock
-import pytest
 import csv
 import os.path as op
-import paths
 from os import chmod, listdir
-from mock import patch, Mock, call
-from ExperimentRunner.Plugins.Profiler import Profiler
+
+import pytest
+from mock import Mock, call, patch
+
+import paths
 from ExperimentRunner.Plugins.Android import Android, ConfigError as AndroidConfigError
-from ExperimentRunner.Plugins.Batterystats import Batterystats, FileFormatError as BsFileFormatError, ConfigError as BsConfigError, FileNotFoundError as BsFileNotFounError
-from ExperimentRunner.Plugins.Trepn import Trepn, FileNotFoundError as TrFileNotFoundError, FileFormatError as TrFileFormatError
+from ExperimentRunner.Plugins.Batterystats import Batterystats, ConfigError as BsConfigError, \
+    FileFormatError as BsFileFormatError, FileNotFoundError as BsFileNotFounError
+from ExperimentRunner.Plugins.Profiler import Profiler
+from ExperimentRunner.Plugins.Trepn import FileFormatError as TrFileFormatError, \
+    FileNotFoundError as TrFileNotFoundError, Trepn
 
 
 class TestPluginTemplate(object):
@@ -21,7 +24,7 @@ class TestPluginTemplate(object):
         return Mock()
 
     def test_init(self):
-            Profiler('config', [])
+        Profiler('config', [])
 
     def test_dependencies(self, profiler_template):
         with pytest.raises(NotImplementedError):
@@ -75,7 +78,8 @@ class TestAndroidPlugin(object):
         test_paths = {'path1': 'path/1'}
         return Android(test_config, test_paths)
 
-    def csv_reader_to_table(self, filename):
+    @staticmethod
+    def csv_reader_to_table(filename):
         result = []
         with open(filename, mode='r') as csv_file:
             csv_reader = csv.reader(csv_file)
@@ -83,7 +87,8 @@ class TestAndroidPlugin(object):
                 result.append(row)
         return result
 
-    def get_dataset(self, filename):
+    @staticmethod
+    def get_dataset(filename):
         with open(filename, mode='r') as csv_file:
             dataset = set(map(tuple, csv.reader(csv_file)))
         return dataset
@@ -97,7 +102,7 @@ class TestAndroidPlugin(object):
         super_init.assert_called_once_with(test_config, test_paths)
         assert ap.output_dir == ''
         assert ap.paths == test_paths
-        assert ap.profile == False
+        assert ap.profile is False
         assert ap.interval == 1
         assert ap.data_points == ['cpu', 'mem']
         assert ap.data == [['datetime', 'cpu', 'mem']]
@@ -110,7 +115,7 @@ class TestAndroidPlugin(object):
 
         assert ap.output_dir == ''
         assert ap.paths == test_paths
-        assert ap.profile == False
+        assert ap.profile is False
         assert ap.interval == 1
         assert ap.data_points == ['cpu', 'mem']
         assert ap.data == [['datetime', 'cpu', 'mem']]
@@ -123,7 +128,7 @@ class TestAndroidPlugin(object):
 
         assert ap.output_dir == ''
         assert ap.paths == test_paths
-        assert ap.profile == False
+        assert ap.profile is False
         assert ap.interval == 0
         assert ap.data_points == ['cpu', 'mem']
         assert ap.data == [['datetime', 'cpu', 'mem']]
@@ -174,7 +179,7 @@ class TestAndroidPlugin(object):
         kwargs = {'arg1': 1, 'app': 'test.app'}
         android_plugin.start_profiling(mock_device, **kwargs)
 
-        assert android_plugin.profile == True
+        assert android_plugin.profile is True
         get_data_mock.assert_called_once_with(mock_device, 'test.app')
 
     @patch('ExperimentRunner.Plugins.Android.Android.get_data')
@@ -182,7 +187,7 @@ class TestAndroidPlugin(object):
         kwargs = {'arg1': 1}
         android_plugin.start_profiling(mock_device, **kwargs)
 
-        assert android_plugin.profile == True
+        assert android_plugin.profile is True
         get_data_mock.assert_called_once_with(mock_device, None)
 
     @patch('timeit.default_timer')
@@ -209,7 +214,7 @@ class TestAndroidPlugin(object):
     @patch('ExperimentRunner.Plugins.Android.Android.get_cpu_usage')
     @patch('ExperimentRunner.Plugins.Android.Android.get_mem_usage')
     def test_get_data_only_mem(self, get_mem_usage_mock, get_cpu_usage_mock, timeit_mock,
-                                 android_plugin, mock_device):
+                               android_plugin, mock_device):
         timeit_mock.side_effect = [100, 200]
         mock_device.shell.return_value = 'device_time'
         get_mem_usage_mock.return_value = "mem_usage"
@@ -223,7 +228,7 @@ class TestAndroidPlugin(object):
     @patch('ExperimentRunner.Plugins.Android.Android.get_cpu_usage')
     @patch('ExperimentRunner.Plugins.Android.Android.get_mem_usage')
     def test_get_data_only_cpu(self, get_mem_usage_mock, get_cpu_usage_mock, timeit_mock,
-                                 android_plugin, mock_device):
+                               android_plugin, mock_device):
         timeit_mock.side_effect = [100, 200]
         mock_device.shell.return_value = 'device_time'
         get_mem_usage_mock.return_value = "mem_usage"
@@ -238,7 +243,7 @@ class TestAndroidPlugin(object):
 
         android_plugin.stop_profiling(mock_device)
 
-        assert android_plugin.profile == False
+        assert android_plugin.profile is False
 
     @patch('time.strftime')
     def test_collect_results(self, time_mock, android_plugin, mock_device, tmpdir, fixture_dir):
@@ -253,7 +258,8 @@ class TestAndroidPlugin(object):
 
         assert op.isfile(op.join(test_output_dir, '{}_{}.csv'.format('device_id', 'experiment_time')))
 
-        file_content_created = self.get_dataset(op.join(test_output_dir, '{}_{}.csv'.format('device_id', 'experiment_time')))
+        file_content_created = self.get_dataset(
+            op.join(test_output_dir, '{}_{}.csv'.format('device_id', 'experiment_time')))
         file_content_original = self.get_dataset(op.join(fixture_dir, 'test_android_output.csv'))
         assert file_content_created == file_content_original
 
@@ -361,11 +367,12 @@ class TestAndroidPlugin(object):
 
     def test_write_to_file(self, android_plugin, tmpdir):
         tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows =[{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
+        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
         android_plugin.write_to_file(tmp_file, test_rows)
 
         assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list([['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+        assert self.csv_reader_to_table(tmp_file) == list(
+            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
 
     def test_is_integer_not_int(self, android_plugin):
         with pytest.raises(AndroidConfigError) as except_result:
@@ -383,7 +390,8 @@ class TestAndroidPlugin(object):
 
 class TestBatterystatsPlugin(object):
 
-    def csv_reader_to_table(self, filename):
+    @staticmethod
+    def csv_reader_to_table(filename):
         result = []
         with open(filename, mode='r') as csv_file:
             csv_reader = csv.reader(csv_file)
@@ -391,7 +399,8 @@ class TestBatterystatsPlugin(object):
                 result.append(row)
         return result
 
-    def file_content(self, filename):
+    @staticmethod
+    def file_content(filename):
         with open(filename, 'r') as myfile:
             content_string = myfile.read().replace('\n', '')
         return content_string
@@ -433,8 +442,8 @@ class TestBatterystatsPlugin(object):
         load_json_mock.assert_called_once_with(op.join(paths.CONFIG_DIR, 'original/path'))
         assert test_batterystats.output_dir == ''
         assert test_batterystats.paths == paths.paths_dict()
-        assert test_batterystats.profile == False
-        assert test_batterystats.cleanup == True
+        assert test_batterystats.profile is False
+        assert test_batterystats.cleanup is True
         assert test_batterystats.type == 'web'
         assert test_batterystats.systrace == 'sys/trace/path'
         assert test_batterystats.powerprofile == 'power/profile/path'
@@ -452,7 +461,7 @@ class TestBatterystatsPlugin(object):
 
         mock_device.shell.assert_called_once_with('dumpsys batterystats --reset')
         get_data_mock.assert_called_once_with(mock_device, 'testapp1')
-        assert batterystats_plugin.profile == True
+        assert batterystats_plugin.profile is True
 
     @patch('time.strftime')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
@@ -466,7 +475,7 @@ class TestBatterystatsPlugin(object):
 
         mock_device.shell.assert_called_once_with('dumpsys batterystats --reset')
         get_data_mock.assert_called_once_with(mock_device, 'com.android.chrome')
-        assert batterystats_plugin.profile == True
+        assert batterystats_plugin.profile is True
 
     @patch('time.strftime')
     @patch('subprocess.Popen')
@@ -476,7 +485,7 @@ class TestBatterystatsPlugin(object):
         time_mock.return_value = 'strftime'
         batterystats_plugin.output_dir = str(tmpdir)
 
-        batterystats_plugin.start_profiling(mock_device)#start profiling call get_data
+        batterystats_plugin.start_profiling(mock_device)  # start profiling call get_data
 
         capsys.readouterr()  # Catch print
         popen_mock.assert_called_once_with('systrace freq idle -e 123 -a com.android.chrome -t 5 -o {}'
@@ -487,12 +496,12 @@ class TestBatterystatsPlugin(object):
 
         batterystats_plugin.stop_profiling(mock_device)
 
-        assert batterystats_plugin.profile == False
+        assert batterystats_plugin.profile is False
 
     @patch('time.strftime')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     def test_pull_logcat(self, get_data_mock, time_mock, batterystats_plugin, mock_device, tmpdir, capsys):
-        #set global variables
+        # set global variables
         mock_device.id = '123'
         batterystats_plugin.type = 'web'
         time_mock.return_value = 'strftime'
@@ -511,7 +520,7 @@ class TestBatterystatsPlugin(object):
     @patch('time.strftime')
     @patch('subprocess.Popen')
     def test_get_batterystats_results(self, popen_mock, time_mock, parse_mock, batterystats_plugin, mock_device, tmpdir,
-                                 capsys):
+                                      capsys):
         # set global variables
         popen_return_value = Mock()
         popen_mock.return_value = popen_return_value
@@ -532,20 +541,24 @@ class TestBatterystatsPlugin(object):
 
         assert get_batterystats_result == parse_return_value
         assert mock_device.mock_calls[1] == call.shell('dumpsys batterystats --history')
-        assert self.file_content(op.join(str(tmpdir), 'batterystats_history_123_strftime.txt')) == 'dumpsys_return_value'
+        assert self.file_content(
+            op.join(str(tmpdir), 'batterystats_history_123_strftime.txt')) == 'dumpsys_return_value'
         parse_mock.assert_called_once_with('com.android.chrome',
                                            op.join(str(tmpdir), 'batterystats_history_123_strftime.txt'),
                                            batterystats_plugin.powerprofile)
 
     def test_get_consumed_joules(self, batterystats_plugin, mock_device):
-        dumpsys_volt = '0 (1) 091 status=discharging health=good plug=none temp=260 volt=4246 +running +wake_lock +wifi_radio +screen phone_signal_strength=great brightness=bright +wifi_running +wifi wifi_signal_strength=4 wifi_suppl=completed +4m07s375ms (2) 090 volt=4225 +16m24s239ms (3) 089 volt=4195'
+        dumpsys_volt = '0 (1) 091 status=discharging health=good plug=none temp=260 volt=4246 +running +wake_lock ' \
+                       '+wifi_radio +screen phone_signal_strength=great brightness=bright +wifi_running +wifi ' \
+                       'wifi_signal_strength=4 wifi_suppl=completed +4m07s375ms (2) 090 volt=4225 +16m24s239ms (3) ' \
+                       '089 volt=4195'
         dumpsys_charge = '3450, Computed drain: 150, actual drain: 104-138'
         mock_device.shell.side_effect = [dumpsys_charge, dumpsys_volt]
         calculated_j_consumed = batterystats_plugin.get_consumed_joules(mock_device)
         assert calculated_j_consumed == 2292.84
 
     @patch('os.remove')
-    def test_cleanup_logs_false(self,os_remove_mock, batterystats_plugin):
+    def test_cleanup_logs_false(self, os_remove_mock, batterystats_plugin):
         batterystats_plugin.cleanup = False
 
         batterystats_plugin.cleanup_logs()
@@ -555,9 +568,10 @@ class TestBatterystatsPlugin(object):
     @patch('time.strftime')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     @patch('os.remove')
-    def test_cleanup_logs_True(self,os_remove_mock, get_data_mock, time_mock, batterystats_plugin, mock_device, tmpdir, capsys):
+    def test_cleanup_logs_true(self, os_remove_mock, get_data_mock, time_mock, batterystats_plugin, mock_device, tmpdir,
+                               capsys):
         batterystats_plugin.cleanup = True
-        #set global variables
+        # set global variables
         mock_device.id = '123'
         batterystats_plugin.type = 'web'
         time_mock.return_value = 'strftime'
@@ -588,12 +602,12 @@ class TestBatterystatsPlugin(object):
         systrace_result_mock = Mock()
         get_systrace_results_mock.return_value = systrace_result_mock
         mock_manager = Mock()
-        mock_manager.attach_mock(pull_logcat_mock,'pull_logcat_managed')
-        mock_manager.attach_mock(get_batterystats_results_mock,'get_batterystats_results_managed')
-        mock_manager.attach_mock(get_consumed_joules_mock,'get_consumed_joules_managed')
-        mock_manager.attach_mock(get_systrace_results_mock,'get_systrace_results_managed')
-        mock_manager.attach_mock(write_results_mock,'write_results_managed')
-        mock_manager.attach_mock(cleanup_logs_mock,'cleanup_logs_managed')
+        mock_manager.attach_mock(pull_logcat_mock, 'pull_logcat_managed')
+        mock_manager.attach_mock(get_batterystats_results_mock, 'get_batterystats_results_managed')
+        mock_manager.attach_mock(get_consumed_joules_mock, 'get_consumed_joules_managed')
+        mock_manager.attach_mock(get_systrace_results_mock, 'get_systrace_results_managed')
+        mock_manager.attach_mock(write_results_mock, 'write_results_managed')
+        mock_manager.attach_mock(cleanup_logs_mock, 'cleanup_logs_managed')
 
         batterystats_plugin.collect_results(mock_device)
 
@@ -601,15 +615,17 @@ class TestBatterystatsPlugin(object):
                           call.get_batterystats_results_managed(mock_device),
                           call.get_consumed_joules_managed(mock_device),
                           call.get_systrace_results_managed(mock_device),
-                          call.write_results_managed(batterystats_result_mock, systrace_result_mock, consumed_joules_mock),
+                          call.write_results_managed(batterystats_result_mock, systrace_result_mock,
+                                                     consumed_joules_mock),
                           call.cleanup_logs_managed()]
         assert mock_manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Plugins.BatterystatsParser.parse_systrace')
     @patch('time.strftime')
     @patch('subprocess.Popen')
-    def test_get_systrace_result(self, popen_mock, time_mock, parse_mock, batterystats_plugin, mock_device, tmpdir, capsys):
-        #set global variables
+    def test_get_systrace_result(self, popen_mock, time_mock, parse_mock, batterystats_plugin, mock_device, tmpdir,
+                                 capsys):
+        # set global variables
         popen_return_value = Mock()
         popen_mock.return_value = popen_return_value
         parse_return_value = Mock()
@@ -629,7 +645,10 @@ class TestBatterystatsPlugin(object):
 
         assert get_sysrace_result == parse_return_value
         popen_return_value.wait.assert_called_once()
-        parse_mock.assert_called_once_with('com.android.chrome', op.join(str(tmpdir), 'systrace_123_strftime.html'), op.join(str(tmpdir), 'logcat_123_strftime.txt'), op.join(str(tmpdir), 'batterystats_history_123_strftime.txt'), batterystats_plugin.powerprofile, 8)
+        parse_mock.assert_called_once_with('com.android.chrome', op.join(str(tmpdir), 'systrace_123_strftime.html'),
+                                           op.join(str(tmpdir), 'logcat_123_strftime.txt'),
+                                           op.join(str(tmpdir), 'batterystats_history_123_strftime.txt'),
+                                           batterystats_plugin.powerprofile, 8)
 
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     @patch('time.strftime')
@@ -646,18 +665,20 @@ class TestBatterystatsPlugin(object):
                                 '0,13.395,13.395,wifi running,0.1838313726']
         systrace_results = ['0.0,5.985252,5.985252,core 0 cpu_idle start,0.092214777564',
                             '0.0,6.00117999999,6.00117999999,core 1 cpu_idle start,0.0924601802599']
-        energy_consumed_J = 2292.84
+        energy_consumed_j = 2292.84
 
-        batterystats_plugin.write_results(batterystats_results, systrace_results, energy_consumed_J)
+        batterystats_plugin.write_results(batterystats_results, systrace_results, energy_consumed_j)
         expected_joule_result_file = op.join(batterystats_plugin.output_dir, 'Joule_results_123_strftime.csv')
         expected_result_file = op.join(batterystats_plugin.output_dir, 'results_123_strftime.csv')
         expected_joule_result_file_content = [['Joule_calculated'], ['2292.84']]
         expected_result_file_content = [['Start Time (Seconds)', 'End Time (Seconds)', 'Duration (Seconds)',
                                          'Component', 'Energy Consumption (Joule)'], ['0', '13.395', '13.395',
-                                        'screen bright', '12.309721026'], ['0', '13.395', '13.395', 'wifi running',
-                                        '0.1838313726'], ['0.0', '5.985252', '5.985252', 'core 0 cpu_idle start',
-                                        '0.092214777564'], ['0.0', '6.00117999999', '6.00117999999',
-                                                            'core 1 cpu_idle start', '0.0924601802599']]
+                                                                                      'screen bright', '12.309721026'],
+                                        ['0', '13.395', '13.395', 'wifi running',
+                                         '0.1838313726'], ['0.0', '5.985252', '5.985252', 'core 0 cpu_idle start',
+                                                           '0.092214777564'], ['0.0', '6.00117999999', '6.00117999999',
+                                                                               'core 1 cpu_idle start',
+                                                                               '0.0924601802599']]
         assert op.isfile(expected_joule_result_file)
         assert self.csv_reader_to_table(expected_joule_result_file) == expected_joule_result_file_content
         assert op.isfile(expected_result_file)
@@ -772,11 +793,12 @@ class TestBatterystatsPlugin(object):
 
     def test_write_to_file(self, batterystats_plugin, tmpdir):
         tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows =[{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
+        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
         batterystats_plugin.write_to_file(tmp_file, test_rows)
 
         assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list([['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+        assert self.csv_reader_to_table(tmp_file) == list(
+            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
 
     def test_is_integer_not_int(self, batterystats_plugin):
         with pytest.raises(BsConfigError) as except_result:
@@ -835,7 +857,8 @@ class TestTrepnPlugin(object):
         test_paths = paths.paths_dict()
         return Trepn(config_mock, test_paths)
 
-    def csv_reader_to_table(self, filename):
+    @staticmethod
+    def csv_reader_to_table(filename):
         result = []
         with open(filename, mode='r') as csv_file:
             csv_reader = csv.reader(csv_file)
@@ -843,7 +866,8 @@ class TestTrepnPlugin(object):
                 result.append(row)
         return result
 
-    def file_content(self, filename):
+    @staticmethod
+    def file_content(filename):
         with open(filename, 'r') as myfile:
             content_string = myfile.read()
         return content_string
@@ -858,7 +882,7 @@ class TestTrepnPlugin(object):
         super_mock.assert_called_once_with(config_mock, test_paths)
         assert trepn_plugin.output_dir == ''
         assert trepn_plugin.paths == paths.paths_dict()
-        assert trepn_plugin.pref_dir == None
+        assert trepn_plugin.pref_dir is None
         assert trepn_plugin.remote_pref_dir == op.join(trepn_plugin.DEVICE_PATH, 'saved_preferences/')
         build_preferences_mock.assert_called_once_with(config_mock)
 
@@ -866,7 +890,7 @@ class TestTrepnPlugin(object):
         assert trepn_plugin.dependencies() == ['com.quicinc.trepn']
 
     def test_build_preferences(self, trepn_plugin, tmpdir, fixture_dir):
-        test_params = {'sample_interval' : 300, 'data_points' : ['battery_power', 'mem_usage']}
+        test_params = {'sample_interval': 300, 'data_points': ['battery_power', 'mem_usage']}
         trepn_plugin.paths['OUTPUT_DIR'] = str(tmpdir)
 
         trepn_plugin.build_preferences(test_params)
@@ -927,16 +951,20 @@ class TestTrepnPlugin(object):
 
         trepn_plugin.collect_results(mock_device)
 
-        expected_calls = [call.device_managed.shell('ls /sdcard/trepn/ | grep "\.db"'),
+        expected_calls = [call.device_managed.shell(r'ls /sdcard/trepn/ | grep "\.db"'),
                           call.device_managed.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
-                         '-e com.quicinc.trepn.export_db_input_file "Trepn_2019.08.21_224812.db" '
-                         '-e com.quicinc.trepn.export_csv_output_file "123_Trepn_2019.08.21_224812.csv"'),
+                                                    '-e com.quicinc.trepn.export_db_input_file '
+                                                    '"Trepn_2019.08.21_224812.db" '
+                                                    '-e com.quicinc.trepn.export_csv_output_file '
+                                                    '"123_Trepn_2019.08.21_224812.csv"'),
                           call.sleep_managed(1),
                           call.device_managed.pull(op.join(trepn_plugin.DEVICE_PATH, '123_Trepn_2019.08.21_224812.csv')
                                                    , tmpdir_str),
                           call.sleep_managed(1),
-                          call.device_managed.shell('rm %s' % op.join(trepn_plugin.DEVICE_PATH, 'Trepn_2019.08.21_224812.db')),
-                          call.device_managed.shell('rm %s' % op.join(trepn_plugin.DEVICE_PATH, '123_Trepn_2019.08.21_224812.csv')),
+                          call.device_managed.shell(
+                              'rm %s' % op.join(trepn_plugin.DEVICE_PATH, 'Trepn_2019.08.21_224812.db')),
+                          call.device_managed.shell(
+                              'rm %s' % op.join(trepn_plugin.DEVICE_PATH, '123_Trepn_2019.08.21_224812.csv')),
                           call.filter_managed(op.join(tmpdir_str, '123_Trepn_2019.08.21_224812.csv'))]
         assert mock_manager.mock_calls == expected_calls
 
@@ -959,11 +987,12 @@ class TestTrepnPlugin(object):
         trepn_plugin.filter_results(test_filename)
         read_csv_mock.assert_called_once_with(test_filename)
         write_mock.assert_called_once_with(test_filename, filter_data_result)
-        filter_data_mock.assert_called_once_with(['Battery Power*', 'Memory Usage'], self.csv_reader_to_table(op.join(fixture_dir, 'test_trepn_data_to_filter.csv')))
+        filter_data_mock.assert_called_once_with(['Battery Power*', 'Memory Usage'], self.csv_reader_to_table(
+            op.join(fixture_dir, 'test_trepn_data_to_filter.csv')))
 
     def test_write_list_to_file(self, trepn_plugin, tmpdir):
         test_filename = op.join(str(tmpdir), 'test_file.txt')
-        test_data = [[],[],[]]
+        test_data = [[], [], []]
         for i in range(0, 40):
             test_data[0].append('column_%s' % i)
             test_data[1].append('column_%s' % i)
@@ -993,7 +1022,7 @@ class TestTrepnPlugin(object):
 
     def test_filter_columns(self, trepn_plugin):
         wanted_columns = [6, 7, 16, 17, 30, 31]
-        data_columns = [[],[]]
+        data_columns = [[], []]
         for i in range(0, 40):
             data_columns[0].append('column_%s' % i)
             data_columns[1].append('column_%s' % i)
@@ -1045,7 +1074,6 @@ class TestTrepnPlugin(object):
         expected_list.append(mock_rows)
         write_to_file_mock.assert_called_once_with(op.join(test_output_dir, 'Aggregated.csv'), expected_list)
 
-
     @patch('ExperimentRunner.Plugins.Trepn.Trepn.write_to_file')
     @patch('ExperimentRunner.Plugins.Trepn.Trepn.aggregate_final')
     def test_aggregate_end(self, aggregate_mock, write_to_file_mock, trepn_plugin):
@@ -1061,11 +1089,12 @@ class TestTrepnPlugin(object):
 
     def test_write_to_file(self, trepn_plugin, tmpdir):
         tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows =[{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
+        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
         trepn_plugin.write_to_file(tmp_file, test_rows)
 
         assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list([['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+        assert self.csv_reader_to_table(tmp_file) == list(
+            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
 
     def test_aggregate_trepn_subject(self, trepn_plugin, fixture_dir):
         test_subject_log_dir = op.join(fixture_dir, 'trepn_subject_result')

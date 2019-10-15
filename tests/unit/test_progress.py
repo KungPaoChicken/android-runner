@@ -1,12 +1,14 @@
-import pytest
-import paths
-import os.path as op
 import os
-import lxml.etree as et
+import os.path as op
 from shutil import copyfile
-from mock import patch, Mock, call
-from ExperimentRunner.util import load_json
+
+import lxml.etree as et
+import pytest
+from mock import Mock, call, patch
+
+import paths
 from ExperimentRunner.Progress import Progress
+from ExperimentRunner.util import load_json
 
 
 class TestProgressSetup(object):
@@ -33,7 +35,7 @@ class TestProgressSetup(object):
 
         progress = Progress(config_file=test_config, config=load_json(test_config))
 
-        expected_calls = [call.managed_build_progress(load_json(test_config),test_config),
+        expected_calls = [call.managed_build_progress(load_json(test_config), test_config),
                           call.managed_write_to_file()]
         assert mock_manager.mock_calls == expected_calls
         expected_lxml = et.fromstring(expected_xml)
@@ -50,11 +52,16 @@ class TestProgressSetup(object):
         assert self.elements_equal(current_lxml, expected_lxml)
 
     def elements_equal(self, e1, e2):
-        if e1.tag != e2.tag: return False
-        if e1.text != e2.text: return False
-        if e1.tail != e2.tail: return False
-        if e1.attrib != e2.attrib: return False
-        if len(e1) != len(e2): return False
+        if e1.tag != e2.tag:
+            return False
+        if e1.text != e2.text:
+            return False
+        if e1.tail != e2.tail:
+            return False
+        if e1.attrib != e2.attrib:
+            return False
+        if len(e1) != len(e2):
+            return False
         return all(self.elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
 
@@ -86,11 +93,16 @@ class TestProgressMethods(object):
         return {'devices': ['device1'], 'paths': ['path1'], 'type': 'native', 'replications': 1}
 
     def elements_equal(self, e1, e2):
-        if e1.tag != e2.tag: return False
-        if e1.text != e2.text: return False
-        if e1.tail != e2.tail: return False
-        if e1.attrib != e2.attrib: return False
-        if len(e1) != len(e2): return False
+        if e1.tag != e2.tag:
+            return False
+        if e1.text != e2.text:
+            return False
+        if e1.tail != e2.tail:
+            return False
+        if e1.attrib != e2.attrib:
+            return False
+        if len(e1) != len(e2):
+            return False
         return all(self.elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
     def test_ordered_next(self, current_progress):
@@ -144,12 +156,12 @@ class TestProgressMethods(object):
         assert current_hash == expected_hash
 
     @patch('ExperimentRunner.Progress.Progress.file_to_hash')
-    def test_check_config_hash_fail(self,file_to_hash_mock, current_progress, capsys, test_config, test_progress):
+    def test_check_config_hash_fail(self, file_to_hash_mock, current_progress, capsys, test_config, test_progress):
         file_to_hash_mock.return_value = '0'
         with pytest.raises(SystemExit) as wrapper_result:
             current_progress.check_config_hash(test_progress)
 
-        #Prevent output during testing
+        # Prevent output during testing
         out, err = capsys.readouterr()
         assert wrapper_result.type == SystemExit
 
@@ -168,20 +180,20 @@ class TestProgressMethods(object):
         device = 'device1'
         path = 'path1'
         browser = 'browser1'
-        subject_xml = current_progress.build_subject_xml(device,path,browser)
+        subject_xml = current_progress.build_subject_xml(device, path, browser)
         expected_xml = '<device>device1</device><path>path1</path><browser>browser1</browser>'
         assert subject_xml == expected_xml
 
     def test_build_subject_xml_native(self, current_progress):
         device = 'device1'
         path = 'path1'
-        subject_xml = current_progress.build_subject_xml(device,path)
+        subject_xml = current_progress.build_subject_xml(device, path)
         expected_xml = '<device>device1</device><path>path1</path>'
         assert subject_xml == expected_xml
 
     @patch('ExperimentRunner.Progress.Progress.build_runs_xml')
     @patch('ExperimentRunner.Progress.Progress.file_to_hash')
-    def test_build_progress_xml(self,file_to_hash_mock, build_runs_xml_mock, current_progress):
+    def test_build_progress_xml(self, file_to_hash_mock, build_runs_xml_mock, current_progress):
         mock_config = Mock()
         mock_config_file = Mock()
         paths.OUTPUT_DIR = "test/dir"
@@ -237,7 +249,7 @@ class TestProgressMethods(object):
         mock_progress_xml = Mock()
         mock_progress_xml.find.return_value = mock_find_return_value
         current_progress.progress_xml_content = mock_progress_xml
-        subject_first = current_progress.subject_first('fake_device','fake_path', 'fake_browser')
+        subject_first = current_progress.subject_first('fake_device', 'fake_path', 'fake_browser')
         assert subject_first is False
 
     def test_subject_first_native_not_first(self, current_progress):
@@ -246,7 +258,7 @@ class TestProgressMethods(object):
         mock_progress_xml = Mock()
         mock_progress_xml.find.return_value = mock_find_return_value
         current_progress.progress_xml_content = mock_progress_xml
-        subject_first = current_progress.subject_first('fake_device','fake_path')
+        subject_first = current_progress.subject_first('fake_device', 'fake_path')
         assert subject_first is False
 
     def test_subject_finished_web_finished(self, current_progress):
@@ -273,7 +285,7 @@ class TestProgressMethods(object):
         mock_progress_xml = Mock()
         mock_progress_xml.find.return_value = mock_find_return_value
         current_progress.progress_xml_content = mock_progress_xml
-        subject_first = current_progress.subject_finished('fake_device','fake_path', 'fake_browser')
+        subject_first = current_progress.subject_finished('fake_device', 'fake_path', 'fake_browser')
         assert subject_first is False
 
     def test_subject_finished_native_not_finished(self, current_progress):
@@ -282,7 +294,7 @@ class TestProgressMethods(object):
         mock_progress_xml = Mock()
         mock_progress_xml.find.return_value = mock_find_return_value
         current_progress.progress_xml_content = mock_progress_xml
-        subject_first = current_progress.subject_finished('fake_device','fake_path')
+        subject_first = current_progress.subject_finished('fake_device', 'fake_path')
         assert subject_first is False
 
     def test_run_finished(self, current_progress):
@@ -327,4 +339,3 @@ class TestProgressMethods(object):
     def test_device_finished_true(self, current_progress):
         device_finished = current_progress.device_finished('device1')
         assert device_finished is True
-

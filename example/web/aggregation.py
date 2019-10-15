@@ -1,6 +1,6 @@
-import sys
-import os
 import csv
+import os
+import sys
 from collections import OrderedDict
 
 
@@ -33,13 +33,14 @@ def aggregate_trepn(logs_dir):
     def format_stats(accum, new):
         column_name = new['Name']
         if '[' in new['Type']:
-            column_name += ' [' +new['Type'].split('[')[1]
+            column_name += ' [' + new['Type'].split('[')[1]
         accum.update({column_name: float(new['Average'])})
         return accum
+
     runs = []
     for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
         with open(os.path.join(logs_dir, run_file), 'rb') as run:
-            contents = run.read()   # Be careful with large files, this loads everything into memory
+            contents = run.read()  # Be careful with large files, this loads everything into memory
             system_stats = contents.split('System Statistics:')[1].strip().splitlines()
             reader = csv.DictReader(system_stats)
             runs.append(reduce(format_stats, reader, {}))
@@ -74,7 +75,8 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
-def main(device, output_root):
+# noinspection PyUnusedLocal
+def main(dummy, output_root):
     print('Output root: {}'.format(output_root))
     data_dir = os.path.join(output_root, 'data')
     rows = aggregate(data_dir)

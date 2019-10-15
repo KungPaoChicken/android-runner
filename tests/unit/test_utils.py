@@ -1,11 +1,12 @@
-import pytest
-from mock import patch, Mock
-import os.path as op
 import os
+import os.path as op
 
+import pytest
+from mock import Mock, patch
+
+import ExperimentRunner.Tests as Tests
 import ExperimentRunner.util as util
 import paths
-import ExperimentRunner.Tests as Tests
 
 
 class TestUtilClass(object):
@@ -80,12 +81,13 @@ class TestUtilClass(object):
         string4 = "a b c d e f"
         assert util.slugify_dir(string4) == string4.replace(" ", "-")
 
+
 class TestPathsClass(object):
     def test_paths_dict(self):
         string_config = 'test/dir/1'
         string_output = 'test/dir/2'
         string_base = 'test/dir/3'
-        string_original= 'test/dir/4'
+        string_original = 'test/dir/4'
         paths.CONFIG_DIR = string_config
         paths.OUTPUT_DIR = string_output
         paths.BASE_OUTPUT_DIR = string_base
@@ -97,6 +99,7 @@ class TestPathsClass(object):
         assert paths_dict['OUTPUT_DIR'] == string_output
         assert paths_dict['BASE_OUTPUT_DIR'] == string_base
         assert paths_dict['ORIGINAL_CONFIG_DIR'] == string_original
+
 
 class TestTestsClass(object):
     def test_is_integer_not_int(self):
@@ -143,5 +146,3 @@ class TestTestsClass(object):
         Tests.check_dependencies(mocked_devices, mock_dependencies)
         assert mock_device.is_installed.call_count == 2
         assert mock_log.call_count == 0
-
-

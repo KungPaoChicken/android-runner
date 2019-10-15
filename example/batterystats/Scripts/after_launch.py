@@ -1,3 +1,4 @@
+# noinspection PyUnusedLocal,PyUnusedLocal
 def main(device, *args, **kwargs):
     """ Enable for Web Experiments using Chrome
     # Tap coordinates can be found by enabling 'Pointer location' in Developer options

@@ -1,5 +1,6 @@
 import logging
 from itertools import chain
+
 from PluginHandler import PluginHandler
 
 
@@ -8,7 +9,7 @@ class Profilers(object):
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.profilers = []
-        self.loaded_devices =[]
+        self.loaded_devices = []
         for name, params in config.items():
             try:
                 self.profilers.append(PluginHandler(name, params))
