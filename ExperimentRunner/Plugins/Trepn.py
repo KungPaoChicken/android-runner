@@ -88,7 +88,7 @@ class Trepn(Profiler):
             device.shell('rm %s' % op.join(Trepn.DEVICE_PATH, csv_filename))
         self.filter_results(op.join(self.output_dir, csv_filename))
 
-    def csv_reader(self, filename):
+    def read_csv(self, filename):
         result = []
         with open(filename, mode='r') as csv_file:
             csv_reader = csv.reader(csv_file)
@@ -97,7 +97,7 @@ class Trepn(Profiler):
         return result
 
     def filter_results(self, filename):
-        file_content = self.csv_reader(filename)[3:]
+        file_content = self.read_csv(filename)[3:]
         split_line = file_content.index(['System Statistics:'])
         data = file_content[:split_line - 2]
         system_statistics = file_content[split_line + 2:]
@@ -139,7 +139,6 @@ class Trepn(Profiler):
                     wanted_columns.append(i)
         wanted_columns.sort()
         return wanted_columns
-
 
     def unload(self, device):
         device.shell('am stopservice com.quicinc.trepn/.TrepnService')
