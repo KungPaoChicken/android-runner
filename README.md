@@ -49,10 +49,13 @@ Path to Systrace.py. Example path: `/home/user/Android/Sdk/platform-tools/systra
 Path to power_profile.xml. Example path: `android-runner/example/batterystats/power_profile.xml`
 
 **type** *string*
-Type of the experiment. Can be `web` or `native`
+Type of the experiment. Can be `web`, `native` or 'plugintest'
 
 **replications** *positive integer*
 Number of times an experiment is run.
+
+**randomization** *boolean*
+Random order of run execution. Default is *false*.
 
 **duration** *positive integer*
 The duration of each run in milliseconds.
@@ -85,7 +88,16 @@ A JSON object to describe the devices to be used and their arguments. Below are 
 Note that the last two examples result in the same behaviour.
 
 **paths** *Array\<String\>*
-The paths to the APKs/URLs to test with.
+The paths to the APKs/URLs to test with. In case of the APKs, the path on the local file system.
+
+**apps** *Array\<String\>*
+The package names of to the apps to test of the app that are already installed in the device. For example:
+```json
+  "apps": [
+    "org.mozilla.firefox",
+    "com.quicinc.trepn"
+  ]
+```
 
 **browsers** *Array\<String\>*
 *Dependent on type = web*
@@ -155,7 +167,7 @@ profiler in the same way as the default profilers, you just need to make sure th
 - Your python file isn't called 'Profiler.py' as this file will be overwritten.
 - The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
-To test your own profiler, you can make us of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
+To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
 
 ## Detailed documentation
 The original thesis can be found here:
