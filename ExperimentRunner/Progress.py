@@ -62,7 +62,8 @@ class Progress(object):
         runs_xml = ''
         run_id = 0
         for device in config['devices']:
-            for path in config['paths']:
+            current_paths = config.get('paths', []) + config.get('apps', [])
+            for path in current_paths:
                 if config['type'] == 'web':
                     for browser in config['browsers']:
                         subject_xml = self.build_subject_xml(device, path, browser)

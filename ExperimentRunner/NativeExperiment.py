@@ -11,13 +11,14 @@ class NativeExperiment(Experiment):
         self.package = None
         self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
         super(NativeExperiment, self).__init__(config, progress)
+        self.pre_installed_apps = config.get('apps', [])
         for apk in config.get('paths', []):
             if not op.isfile(apk):
                 raise ConfigError('File %s not found' % apk)
 
     def cleanup(self, device):
         super(NativeExperiment, self).cleanup(device)
-        if self.package in device.get_app_list():
+        if self.package in device.get_app_list() and not self.package in self.pre_installed_apps:
             device.uninstall(self.package)
 
     def before_experiment(self, device, *args, **kwargs):
@@ -25,11 +26,14 @@ class NativeExperiment(Experiment):
 
     def before_run_subject(self, device, path, *args, **kwargs):
         super(NativeExperiment, self).before_run_subject(device, path)
-        filename = op.basename(path)
-        self.logger.info('APK: %s' % filename)
-        if filename not in device.get_app_list():
-            device.install(path)
-        self.package = op.splitext(op.basename(path))[0]
+        if path in self.pre_installed_apps:
+            self.package = path
+        else:
+            filename = op.basename(path)
+            self.logger.info('APK: %s' % filename)
+            if filename not in device.get_app_list():
+                device.install(path)
+            self.package = op.splitext(op.basename(path))[0]
 
     def before_run(self, device, path, run, *args, **kwargs):
         super(NativeExperiment, self).before_run(device, path, run)
@@ -47,7 +51,8 @@ class NativeExperiment(Experiment):
 
     def after_last_run(self, device, path, *args, **kwargs):
         super(NativeExperiment, self).after_last_run(device, path)
-        device.uninstall(self.package)
+        if self.package in device.get_app_list() and not self.package in self.pre_installed_apps:
+            device.uninstall(self.package)
         self.package = None
 
     def after_experiment(self, device, *args, **kwargs):
