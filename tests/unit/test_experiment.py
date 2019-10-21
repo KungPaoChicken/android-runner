@@ -15,6 +15,7 @@ from ExperimentRunner.Progress import Progress
 from ExperimentRunner.Scripts import Scripts
 from ExperimentRunner.WebExperiment import WebExperiment
 from ExperimentRunner.util import ConfigError, makedirs
+from tests.PluginTests import PluginTests
 
 
 # noinspection PyUnusedLocal
@@ -1105,7 +1106,24 @@ class TestNativeExperiment(object):
         before_experiment.assert_called_once_with(mock_device)
 
     @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
-    def test_before_run_subject_app_installed(self, before_run_subject, native_experiment):
+    def test_before_run_subject_pre_app_installed(self, before_run_subject, native_experiment):
+        args = (1, 2, 3)
+        kwargs = {'arg1': 1, 'arg2': 2}
+        mock_device = Mock()
+        test_package = 'com.test.app'
+        path = os.path.join(test_package)
+        mock_device.get_app_list.return_value = [test_package]
+        native_experiment.pre_installed_apps = ['com.test.app']
+
+        native_experiment.before_run_subject(mock_device, path, *args, **kwargs)
+
+        before_run_subject.assert_called_once_with(mock_device, path)
+        assert mock_device.install.call_count == 0
+        assert mock_device.get_app_list.call_count == 0
+        assert native_experiment.package == 'com.test.app'
+
+    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    def test_before_run_subject_in_app_list(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1202,11 +1220,45 @@ class TestNativeExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
-    def test_after_last_run(self, after_last_run, native_experiment):
+    def test_after_last_run_pre_installed(self, after_last_run, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
+        mock_device.get_app_list.return_value = ['com.test.app']
         path = 'test/path'
+        native_experiment.pre_installed_apps = ['com.test.app']
+        native_experiment.package = 'com.test.app'
+
+
+        native_experiment.after_last_run(mock_device, path, *args, **kwargs)
+
+        assert mock_device.uninstall.call_count == 0
+        assert native_experiment.package is None
+
+    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    def test_after_last_run_not_installed(self, after_last_run, native_experiment):
+        args = (1, 2, 3)
+        kwargs = {'arg1': 1, 'arg2': 2}
+        mock_device = Mock()
+        mock_device.get_app_list.return_value = []
+        path = 'test/path'
+        native_experiment.pre_installed_apps = ['com.test.app']
+        native_experiment.package = 'com.test.app'
+
+
+        native_experiment.after_last_run(mock_device, path, *args, **kwargs)
+
+        assert mock_device.uninstall.call_count == 0
+        assert native_experiment.package is None
+
+    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    def test_after_last_run_not_pre_installed(self, after_last_run, native_experiment):
+        args = (1, 2, 3)
+        kwargs = {'arg1': 1, 'arg2': 2}
+        mock_device = Mock()
+        mock_device.get_app_list.return_value = ['com.test.app']
+        path = 'test/path'
+        native_experiment.pre_installed_apps = []
         native_experiment.package = 'com.test.app'
         mock_manager = Mock()
         mock_manager.attach_mock(after_last_run, 'after_last_run_managed')
@@ -1215,6 +1267,7 @@ class TestNativeExperiment(object):
         native_experiment.after_last_run(mock_device, path, *args, **kwargs)
 
         expected_calls = [call.after_last_run_managed(mock_device, path),
+                          call.mock_device_managed.get_app_list(),
                           call.mock_device_managed.uninstall('com.test.app')]
         assert mock_manager.mock_calls == expected_calls
         assert native_experiment.package is None
@@ -1297,7 +1350,6 @@ class TestExperimentFactory(object):
         makedirs(paths.OUTPUT_DIR)
         tmp_file = tmpdir.join('tmp.txt')
         tmp_file.write('{"type":"regular"}')
-        config = OrderedDict([("type", "regular")])
 
         experiment = ExperimentFactory.from_json(str(tmp_file), None)
 
@@ -1306,5 +1358,23 @@ class TestExperimentFactory(object):
         mock_experiment.assert_called_once()
         assert isinstance(experiment, Experiment)
         assert isinstance(mock_experiment.mock_calls[0][1][1], Progress)
+        assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
+        assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
+
+    @patch('ExperimentRunner.Progress.Progress.__init__')
+    @patch('tests.PluginTests.PluginTests.__init__')
+    def test_from_json_plugintester_no_progres(self, mock_experiment, mock_progress, tmpdir):
+        mock_experiment.return_value = None
+        mock_progress.return_value = None
+        paths.OUTPUT_DIR = os.path.join(str(tmpdir), 'output')
+        makedirs(paths.OUTPUT_DIR)
+        tmp_file = tmpdir.join('tmp.txt')
+        tmp_file.write('{"type":"plugintest", "devices": {"nexus6p": {}}}')
+        config = OrderedDict([(u'type', u'plugintest'), (u'devices', OrderedDict([(u'nexus6p', OrderedDict())]))])
+        experiment = ExperimentFactory.from_json(str(tmp_file), None)
+
+        assert mock_progress.call_count == 0
+        mock_experiment.assert_called_once_with(config)
+        assert isinstance(experiment, PluginTests)
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)

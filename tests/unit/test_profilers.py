@@ -261,8 +261,8 @@ class TestPluginHandler(object):
 
         android_test_plugin_handler.set_output()
 
-        mock_profiler.set_output.assert_called_once_with(os.path.join(tmpdir, 'android1'))
-        assert os.path.isdir(os.path.join(tmpdir, 'android1'))
+        mock_profiler.set_output.assert_called_once_with(os.path.join(tmpdir, 'Android1'))
+        assert os.path.isdir(os.path.join(tmpdir, 'Android1'))
 
     def test_list_dir_empty(self, tmpdir, android_test_plugin_handler):
         tmpdir = os.path.join(str(tmpdir), 'test')
@@ -432,7 +432,7 @@ class TestPluginHandler(object):
 
     def test_aggregate_subject_default_native_experiment(self, android_test_plugin_handler, tmpdir):
         tmpdir = str(tmpdir)
-        paths_ends = ['device1/native1/android1', 'device1/native2/android1', 'device1/native3/android1']
+        paths_ends = ['device1/native1/Android1', 'device1/native2/Android1', 'device1/native3/Android1']
         created_paths = self.make_paths(tmpdir, paths_ends)
         mock_profiler = Mock()
         android_test_plugin_handler.currentProfiler = mock_profiler
@@ -447,8 +447,8 @@ class TestPluginHandler(object):
 
     def test_aggregate_subject_default_web_experiment(self, android_test_plugin_handler, tmpdir):
         tmpdir = str(tmpdir)
-        paths_ends = ['device1/subject1/browser1/android1', 'device1/subject2/browser1/android1',
-                      'device1/subject3/browser1/android1']
+        paths_ends = ['device1/subject1/browser1/Android1', 'device1/subject2/browser1/Android1',
+                      'device1/subject3/browser1/Android1']
         created_paths = self.make_paths(tmpdir, paths_ends)
 
         mock_profiler = Mock()
