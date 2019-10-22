@@ -951,7 +951,7 @@ class TestTrepnPlugin(object):
 
         trepn_plugin.collect_results(mock_device)
 
-        expected_calls = [call.device_managed.shell(r'ls /sdcard/trepn/ | grep "\.db"'),
+        expected_calls = [call.device_managed.shell(r'ls /sdcard/trepn/ | grep "\.db$"'),
                           call.device_managed.shell('am broadcast -a com.quicinc.trepn.export_to_csv '
                                                     '-e com.quicinc.trepn.export_db_input_file '
                                                     '"Trepn_2019.08.21_224812.db" '

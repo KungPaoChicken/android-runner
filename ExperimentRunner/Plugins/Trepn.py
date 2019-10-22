@@ -74,7 +74,7 @@ class Trepn(Profiler):
 
     def collect_results(self, device):
         # Gives the latest result
-        db = device.shell(r'ls %s | grep "\.db"' % Trepn.DEVICE_PATH).strip().splitlines()
+        db = device.shell(r'ls %s | grep "\.db$"' % Trepn.DEVICE_PATH).strip().splitlines()
         newest_db = db[len(db) - 1]
         csv_filename = '%s_%s.csv' % (device.id, op.splitext(newest_db)[0])
         if newest_db:

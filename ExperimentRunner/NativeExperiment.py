@@ -38,6 +38,7 @@ class NativeExperiment(Experiment):
     def before_run(self, device, path, run, *args, **kwargs):
         super(NativeExperiment, self).before_run(device, path, run)
         device.launch_package(self.package)
+        time.sleep(1)
         self.after_launch(device, path, run)
 
     def start_profiling(self, device, path, run, *args, **kwargs):
@@ -47,6 +48,7 @@ class NativeExperiment(Experiment):
     def after_run(self, device, path, run, *args, **kwargs):
         self.before_close(device, path, run)
         device.force_stop(self.package)
+        time.sleep(3)
         super(NativeExperiment, self).after_run(device, path, run)
 
     def after_last_run(self, device, path, *args, **kwargs):
