@@ -40,7 +40,6 @@ def connect(device_id):
 
 
 def shell_su(device_id, cmd):
-    print 'adb -s %s shell "su -c \'%s\'"' % (device_id, cmd)
     os.system('adb -s %s shell "su -c \'%s\'"' % (device_id, cmd))
 
 
