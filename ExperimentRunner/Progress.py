@@ -185,3 +185,11 @@ class Progress(object):
             return True
         else:
             return False
+
+    def experiment_started(self):
+        runs_done = self.progress_xml_content.find('runsDone')
+        count = len(runs_done.getchildren())
+        if count == 0:
+            return False
+        else:
+            return True

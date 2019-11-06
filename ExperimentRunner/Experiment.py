@@ -33,12 +33,15 @@ class Experiment(object):
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
         self.output_root = paths.OUTPUT_DIR
         self.result_file_structure = None
+        if self.progress.experiment_started():
+            for device in self.devices:
+                self.prepare_device(device, restart=True)
 
-    def prepare_device(self, device):
+    def prepare_device(self, device, restart=False):
         """Prepare the device for experiment"""
         self.logger.info('Device: %s' % device)
         self.profilers.load(device)
-        device.unplug()
+        device.unplug(restart)
 
     def cleanup(self, device):
         """Cleans up the changes on the devices"""

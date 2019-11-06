@@ -45,18 +45,30 @@ class Device:
         """Uninstalls the package on the device"""
         Adb.uninstall(self.id, name)
 
-    def su_unplug(self):
+    def su_unplug(self, restart):
         self.root_plug_value = Adb.shell(self.id, 'cat %s' % self.root_unplug_file)
         if 'su: not found' in self.root_plug_value:
             raise AdbError("%s %s: is not rooted" % (self.id, self.name))
         if 'No such file or directory' in self.root_plug_value:
             raise ConfigError('%s %s: the root unplug file seems to be invalid' % (self.id, self.name))
+        if restart:
+            self.check_plug_value()
         Adb.shell_su(self.id, 'echo %s > %s' % (self.root_unplug_value, self.root_unplug_file))
 
-    def unplug(self):
+    def check_plug_value(self):
+        if self.root_plug_value == self.root_unplug_value:
+            try:
+                self.root_plug_value = abs(self.root_plug_value - 1)
+            except TypeError:
+                if 'enabled' in self.root_plug_value:
+                    self.root_plug_value = 'disabled'
+                elif 'disabled' in self.root_plug_value:
+                    self.root_plug_value = 'enabled'
+
+    def unplug(self, restart):
         """Fakes the device to think it is unplugged, so the Doze mode can be activated"""
         if self.root_unplug:
-            self.su_unplug()
+            self.su_unplug(restart)
             self.logger.info('Root unpluged')
         else:
             self.logger.info('Default unplug')
@@ -70,6 +82,7 @@ class Device:
                 Adb.shell(self.id, 'dumpsys battery unplug')
 
     def su_plug(self):
+        self.logger.info('Root pluged')
         Adb.shell_su(self.id, 'echo %s > %s' % (self.root_plug_value, self.root_unplug_file))
 
     def plug(self):
