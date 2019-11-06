@@ -1,5 +1,6 @@
 import logging
 import os.path as op
+import os
 
 from pyand import ADB
 
@@ -36,6 +37,10 @@ def connect(device_id):
     logger.debug('Device list:\n%s' % device_list)
     if device_id not in device_list.values():
         raise ConnectionError('%s: Device can not connected' % device_id)
+
+
+def shell_su(device_id, cmd):
+    os.system('adb -s %s shell "su -c \'%s\'"' % (device_id, cmd))
 
 
 def shell(device_id, cmd):
