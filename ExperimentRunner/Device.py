@@ -47,7 +47,6 @@ class Device:
 
     def su_unplug(self):
         self.root_plug_value = Adb.shell(self.id, 'cat %s' % self.root_unplug_file)
-        print self.root_plug_value
         if 'su: not found' in self.root_plug_value:
             raise AdbError("%s %s: is not rooted" % (self.id, self.name))
         if 'No such file or directory' in self.root_plug_value:
