@@ -8,6 +8,7 @@ import time
 from collections import OrderedDict
 
 import BatterystatsParser
+from ExperimentRunner.BrowserFactory import BrowserFactory
 from Profiler import Profiler
 
 
@@ -27,6 +28,8 @@ class Batterystats(Profiler):
         self.systrace = config_file.get('systrace_path', 'systrace')
         self.powerprofile = config_file['powerprofile_path']
         self.duration = self.is_integer(config_file.get('duration', 0)) / 1000
+        if self.type == 'web':
+            self.browsers = [BrowserFactory.get_browser(b)(config_file) for b in config_file.get('browsers', ['chrome'])]
 
     # noinspection PyGlobalUndefined
     def start_profiling(self, device, **kwargs):
@@ -46,7 +49,7 @@ class Batterystats(Profiler):
             app = kwargs.get('app', None)
         # TODO: add support for other browsers, required form: app = 'package.name'
         elif self.type == 'web':
-            app = 'com.android.chrome'
+            app = self.browsers[0].to_string()
 
         # Create files on system
         systrace_file = op.join(self.output_dir,

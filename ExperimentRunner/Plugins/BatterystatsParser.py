@@ -1,7 +1,7 @@
-import datetime as dt
+from xml.dom import minidom
 import re
 import time as t
-from xml.dom import minidom
+import datetime as dt
 
 SECONDS_IN_MS = 1000.0
 SECONDS_IN_M = 60.0
@@ -63,6 +63,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
     with open(batterystats_file, 'r') as bs_file:
         voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
         app_pattern = re.compile(r'(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
+        print("Current app: "+str(format(app)))
         screen_pattern = re.compile(r'(0|\+\d.*ms).*([+-])screen')
         brightness_pattern = re.compile(r'(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
         wifi_pattern = re.compile(r'(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
@@ -74,7 +75,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
         bluetooth_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(bluetooth)')
         phone_scanning_pattern = re.compile(r'(0|\+\d.*ms).*([+-])(phone_scanning)')
         time_pattern = re.compile(r'(0|\+\d.*ms).*')
-
+#        t.sleep(10)
         f = bs_file.read()
         app_start_time = convert_to_s(re.findall(app_pattern, f)[0][0])
         app_end_time = convert_to_s(re.findall(app_pattern, f)[-1][0])
@@ -253,14 +254,13 @@ def parse_batterystats(app, batterystats_file, power_profile):
 
 def get_voltage(line):
     """ Obtain voltage value """
-    pattern = re.compile(r'volt=(\d+)')
+    pattern = re.compile('volt=(\d+)')
     match = pattern.search(line)
     return float(match.group(1)) / 1000.0
 
 
 def get_screen_intensity(brightness, power_profile):
     """ Calculate screen intensity """
-    screen_intensity = None
     intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(power_profile, 'screen.on')
     if brightness == 'dark':
         screen_intensity = get_amp_value(power_profile, 'screen.on')
@@ -441,14 +441,15 @@ def parse_logcat(app, logcat_file):
     with open(logcat_file, 'r') as f:
         logcat = f.read()
         app_start_pattern = re.compile(
-            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % app)
+            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % str(app))
+        print("App used for logcat: "+str(app))
         app_start_date = re.findall(app_start_pattern, logcat)[0][0]
         year = dt.datetime.now().year
         time_tuple = t.strptime('{}-{}'.format(year, app_start_date), '%Y-%m-%d %H:%M:%S')
         unix_start_time = int(t.mktime(time_tuple)) * 1000 + int(app_start_pattern.search(logcat).group(2))
 
         app_stop_pattern = re.compile(
-            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
+            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
         app_stop_date = re.findall(app_stop_pattern, logcat)[-1][0]
         time_tuple = t.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
         unix_end_time = int(t.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))
