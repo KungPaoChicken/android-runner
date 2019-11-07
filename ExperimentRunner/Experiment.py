@@ -15,7 +15,7 @@ from util import ConfigError, makedirs, slugify_dir
 
 # noinspection PyUnusedLocal
 class Experiment(object):
-    def __init__(self, config, progress):
+    def __init__(self, config, progress, restart):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.progress = progress
         self.basedir = None
@@ -33,7 +33,7 @@ class Experiment(object):
         Tests.check_dependencies(self.devices, self.profilers.dependencies())
         self.output_root = paths.OUTPUT_DIR
         self.result_file_structure = None
-        if self.progress.experiment_started():
+        if restart:
             for device in self.devices:
                 self.prepare_device(device, restart=True)
 

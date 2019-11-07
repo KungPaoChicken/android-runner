@@ -7,10 +7,10 @@ from util import ConfigError
 
 
 class NativeExperiment(Experiment):
-    def __init__(self, config, progress):
+    def __init__(self, config, progress, restart):
         self.package = None
         self.duration = Tests.is_integer(config.get('duration', 0)) / 1000
-        super(NativeExperiment, self).__init__(config, progress)
+        super(NativeExperiment, self).__init__(config, progress, restart)
         self.pre_installed_apps = config.get('apps', [])
         for apk in config.get('paths', []):
             if not op.isfile(apk):

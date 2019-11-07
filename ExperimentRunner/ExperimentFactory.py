@@ -28,9 +28,12 @@ class ExperimentFactory(object):
             return PluginTests(config)
         if progress is None:
             progress = Progress(config_file=path, config=config, load_progress=False)
-        if experiment_type == 'native':
-            return NativeExperiment(config, progress)
-        elif experiment_type == 'web':
-            return WebExperiment(config, progress)
+            restart = False
         else:
-            return Experiment(config, progress)
+            restart = True
+        if experiment_type == 'native':
+            return NativeExperiment(config, progress, restart)
+        elif experiment_type == 'web':
+            return WebExperiment(config, progress, restart)
+        else:
+            return Experiment(config, progress, restart)
