@@ -56,6 +56,11 @@ class Device:
         Adb.shell_su(self.id, 'echo %s > %s' % (self.root_unplug_value, self.root_unplug_file))
 
     def check_plug_value(self):
+        if isinstance(self.root_unplug_value, (int, long)):
+            try:
+                self.root_plug_value = int(self.root_plug_value)
+            except TypeError:
+                logging.info('Error setting root plug value, check manually after experiment if charging')
         if self.root_plug_value == self.root_unplug_value:
             try:
                 self.root_plug_value = abs(self.root_plug_value - 1)
