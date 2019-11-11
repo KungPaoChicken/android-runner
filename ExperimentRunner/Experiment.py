@@ -184,7 +184,7 @@ class Experiment(object):
     def before_run(self, device, path, run, *args, **kwargs):
         """Hook executed before a run"""
         self.profilers.set_output()
-        self.logger.info('Run %s of %s' % (run, self.replications))
+        self.logger.info('Run %s/%s of subject "%s" on %s' % (run, self.replications, path, device.name))
         device.shell('logcat -c')
         self.logger.info('Logcat cleared')
         self.scripts.run('before_run', device, *args, **kwargs)
