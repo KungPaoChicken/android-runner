@@ -104,17 +104,27 @@ class Progress(object):
 
     """Turn a <run> element and its childeren into a dictionary"""
 
-    @staticmethod
-    def run_to_dict(run_xml):
+    def run_to_dict(self, run_xml):
         run = dict()
         run['runId'] = run_xml.get('runId')
         run['device'] = run_xml.find('device').text
         run['path'] = run_xml.find('path').text
-        run['runCount'] = run_xml.find('runCount').text
+        run['runCount'] = self.get_run_count(run_xml, run['device'], run['path'])
         browser = run_xml.find('browser')
         if browser is not None:
             run['browser'] = run_xml.find('browser').text
         return run
+
+    def get_run_count(self, run_xml, device, path):
+        runs_done = self.progress_xml_content.find('runsDone')
+        browser_val = run_xml.find('browser')
+        if browser_val is not None:
+            browser_name = browser_val.text
+            query = "run[device='{}' and path='{}' and browser='{}']".format(device, path, browser_name)
+        else:
+            query = "run[device='{}' and path='{}']".format(device, path)
+        elements = runs_done.xpath(query)
+        return len(elements) + 1
 
     """Marks run as finished"""
 
