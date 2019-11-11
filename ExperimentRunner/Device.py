@@ -46,7 +46,7 @@ class Device:
         Adb.uninstall(self.id, name)
 
     def su_unplug(self, restart):
-        self.root_plug_value = Adb.shell(self.id, 'cat %s' % self.root_unplug_file)
+        self.root_plug_value = Adb.shell_su(self.id, 'cat %s' % self.root_unplug_file)
         if 'su: not found' in self.root_plug_value:
             raise AdbError("%s %s: is not rooted" % (self.id, self.name))
         if 'No such file or directory' in self.root_plug_value:
@@ -59,8 +59,8 @@ class Device:
         if isinstance(self.root_unplug_value, (int, long)):
             try:
                 self.root_plug_value = int(self.root_plug_value)
-            except TypeError:
-                logging.info('Error setting root plug value, check manually after experiment if charging')
+            except ValueError:
+                logging.info('Error setting root plug value, check manually after experiment if charging is enabled')
         if self.root_plug_value == self.root_unplug_value:
             try:
                 self.root_plug_value = abs(self.root_plug_value - 1)
