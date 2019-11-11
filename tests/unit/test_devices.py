@@ -108,17 +108,18 @@ class TestDevice(object):
     @patch('ExperimentRunner.Adb.shell')
     def test_unplug_api_lower_23_no_root(self, adb_shell, get_api_level, su_unplug, device):
         get_api_level.return_value = 22
-        device.unplug()
+        device.unplug(False)
 
         assert su_unplug.call_count == 0
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery set usb 0')
+
 
     @patch('ExperimentRunner.Device.Device.su_unplug')
     @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
     def test_unplug_api_higher_equal_23_no_root(self, adb_shell, get_api_level, su_unplug, device):
         get_api_level.return_value = 23
-        device.unplug()
+        device.unplug(False)
 
         assert su_unplug.call_count == 0
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery unplug')
@@ -128,54 +129,149 @@ class TestDevice(object):
     @patch('ExperimentRunner.Adb.shell')
     def test_unplug_api_lower_23_root(self, adb_shell, get_api_level, su_unplug, device_root):
         get_api_level.return_value = 22
-        device_root.unplug()
+        device_root.unplug(False)
 
-        su_unplug.assert_called_once()
-        adb_shell.assert_called_once_with(123456789, 'dumpsys battery set usb 0')
+        su_unplug.assert_called_once_with(False)
+        assert adb_shell.call_count == 0
+
+    @patch('ExperimentRunner.Device.Device.su_unplug')
+    @patch('ExperimentRunner.Device.Device.get_api_level')
+    @patch('ExperimentRunner.Adb.shell')
+    def test_unplug_api_lower_23_root_restart(self, adb_shell, get_api_level, su_unplug, device_root):
+        get_api_level.return_value = 22
+        device_root.unplug(True)
+
+        su_unplug.assert_called_once_with(True)
+        assert adb_shell.call_count == 0
 
     @patch('ExperimentRunner.Device.Device.su_unplug')
     @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
     def test_unplug_api_higher_equal_23_root(self, adb_shell, get_api_level, su_unplug, device_root):
         get_api_level.return_value = 23
-        device_root.unplug()
+        device_root.unplug(False)
 
-        su_unplug.assert_called_once()
-        adb_shell.assert_called_once_with(123456789, 'dumpsys battery unplug')
+        su_unplug.assert_called_once_with(False)
+        assert adb_shell.call_count == 0
 
+    @patch('ExperimentRunner.Device.Device.su_unplug')
+    @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
-    def test_su_unplug_no_error(self, adb_shell, device_root):
-        adb_shell.side_effect = ['', 'default_return', '']
+    def test_unplug_api_higher_equal_23_root_restart(self, adb_shell, get_api_level, su_unplug, device_root):
+        get_api_level.return_value = 23
+        device_root.unplug(True)
 
-        device_root.su_unplug()
+        su_unplug.assert_called_once_with(True)
+        assert adb_shell.call_count == 0
 
-        expected_calls = [call(device_root.id, 'su'),
-                          call(device_root.id, 'cat %s' % device_root.root_unplug_file),
+
+    @patch('ExperimentRunner.Device.Device.check_plug_value')
+    @patch('ExperimentRunner.Adb.shell_su')
+    def test_su_unplug_no_error(self, shell_su, check_plug_value, device_root):
+        shell_su.side_effect = ['default_return', '']
+
+        device_root.su_unplug(False)
+
+        expected_calls = [call(device_root.id, 'cat %s' % device_root.root_unplug_file),
                           call(device_root.id, 'echo %s > %s' %
                                (device_root.root_unplug_value, device_root.root_unplug_file))]
-        assert adb_shell.mock_calls == expected_calls
+        assert shell_su.mock_calls == expected_calls
         assert device_root.root_plug_value == 'default_return'
+        assert check_plug_value.call_count == 0
 
-    @patch('ExperimentRunner.Adb.shell')
-    def test_su_unplug_not_rooted(self, adb_shell, device_root):
-        adb_shell.side_effect = ['su: not found', 'default_return', 'No such file or directory']
+    @patch('ExperimentRunner.Device.Device.check_plug_value')
+    @patch('ExperimentRunner.Adb.shell_su')
+    def test_su_unplug_not_rooted(self, shell_su, check_plug_value, device_root):
+        shell_su.side_effect = ['su: not found', 'default_return', 'No such file or directory']
         with pytest.raises(Adb.AdbError):
-            device_root.su_unplug()
+            device_root.su_unplug(False)
 
-        expected_calls = [call(device_root.id, 'su')]
-        assert adb_shell.mock_calls == expected_calls
-        assert device_root.root_plug_value is None
+        expected_calls = [call(device_root.id, 'cat test/file')]
+        assert shell_su.mock_calls == expected_calls
+        assert device_root.root_plug_value == 'su: not found'
+        assert check_plug_value.call_count == 0
 
-    @patch('ExperimentRunner.Adb.shell')
-    def test_su_unplug_invalid_root_unplug_file(self, adb_shell, device_root):
-        adb_shell.side_effect = ['', 'No such file or directory', '']
+    @patch('ExperimentRunner.Device.Device.check_plug_value')
+    @patch('ExperimentRunner.Adb.shell_su')
+    def test_su_unplug_invalid_root_unplug_file(self, adb_shell, check_plug_value, device_root):
+        adb_shell.side_effect = ['No such file or directory', '']
         with pytest.raises(ConfigError):
-            device_root.su_unplug()
+            device_root.su_unplug(False)
 
-        expected_calls = [call(device_root.id, 'su'),
-                          call(device_root.id, 'cat %s' % device_root.root_unplug_file)]
+        expected_calls = [call(device_root.id, 'cat %s' % device_root.root_unplug_file)]
         assert adb_shell.mock_calls == expected_calls
         assert device_root.root_plug_value == 'No such file or directory'
+        assert check_plug_value.call_count == 0
+
+    @patch('ExperimentRunner.Device.Device.check_plug_value')
+    @patch('ExperimentRunner.Adb.shell_su')
+    def test_su_unplug_restart(self, shell_su, check_plug_value, device_root):
+        shell_su.side_effect = ['default_return', '']
+
+        device_root.su_unplug(True)
+
+        expected_calls = [call(device_root.id, 'cat %s' % device_root.root_unplug_file),
+                          call(device_root.id, 'echo %s > %s' %
+                               (device_root.root_unplug_value, device_root.root_unplug_file))]
+        assert shell_su.mock_calls == expected_calls
+        assert device_root.root_plug_value == 'default_return'
+        check_plug_value.assert_called_once()
+
+    def test_check_plug_value_no_action(self, device_root):
+        device_root.root_plug_value = 'enabled'
+        device_root.root_unplug_value = 'disabled'
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 'enabled'
+        assert device_root.root_unplug_value == 'disabled'
+
+    def test_check_plug_value_unplug_plug_int_no_match(self, device_root):
+        device_root.root_plug_value = 1
+        device_root.root_unplug_value = 0
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 1
+        assert device_root.root_unplug_value == 0
+
+    @patch('logging.Logger.info')
+    def test_check_plug_value_unplug_int_plug_string_no_match(self, logger, device_root):
+        device_root.root_plug_value = 'enabled'
+        device_root.root_unplug_value = 0
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 'enabled'
+        assert device_root.root_unplug_value == 0
+        logger.assert_called_once_with('Error setting root plug value, check manually after experiment if charging is enabled')
+
+    def test_check_plug_value_same_plug_unplug_int(self, device_root):
+        device_root.root_plug_value = 0
+        device_root.root_unplug_value = 0
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 1
+        assert device_root.root_unplug_value == 0
+
+    def test_check_plug_value_same_plug_unplug_string_set_enabled(self, device_root):
+        device_root.root_plug_value = 'disabled'
+        device_root.root_unplug_value = 'disabled'
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 'enabled'
+        assert device_root.root_unplug_value == 'disabled'
+
+    def test_check_plug_value_same_plug_unplug_string_set_disabled(self, device_root):
+        device_root.root_plug_value = 'enabled'
+        device_root.root_unplug_value = 'enabled'
+
+        device_root.check_plug_value()
+
+        assert device_root.root_plug_value == 'disabled'
+        assert device_root.root_unplug_value == 'enabled'
 
     @patch('ExperimentRunner.Device.Device.su_plug')
     @patch('ExperimentRunner.Adb.shell')
@@ -193,16 +289,13 @@ class TestDevice(object):
         su_plug.assert_called_once()
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery reset')
 
-    @patch('ExperimentRunner.Adb.shell')
-    def test_su_plug(self, adb_shell, device_root):
+    @patch('ExperimentRunner.Adb.shell_su')
+    def test_su_plug(self, adb_shell_su, device_root):
         device_root.root_plug_value = '123456'
 
         device_root.su_plug()
 
-        expected_calls = [call(device_root.id, 'su'),
-                          call(device_root.id, 'echo %s > %s' %
-                               (device_root.root_plug_value, device_root.root_unplug_file))]
-        assert adb_shell.mock_calls == expected_calls
+        adb_shell_su.assert_called_once_with(123456789, 'echo 123456 > test/file')
 
     @patch('ExperimentRunner.Adb.shell')
     def test_current_activity_current_focus(self, adb_shell, device):
@@ -555,6 +648,27 @@ class TestAdb(object):
             Adb.shell(123, "test_command")
 
         expected_calls = [call.set_target_by_name(123), call.shell_command('test_command')]
+        assert mock_adb.mock_calls == expected_calls
+
+    def test_shell_su_succes(self):
+        mock_adb = Mock()
+        mock_adb.shell_command.return_value = "su_succes         "
+        Adb.adb = mock_adb
+        result = Adb.shell_su(123, "test_command_su")
+
+        expected_calls = [call.set_target_by_name(123), call.shell_command('su -c \'test_command_su\'')]
+        assert mock_adb.mock_calls == expected_calls
+        assert result == 'su_succes'
+
+    def test_shell_su_error(self):
+        mock_adb = Mock()
+        mock_adb.shell_command.return_value = "su_error"
+        Adb.adb = mock_adb
+
+        with pytest.raises(Adb.AdbError):
+            Adb.shell_su(123, "test_command_su")
+
+        expected_calls = [call.set_target_by_name(123), call.shell_command('su -c \'test_command_su\'')]
         assert mock_adb.mock_calls == expected_calls
 
     @patch('ExperimentRunner.Adb.shell')

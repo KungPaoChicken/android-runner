@@ -42,20 +42,21 @@ class TestExperiment(object):
         paths.OUTPUT_DIR = 'fake/path/name'
         device_config = {'devices': 'fake_device'}
         mock_devices.return_value = None
-        return Experiment(device_config, None)
+        return Experiment(device_config, None, False)
 
     def test_init_empty_config(self):
         empty_config = {}
         with pytest.raises(ConfigError):
-            Experiment(empty_config, None)
+            Experiment(empty_config, None, False)
 
+    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
     @patch('ExperimentRunner.Tests.check_dependencies')
     @patch('ExperimentRunner.Devices.Devices.__init__')
-    def test_init_only_device_config(self, mock_devices, mock_test):
+    def test_init_only_device_config_no_restart(self, mock_devices, mock_test, mock_prepare):
         paths.OUTPUT_DIR = 'fake/path/name'
         device_config = {'devices': 'fake_device'}
         mock_devices.return_value = None
-        experiment = Experiment(device_config, None)
+        experiment = Experiment(device_config, None, False)
 
         assert experiment.progress is None
         assert experiment.basedir is None
@@ -68,12 +69,41 @@ class TestExperiment(object):
         assert experiment.time_between_run == 0
         assert experiment.output_root == paths.OUTPUT_DIR
         assert experiment.result_file_structure is None
+        assert mock_prepare.call_count == 0
 
+    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
+    @patch('ExperimentRunner.Tests.check_dependencies')
+    @patch('ExperimentRunner.Devices.Devices.__iter__')
+    @patch('ExperimentRunner.Devices.Devices.__init__')
+    def test_init_only_device_config_restart(self, mock_devices, mock_devices_itter, mock_test, mock_prepare):
+        paths.OUTPUT_DIR = 'fake/path/name'
+        device_config = {'devices': 'fake_device'}
+        mock_devices_itter.return_value = ['dev1', 'dev2', 'dev3'].__iter__()
+        mock_devices.return_value = None
+        experiment = Experiment(device_config, None, True)
+
+        assert experiment.progress is None
+        assert experiment.basedir is None
+        assert experiment.random is False
+        assert isinstance(experiment.devices, Devices)
+        assert experiment.replications == 1
+        assert experiment.paths == []
+        assert isinstance(experiment.profilers, Profilers)
+        assert isinstance(experiment.scripts, Scripts)
+        assert experiment.time_between_run == 0
+        assert experiment.output_root == paths.OUTPUT_DIR
+        assert experiment.result_file_structure is None
+        assert mock_prepare.call_count == 3
+        assert mock_prepare.mock_calls[0] == call('dev1', restart=True)
+        assert mock_prepare.mock_calls[1] == call('dev2', restart=True)
+        assert mock_prepare.mock_calls[2] == call('dev3', restart=True)
+
+    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
     @patch('ExperimentRunner.Scripts.Scripts.__init__')
     @patch('ExperimentRunner.Experiment.Profilers')
     @patch('ExperimentRunner.Tests.check_dependencies')
     @patch('ExperimentRunner.Devices.Devices.__init__')
-    def test_init_full_config(self, mock_devices, mock_test, mock_profilers, mock_scripts, test_config):
+    def test_init_full_config_no_restart(self, mock_devices, mock_test, mock_profilers, mock_scripts, mock_prepare, test_config):
         paths.OUTPUT_DIR = 'fake/path/name'
         mock_devices.return_value = None
         profiler_instance = MagicMock()
@@ -81,7 +111,7 @@ class TestExperiment(object):
         mock_profilers.return_value = profiler_instance
         mock_scripts.return_value = None
         mock_progress = Mock()
-        experiment = Experiment(test_config, mock_progress)
+        experiment = Experiment(test_config, mock_progress, False)
 
         assert experiment.progress == mock_progress
         assert experiment.basedir is None
@@ -98,6 +128,7 @@ class TestExperiment(object):
         mock_profilers.assert_called_once_with({'fake': {'config1': 1, 'config2': 2}})
         mock_scripts.assert_called_once_with({'script1': 'path/to/1'}, monkeyrunner_path='monkey_path')
         mock_test.assert_called_once_with(experiment.devices, [])
+        assert mock_prepare.call_count == 0
 
     def test_prepare_device(self, default_experiment):
         mock_profilers = Mock()
@@ -109,7 +140,7 @@ class TestExperiment(object):
 
         default_experiment.prepare_device(fake_device)
 
-        expected_calls = [call.mock_profilers.load(fake_device), call.fake_device.unplug()]
+        expected_calls = [call.mock_profilers.load(fake_device), call.fake_device.unplug(False)]
         assert mock_manager.mock_calls == expected_calls
 
     def test_cleanup(self, default_experiment):
@@ -791,7 +822,7 @@ class TestWebExperiment(object):
     def web_experiment(self, device, check_dependencies):
         device.return_value = None
         device_config = {'devices': 'fake_device'}
-        return WebExperiment(device_config, None)
+        return WebExperiment(device_config, None, False)
 
     @patch('ExperimentRunner.BrowserFactory.BrowserFactory.get_browser')
     @patch('ExperimentRunner.Tests.check_dependencies')
@@ -802,7 +833,7 @@ class TestWebExperiment(object):
 
         device.return_value = None
         device_config = {'devices': 'fake_device'}
-        web_experiment = WebExperiment(device_config, None)
+        web_experiment = WebExperiment(device_config, None, False)
 
         assert check_dependencies.call_count == 2
         assert web_experiment.duration == 0
@@ -815,7 +846,7 @@ class TestWebExperiment(object):
     def test_init_nom_empty_config(self, device, check_dependencies, get_browser):
         device.return_value = None
         device_config = {'devices': 'fake_device', 'browsers': ['firefox', 'opera'], 'duration': 1000}
-        web_experiment = WebExperiment(device_config, None)
+        web_experiment = WebExperiment(device_config, None, False)
 
         assert check_dependencies.call_count == 2
         assert web_experiment.duration == 1
@@ -1033,14 +1064,14 @@ class TestNativeExperiment(object):
     def native_experiment(self, device, check_dependencies):
         device.return_value = None
         device_config = {'devices': 'fake_device'}
-        return NativeExperiment(device_config, None)
+        return NativeExperiment(device_config, None, False)
 
     @patch('os.path.isfile')
     @patch('ExperimentRunner.Experiment.Experiment.__init__')
     def test_init_empty_config(self, experiment, isfile):
-        native_experiment = NativeExperiment({}, None)
+        native_experiment = NativeExperiment({}, None, False)
 
-        experiment.assert_called_once_with({}, None)
+        experiment.assert_called_once_with({}, None, False)
         assert native_experiment.duration == 0
         assert isfile.call_count == 0
 
@@ -1051,9 +1082,9 @@ class TestNativeExperiment(object):
         config = {'paths': test_paths, 'duration': 1000}
         isfile.return_value = True
 
-        native_experiment = NativeExperiment(config, None)
+        native_experiment = NativeExperiment(config, None, False)
 
-        experiment.assert_called_once_with(config, None)
+        experiment.assert_called_once_with(config, None, False)
         assert native_experiment.duration == 1
         assert isfile.call_count == 3
         isfile.has_calls([call(test_paths[0]), call(test_paths[1]), call(test_paths[2])])
@@ -1065,9 +1096,9 @@ class TestNativeExperiment(object):
         config = {'paths': test_paths}
         isfile.return_value = False
         with pytest.raises(ConfigError):
-            NativeExperiment(config, None)
+            NativeExperiment(config, None, False)
 
-        experiment.assert_called_once_with(config, None)
+        experiment.assert_called_once_with(config, None, False)
         isfile.assert_called_once_with(test_paths[0])
 
     @patch('ExperimentRunner.Experiment.Experiment.cleanup')
@@ -1300,7 +1331,7 @@ class TestExperimentFactory(object):
         experiment = ExperimentFactory.from_json(str(tmp_file), mock_progress)
 
         assert isinstance(experiment, NativeExperiment)
-        native_experiment.assert_called_once_with({'type': 'native'}, mock_progress)
+        native_experiment.assert_called_once_with({'type': 'native'}, mock_progress, True)
         assert progress_init.call_count == 0
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
@@ -1318,7 +1349,7 @@ class TestExperimentFactory(object):
         experiment = ExperimentFactory.from_json(str(tmp_file), mock_progress)
 
         assert isinstance(experiment, WebExperiment)
-        web_experiment.assert_called_once_with({'type': 'web'}, mock_progress)
+        web_experiment.assert_called_once_with({'type': 'web'}, mock_progress, True)
         assert progress_init.call_count == 0
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
@@ -1336,7 +1367,7 @@ class TestExperimentFactory(object):
         experiment = ExperimentFactory.from_json(str(tmp_file), mock_progress)
 
         assert isinstance(experiment, Experiment)
-        mock_experiment.assert_called_once_with({'type': 'regular'}, mock_progress)
+        mock_experiment.assert_called_once_with({'type': 'regular'}, mock_progress, True)
         assert progress_init.call_count == 0
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)

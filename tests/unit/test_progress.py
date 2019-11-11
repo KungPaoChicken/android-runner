@@ -105,19 +105,19 @@ class TestProgressMethods(object):
             return False
         return all(self.elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
-    def test_ordered_next(self, current_progress):
-        ids = list()
+    @patch('ExperimentRunner.Progress.Progress.run_to_dict')
+    def test_ordered_next(self, run_to_dict, current_progress):
+        run_to_dict.return_value = 0
         for _ in range(50):
-            ids.append(int(current_progress.get_next_run()['runId']))
-        unique_values = len(set(ids))
-        assert ids.pop() == 0
+            current_progress.get_next_run()
+        unique_values = len(set(str(run_to_dict.mock_calls).replace('[','').replace(']','').replace('\n','').split(', ')))
         assert unique_values == 1
 
-    def test_random_next(self, current_progress):
-        ids = list()
+    @patch('ExperimentRunner.Progress.Progress.run_to_dict')
+    def test_random_next(self, run_to_dict, current_progress):
         for _ in range(50):
-            ids.append(int(current_progress.get_random_run()['runId']))
-        unique_values = len(set(ids))
+            current_progress.get_random_run()
+        unique_values = len(set(str(run_to_dict.mock_calls).replace('[','').replace(']','').replace('\n','').split(', ')))
         assert unique_values > 1
 
     def test_get_progress_xml_file(self, current_progress, test_progress):
@@ -170,10 +170,12 @@ class TestProgressMethods(object):
         file_to_hash_mock.return_value = current_progress.progress_xml_content.find('configHash').text
         current_progress.check_config_hash(current_progress.get_progress_xml_file())
 
-    def test_run_to_dict(self, current_progress):
+    @patch('ExperimentRunner.Progress.Progress.get_run_count')
+    def test_run_to_dict(self, get_run_count, current_progress):
+        get_run_count.return_value = 1459
         run_dict = current_progress.run_to_dict(et.fromstring('<run runId="0"><device>device</device><path>path</path>'
                                                               '<browser>browser</browser><runCount>1</runCount></run>'))
-        expected_dict = {'runId': '0', 'device': 'device', 'path': 'path', 'browser': 'browser', 'runCount': '1'}
+        expected_dict = {'runId': '0', 'device': 'device', 'path': 'path', 'browser': 'browser', 'runCount': 1459}
         assert run_dict == expected_dict
 
     def test_build_subject_xml_web(self, current_progress):
@@ -339,3 +341,29 @@ class TestProgressMethods(object):
     def test_device_finished_true(self, current_progress):
         device_finished = current_progress.device_finished('device1')
         assert device_finished is True
+
+    def test_get_run_count_web(self, current_progress):
+        device = 'nexus6p'
+        path = 'https://google.com/'
+        run_xml = et.fromstring('<run runId="0"><device>nexus6p</device>'
+                      '<path>https://google.com/</path>'
+                      '<browser>firefox</browser>'
+                      '</run>')
+        assert current_progress.get_run_count(run_xml, device, path) == 1
+
+        for _ in range(2):
+            run = current_progress.get_next_run()
+            current_progress.run_finished(run['runId'])
+
+        assert current_progress.get_run_count(run_xml, device, path) == 3
+
+    def test_get_run_count_native(self, current_progress):
+        device = 'nexus6p'
+        path = 'https://google.com/'
+        run_xml = et.fromstring('<run runId="0"><device>nexus6p</device>'
+                      '<path>https://google.com/</path>'
+                      '</run>')
+        assert current_progress.get_run_count(run_xml, device, path) == 1
+        run = current_progress.get_next_run()
+        current_progress.run_finished(run['runId'])
+        assert current_progress.get_run_count(run_xml, device, path) == 2
