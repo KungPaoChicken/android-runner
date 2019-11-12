@@ -87,6 +87,12 @@ A JSON object to describe the devices to be used and their arguments. Below are 
 ```
 Note that the last two examples result in the same behaviour.
 
+**WARNING:** Always check the battery settings of the device for the charging status of the device after using root disable charging.
+If the device isn't charging after the experiment is finished, reset the charging file yourself via ADB SU command line using:
+```shell
+adb su -c 'echo <charging enabled value> > <usb_charging_disabled_file>'
+```
+
 **paths** *Array\<String\>*
 The paths to the APKs/URLs to test with. In case of the APKs, the path on the local file system.
 
