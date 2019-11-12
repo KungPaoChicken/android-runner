@@ -87,7 +87,7 @@ class Device:
                 Adb.shell(self.id, 'dumpsys battery unplug')
 
     def su_plug(self):
-        self.logger.info('Root pluged')
+        self.logger.info('Root pluged, please check if device is charging')
         Adb.shell_su(self.id, 'echo %s > %s' % (self.root_plug_value, self.root_unplug_file))
 
     def plug(self):
