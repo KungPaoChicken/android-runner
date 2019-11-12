@@ -4,7 +4,7 @@
 	"nexus6p": {
         "root_disable_charging": "True",
         "charging_disabled_value": 0,
-        "usb_charging_disabled_file": "/sys/class/power_supply/usb/device/charge"
+        "usb_charging_disabled_file": "sys/class/power_supply/battery/charging_enabled"
     }
    },
   "replications": 1,

@@ -8,10 +8,12 @@
     "com.experimental.rvs960.ioapp"
   ],
   "profilers": {
-     "trepn": {
-      "sample_interval": 200,
-      "data_points": ["battery_power"]
-     }
+    "android": {
+      "subject_aggregation" : "default",
+      "experiment_aggregation" : "default",
+      "sample_interval": 0,
+      "data_points": ["cpu", "mem"]
+    }
  },
   "scripts": {
     "before_experiment": "Scripts/before_experiment.py",
