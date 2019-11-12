@@ -1,4 +1,4 @@
-# Android Task runner
+# Android Runner
 Automated experiment execution on Android devices
 
 ## Install

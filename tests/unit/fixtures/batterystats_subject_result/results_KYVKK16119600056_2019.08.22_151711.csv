@@ -1,0 +1,11 @@
+Start Time (Seconds),End Time (Seconds),Duration (Seconds),Component,Energy Consumption (Joule)
+0,67.308,67.308,screen bright,62.5097742192
+0,67.308,67.308,wifi running,0.93351080592
+0.0,6.302085,6.302085,core 0 cpu_idle start,0.0968094787275
+0.0,6.301983,6.301983,core 1 cpu_idle start,0.0968079118545
+0.0,6.380619,6.380619,core 2 cpu_idle start,0.0980158787685
+0.0,6.302614,6.302614,core 3 cpu_idle start,0.096817604961
+0.0,7.513179,7.513179,core 4 cpu_idle start,0.115413699208
+0.0,7.513943,7.513943,core 5 cpu_idle start,0.115425435394
+0.0,7.946135,7.946135,core 6 cpu_idle start,0.122064552803
+0.0,7.946098,7.946098,core 7 cpu_idle start,0.122063984427

@@ -1,3 +1,4 @@
+# noinspection PyMethodMayBeStatic,PyMethodMayBeStatic,PyMethodMayBeStatic
 class FakeDevice(object):
     def __init__(self, device_id):
         self.id = device_id

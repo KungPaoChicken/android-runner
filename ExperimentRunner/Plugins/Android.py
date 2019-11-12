@@ -1,11 +1,11 @@
-import csv
-import os
 import os.path as op
-import threading
+import os
 import time
 import timeit
-from collections import OrderedDict
+import threading
+import csv
 
+from collections import OrderedDict
 from Profiler import Profiler
 
 
@@ -28,19 +28,12 @@ class Android(Profiler):
         self.data_points = [dp for dp in config['data_points'] if dp in set(available_data_points)]
         self.data = [['datetime'] + self.data_points]
 
-    @staticmethod
-    def get_cpu_usage(device):
+    def get_cpu_usage(self, device):
         """Get CPU usage in percentage"""
         # return device.shell('dumpsys cpuinfo | grep TOTAL | cut -d" " -f1').strip()[:-1]
-        shell_result = device.shell('dumpsys cpuinfo | grep TOTAL')
-        shell_splitted = shell_result.split('%')[0]
-        if '.-' in shell_splitted:
-            shell_splitted = shell_splitted.replace('.-', '.')
-        return shell_splitted
-        # return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
+        return device.shell('dumpsys cpuinfo | grep TOTAL').split('%')[0]
 
-    @staticmethod
-    def get_mem_usage(device, app):
+    def get_mem_usage(self, device, app):
         """Get memory usage in KB for app, if app is None system usage is used"""
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
@@ -71,14 +64,14 @@ class Android(Profiler):
         self.data.append(row)
         end = timeit.default_timer()
         # timer results could be negative
-        interval = max(float(0), self.interval - max(0, int(end - start)))
+        interval = max(float(0), self.interval - max(0, end - start))
         if self.profile:
             threading.Timer(interval, self.get_data, args=(device, app)).start()
 
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
-    def collect_results(self, device):
+    def collect_results(self, device, path=None):
         filename = '{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         with open(op.join(self.output_dir, filename), 'w+') as f:
             writer = csv.writer(f)
@@ -107,8 +100,7 @@ class Android(Profiler):
         rows = self.aggregate_final(data_dir)
         self.write_to_file(output_file, rows)
 
-    @staticmethod
-    def aggregate_android_subject(logs_dir):
+    def aggregate_android_subject(self, logs_dir):
         def add_row(accum, new):
             row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
             count = accum['count'] + 1
@@ -133,7 +125,7 @@ class Android(Profiler):
             for subject in self.list_subdir(device_dir):
                 row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
-                if os.path.isdir(os.path.join(subject_dir, 'android')):
+                if os.path.isdir(os.path.join(subject_dir,'android')):
                     row.update(self.aggregate_android_final(os.path.join(subject_dir, 'android')))
                     rows.append(row.copy())
                 else:
@@ -145,8 +137,7 @@ class Android(Profiler):
                             rows.append(row.copy())
         return rows
 
-    @staticmethod
-    def aggregate_android_final(logs_dir):
+    def aggregate_android_final(self, logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
                 with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
@@ -157,22 +148,19 @@ class Android(Profiler):
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
 
-    @staticmethod
-    def list_subdir(a_dir):
+    def list_subdir(self, a_dir):
         """List immediate subdirectories of a_dir"""
         # https://stackoverflow.com/a/800201
         return [name for name in os.listdir(a_dir)
                 if os.path.isdir(os.path.join(a_dir, name))]
 
-    @staticmethod
-    def write_to_file(filename, rows):
+    def write_to_file(self, filename, rows):
         with open(filename, 'w') as f:
             writer = csv.DictWriter(f, rows[0].keys())
             writer.writeheader()
             writer.writerows(rows)
 
-    @staticmethod
-    def is_integer(number, minimum=0):
+    def is_integer(self, number, minimum=0):
         if not isinstance(number, (int, long)):
             raise ConfigError('%s is not an integer' % number)
         if number < minimum:
