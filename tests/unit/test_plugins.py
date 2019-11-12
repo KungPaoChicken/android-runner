@@ -501,6 +501,7 @@ class TestBatterystatsPlugin(object):
     @patch('time.strftime')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     def test_pull_logcat(self, get_data_mock, time_mock, batterystats_plugin, mock_device, tmpdir, capsys):
+        get_data_mock.return_value = None
         # set global variables
         mock_device.id = '123'
         batterystats_plugin.type = 'web'
@@ -570,6 +571,7 @@ class TestBatterystatsPlugin(object):
     @patch('os.remove')
     def test_cleanup_logs_true(self, os_remove_mock, get_data_mock, time_mock, batterystats_plugin, mock_device, tmpdir,
                                capsys):
+        get_data_mock.return_value = None
         batterystats_plugin.cleanup = True
         # set global variables
         mock_device.id = '123'
@@ -653,6 +655,7 @@ class TestBatterystatsPlugin(object):
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     @patch('time.strftime')
     def test_write_results(self, time_mock, get_data, batterystats_plugin, mock_device, tmpdir, capsys):
+        get_data.return_value = None
         mock_device.id = '123'
         mock_device.shell.return_value = 8
         batterystats_plugin.type = 'web'
@@ -853,6 +856,8 @@ class TestTrepnPlugin(object):
     @patch('ExperimentRunner.Plugins.Trepn.Trepn.build_preferences')
     @patch('ExperimentRunner.Plugins.Profiler.__init__')
     def trepn_plugin(self, super_mock, build_preferences_mock):
+        super_mock.return_value = None
+        build_preferences_mock.return_value = None
         config_mock = Mock()
         test_paths = paths.paths_dict()
         return Trepn(config_mock, test_paths)

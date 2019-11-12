@@ -254,7 +254,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
 
 def get_voltage(line):
     """ Obtain voltage value """
-    pattern = re.compile('volt=(\d+)')
+    pattern = re.compile(r'volt=(\d+)')
     match = pattern.search(line)
     return float(match.group(1)) / 1000.0
 
@@ -262,6 +262,7 @@ def get_voltage(line):
 def get_screen_intensity(brightness, power_profile):
     """ Calculate screen intensity """
     intensity_range = get_amp_value(power_profile, 'screen.full') - get_amp_value(power_profile, 'screen.on')
+    screen_intensity = None
     if brightness == 'dark':
         screen_intensity = get_amp_value(power_profile, 'screen.on')
     elif brightness == 'dim':
@@ -441,7 +442,7 @@ def parse_logcat(app, logcat_file):
     with open(logcat_file, 'r') as f:
         logcat = f.read()
         app_start_pattern = re.compile(
-            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % str(app))
+            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % str(app))
         print("App used for logcat: "+str(app))
         app_start_date = re.findall(app_start_pattern, logcat)[0][0]
         year = dt.datetime.now().year
@@ -449,7 +450,7 @@ def parse_logcat(app, logcat_file):
         unix_start_time = int(t.mktime(time_tuple)) * 1000 + int(app_start_pattern.search(logcat).group(2))
 
         app_stop_pattern = re.compile(
-            '(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
+            r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sForce\sstopping\s(%s)' % app)
         app_stop_date = re.findall(app_stop_pattern, logcat)[-1][0]
         time_tuple = t.strptime('{}-{}'.format(year, app_stop_date), '%Y-%m-%d %H:%M:%S')
         unix_end_time = int(t.mktime(time_tuple)) * 1000 + int(app_stop_pattern.search(logcat).group(2))

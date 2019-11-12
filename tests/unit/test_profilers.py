@@ -184,7 +184,7 @@ class TestPluginHandler(object):
         make_plugin_source_mock.return_value = mock_plugin_source
 
         android_config = load_json(os.path.join(fixture_dir, 'test_config.json'))['profilers']['android']
-        plugin_handler = PluginHandler('Android', android_config)
+        PluginHandler('Android', android_config)
         plugin_base_init_mock.assert_called_once()
         make_plugin_source_mock.assert_called_once_with(
             searchpath=[os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins')])

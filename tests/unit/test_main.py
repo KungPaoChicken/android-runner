@@ -136,6 +136,7 @@ class TestRunnerMain(object):
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_exception(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
+        setup_paths_mock.return_value = None
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
         from_json_mock.side_effect = Exception()
@@ -159,6 +160,7 @@ class TestRunnerMain(object):
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_interrupt(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
+        setup_paths_mock.return_value = None
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
         from_json_mock.side_effect = KeyboardInterrupt
@@ -184,6 +186,7 @@ class TestRunnerMain(object):
     @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_succes(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                          parse_arguments_mock, tmpdir):
+        setup_paths_mock.return_value = None
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
         open(temp_progress_file, "w+")
         mock_experiment = Mock()

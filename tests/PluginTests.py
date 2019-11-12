@@ -40,7 +40,7 @@ class PluginTests(object):
         for name, params in self.config.get('profilers', {}).items():
             try:
                 self.profilers.append(PluginHandler(name, params))
-            except Exception as e:
+            except Exception:
                 self.errors.append('Profiler {}: Initializing profiler resulted in the following error:\n{}'.
                                    format(name, traceback.format_exc()))
 
@@ -91,7 +91,7 @@ class PluginTests(object):
                                    format(profiler_name, current_method))
         except NotImplementedError:
             self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, current_method))
-        except Exception as e:
+        except Exception:
             self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
                                .format(profiler_name, current_method, traceback.format_exc()))
 
@@ -102,7 +102,7 @@ class PluginTests(object):
             self.check_dependencies(method_result, profiler_name)
         except NotImplementedError:
             self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
+        except Exception:
             self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
                                .format(profiler_name, method, traceback.format_exc()))
 

@@ -1,6 +1,5 @@
 import logging
 import os.path as op
-import os
 
 from pyand import ADB
 
@@ -43,7 +42,7 @@ def shell_su(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command("su -c \'%s\'" % cmd)
     logger.debug('%s: "su -c \'%s\'" returned: \n%s' % (device_id, cmd, result))
-    if 'error'  in result:
+    if 'error' in result:
         raise AdbError(result)
     return result.rstrip()
 
@@ -52,7 +51,7 @@ def shell(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command(cmd)
     logger.debug('%s: "%s" returned: \n%s' % (device_id, cmd, result))
-    if 'error'  in result:
+    if 'error' in result:
         raise AdbError(result)
     return result.rstrip()
 

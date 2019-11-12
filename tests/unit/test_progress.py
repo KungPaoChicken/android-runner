@@ -44,6 +44,7 @@ class TestProgressSetup(object):
 
     @patch('ExperimentRunner.Progress.Progress.check_config_hash')
     def test_progress_init_resume(self, check_hash_mock, tmp_path, test_config, test_progress):
+        check_hash_mock.return_value = None
         progress = Progress(config_file=test_config, progress_file=test_progress, load_progress=True)
         with open(test_progress, 'r') as f:
             expected_xml = f.read()
@@ -110,14 +111,16 @@ class TestProgressMethods(object):
         run_to_dict.return_value = 0
         for _ in range(50):
             current_progress.get_next_run()
-        unique_values = len(set(str(run_to_dict.mock_calls).replace('[','').replace(']','').replace('\n','').split(', ')))
+        unique_values = len(set(str(run_to_dict.mock_calls).
+                                replace('[', '').replace(']', '').replace('\n', '').split(', ')))
         assert unique_values == 1
 
     @patch('ExperimentRunner.Progress.Progress.run_to_dict')
     def test_random_next(self, run_to_dict, current_progress):
         for _ in range(50):
             current_progress.get_random_run()
-        unique_values = len(set(str(run_to_dict.mock_calls).replace('[','').replace(']','').replace('\n','').split(', ')))
+        unique_values = len(set(str(run_to_dict.mock_calls).
+                                replace('[', '').replace(']', '').replace('\n', '').split(', ')))
         assert unique_values > 1
 
     def test_get_progress_xml_file(self, current_progress, test_progress):
@@ -162,7 +165,7 @@ class TestProgressMethods(object):
             current_progress.check_config_hash(test_progress)
 
         # Prevent output during testing
-        out, err = capsys.readouterr()
+        capsys.readouterr()
         assert wrapper_result.type == SystemExit
 
     @patch('ExperimentRunner.Progress.Progress.file_to_hash')
@@ -346,9 +349,8 @@ class TestProgressMethods(object):
         device = 'nexus6p'
         path = 'https://google.com/'
         run_xml = et.fromstring('<run runId="0"><device>nexus6p</device>'
-                      '<path>https://google.com/</path>'
-                      '<browser>firefox</browser>'
-                      '</run>')
+                                '<path>https://google.com/</path>'
+                                '<browser>firefox</browser></run>')
         assert current_progress.get_run_count(run_xml, device, path) == 1
 
         for _ in range(2):
@@ -360,9 +362,7 @@ class TestProgressMethods(object):
     def test_get_run_count_native(self, current_progress):
         device = 'nexus6p'
         path = 'https://google.com/'
-        run_xml = et.fromstring('<run runId="0"><device>nexus6p</device>'
-                      '<path>https://google.com/</path>'
-                      '</run>')
+        run_xml = et.fromstring('<run runId="0"><device>nexus6p</device><path>https://google.com/</path></run>')
         assert current_progress.get_run_count(run_xml, device, path) == 1
         run = current_progress.get_next_run()
         current_progress.run_finished(run['runId'])

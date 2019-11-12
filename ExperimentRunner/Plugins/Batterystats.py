@@ -23,13 +23,13 @@ class Batterystats(Profiler):
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
         # FIX
-        config_file = self.load_json(op.join(self.paths["CONFIG_DIR"], self.paths['ORIGINAL_CONFIG_DIR']))
-        self.type = config_file['type']
-        self.systrace = config_file.get('systrace_path', 'systrace')
-        self.powerprofile = config_file['powerprofile_path']
-        self.duration = self.is_integer(config_file.get('duration', 0)) / 1000
+        config_f = self.load_json(op.join(self.paths["CONFIG_DIR"], self.paths['ORIGINAL_CONFIG_DIR']))
+        self.type = config_f['type']
+        self.systrace = config_f.get('systrace_path', 'systrace')
+        self.powerprofile = config_f['powerprofile_path']
+        self.duration = self.is_integer(config_f.get('duration', 0)) / 1000
         if self.type == 'web':
-            self.browsers = [BrowserFactory.get_browser(b)(config_file) for b in config_file.get('browsers', ['chrome'])]
+            self.browsers = [BrowserFactory.get_browser(b)(config_f) for b in config_f.get('browsers', ['chrome'])]
 
     # noinspection PyGlobalUndefined
     def start_profiling(self, device, **kwargs):

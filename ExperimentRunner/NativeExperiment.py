@@ -18,7 +18,7 @@ class NativeExperiment(Experiment):
 
     def cleanup(self, device):
         super(NativeExperiment, self).cleanup(device)
-        if self.package in device.get_app_list() and not self.package in self.pre_installed_apps:
+        if self.package in device.get_app_list() and self.package not in self.pre_installed_apps:
             device.uninstall(self.package)
 
     def before_experiment(self, device, *args, **kwargs):
@@ -53,7 +53,7 @@ class NativeExperiment(Experiment):
 
     def after_last_run(self, device, path, *args, **kwargs):
         super(NativeExperiment, self).after_last_run(device, path)
-        if self.package in device.get_app_list() and not self.package in self.pre_installed_apps:
+        if self.package in device.get_app_list() and self.package not in self.pre_installed_apps:
             device.uninstall(self.package)
         self.package = None
 

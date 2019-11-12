@@ -103,7 +103,8 @@ class TestExperiment(object):
     @patch('ExperimentRunner.Experiment.Profilers')
     @patch('ExperimentRunner.Tests.check_dependencies')
     @patch('ExperimentRunner.Devices.Devices.__init__')
-    def test_init_full_config_no_restart(self, mock_devices, mock_test, mock_profilers, mock_scripts, mock_prepare, test_config):
+    def test_init_full_config_no_restart(self, mock_devices, mock_test, mock_profilers,
+                                         mock_scripts, mock_prepare, test_config):
         paths.OUTPUT_DIR = 'fake/path/name'
         mock_devices.return_value = None
         profiler_instance = MagicMock()
@@ -820,6 +821,7 @@ class TestWebExperiment(object):
     @patch('ExperimentRunner.Tests.check_dependencies')
     @patch('ExperimentRunner.Devices.Devices.__init__')
     def web_experiment(self, device, check_dependencies):
+        check_dependencies.return_value = None
         device.return_value = None
         device_config = {'devices': 'fake_device'}
         return WebExperiment(device_config, None, False)
@@ -1062,6 +1064,7 @@ class TestNativeExperiment(object):
     @patch('ExperimentRunner.Tests.check_dependencies')
     @patch('ExperimentRunner.Devices.Devices.__init__')
     def native_experiment(self, device, check_dependencies):
+        check_dependencies.return_value = None
         device.return_value = None
         device_config = {'devices': 'fake_device'}
         return NativeExperiment(device_config, None, False)
@@ -1252,6 +1255,7 @@ class TestNativeExperiment(object):
 
     @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run_pre_installed(self, after_last_run, native_experiment):
+        after_last_run.return_value = None
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1260,7 +1264,6 @@ class TestNativeExperiment(object):
         native_experiment.pre_installed_apps = ['com.test.app']
         native_experiment.package = 'com.test.app'
 
-
         native_experiment.after_last_run(mock_device, path, *args, **kwargs)
 
         assert mock_device.uninstall.call_count == 0
@@ -1268,6 +1271,7 @@ class TestNativeExperiment(object):
 
     @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run_not_installed(self, after_last_run, native_experiment):
+        after_last_run.return_value = None
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
         mock_device = Mock()
@@ -1275,7 +1279,6 @@ class TestNativeExperiment(object):
         path = 'test/path'
         native_experiment.pre_installed_apps = ['com.test.app']
         native_experiment.package = 'com.test.app'
-
 
         native_experiment.after_last_run(mock_device, path, *args, **kwargs)
 

@@ -1,7 +1,6 @@
 import logging
 import os.path as op
 import time
-import traceback
 from os import remove, rmdir, walk
 from threading import Thread
 

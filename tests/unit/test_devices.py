@@ -14,6 +14,7 @@ class TestDevice(object):
     @pytest.fixture()
     @patch('ExperimentRunner.Adb.connect')
     def device(self, adb_connect):
+        adb_connect.return_value = None
         name = 'fake_device'
         device_id = 123456789
         device_settings = {}
@@ -23,6 +24,7 @@ class TestDevice(object):
     @pytest.fixture()
     @patch('ExperimentRunner.Adb.connect')
     def device_root(self, adb_connect):
+        adb_connect.return_value = None
         name = 'fake_device'
         device_id = 123456789
         device_settings = {'root_disable_charging': True,
@@ -113,7 +115,6 @@ class TestDevice(object):
         assert su_unplug.call_count == 0
         adb_shell.assert_called_once_with(123456789, 'dumpsys battery set usb 0')
 
-
     @patch('ExperimentRunner.Device.Device.su_unplug')
     @patch('ExperimentRunner.Device.Device.get_api_level')
     @patch('ExperimentRunner.Adb.shell')
@@ -163,7 +164,6 @@ class TestDevice(object):
 
         su_unplug.assert_called_once_with(True)
         assert adb_shell.call_count == 0
-
 
     @patch('ExperimentRunner.Device.Device.check_plug_value')
     @patch('ExperimentRunner.Adb.shell_su')
@@ -244,7 +244,8 @@ class TestDevice(object):
 
         assert device_root.root_plug_value == 'enabled'
         assert device_root.root_unplug_value == 0
-        logger.assert_called_once_with('Error setting root plug value, check manually after experiment if charging is enabled')
+        logger.assert_called_once_with('Error setting root plug value, '
+                                       'check manually after experiment if charging is enabled')
 
     def test_check_plug_value_same_plug_unplug_int(self, device_root):
         device_root.root_plug_value = 0
@@ -480,6 +481,8 @@ class TestDevices(object):
     @patch('ExperimentRunner.Devices.load_json')
     @patch('ExperimentRunner.Adb.setup')
     def devices(self, adb_setup, load_json):
+        adb_setup.return_value = None
+        load_json.return_value = {}
         return Devices([])
 
     @patch('ExperimentRunner.Devices.load_json')
