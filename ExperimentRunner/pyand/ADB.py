@@ -8,7 +8,7 @@ try:
     import platform
     from os import popen3 as pipe
 except ImportError as e:
-    print "[!] Required module missing. %s" % e.args[0]
+    print("[!] Required module missing. %s" % e.args[0])
     sys.exit(-1)
 
 
@@ -98,7 +98,7 @@ class ADB(object):
                 self.__error = "[-] Device unauthorized"
                 return False
             return self.__output.rstrip('\n')
-        except OSError, error:
+        except OSError as error:
             self.__error = str(error)
 
         return
@@ -122,7 +122,7 @@ class ADB(object):
         """
 
         if self.get_version() is None:
-            print "[-] adb executable not found"
+            print("[-] adb executable not found")
             return False
         return True
 
@@ -221,9 +221,9 @@ class ADB(object):
         Specify the device name to target
         example: set_target_device('emulator-5554')
         """
-        if device is None or self.__devices is None or device not in self.__devices.values():
+        if device is None or self.__devices is None or device not in list(self.__devices.values()):
             self.__error = 'Must get device list first'
-            print "[!] Device not found in device list"
+            print("[!] Device not found in device list")
             return False
         self.__target = device
         return "[+] Target device set: %s" % self.get_target_device()
@@ -235,7 +235,7 @@ class ADB(object):
         """
         if device is None or self.__devices is None or device not in self.__devices:
             self.__error = 'Must get device list first'
-            print "[!] Device not found in device list"
+            print("[!] Device not found in device list")
             return False
         self.__target = self.__devices[device]
         return "[+] Target device set: %s" % self.get_target_device()
@@ -245,7 +245,7 @@ class ADB(object):
         Returns the selected device to work with
         """
         if self.__target is None:
-            print "[*] No device target set"
+            print("[*] No device target set")
 
         return self.__target
 

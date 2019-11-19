@@ -63,7 +63,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
     with open(batterystats_file, 'r') as bs_file:
         voltage_pattern = re.compile(r'(0|\+\d.*ms).*volt=(\d+)')
         app_pattern = re.compile(r'(0|\+\d.*ms).*( top|-top|\+top).*"{}"'.format(app))
-        print("Current app: "+str(format(app)))
+        print(("Current app: "+str(format(app))))
         screen_pattern = re.compile(r'(0|\+\d.*ms).*([+-])screen')
         brightness_pattern = re.compile(r'(0|\+\d.*ms).*brightness=(dark|dim|medium|light|bright)')
         wifi_pattern = re.compile(r'(0|\+\d.*ms).*([+-])wifi_(running|radio|scan)')
@@ -443,7 +443,7 @@ def parse_logcat(app, logcat_file):
         logcat = f.read()
         app_start_pattern = re.compile(
             r'(\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}).(\d{3}).*ActivityManager:\sDisplayed\s(%s)' % str(app))
-        print("App used for logcat: "+str(app))
+        print(("App used for logcat: "+str(app)))
         app_start_date = re.findall(app_start_pattern, logcat)[0][0]
         year = dt.datetime.now().year
         time_tuple = t.strptime('{}-{}'.format(year, app_start_date), '%Y-%m-%d %H:%M:%S')

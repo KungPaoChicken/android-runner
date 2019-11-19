@@ -36,7 +36,7 @@ class Progress(object):
         if progress_config_hash == self.file_to_hash(config_file):
             return
         else:
-            print 'Current config.json and config.json from progress.xml are not the same, cannot continue'
+            print('Current config.json and config.json from progress.xml are not the same, cannot continue')
             sys.exit()
 
     def build_progress_xml(self, config, config_file):

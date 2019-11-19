@@ -836,7 +836,7 @@ class TestBatterystatsPlugin(object):
     def test_load_json_file_permission_denied(self, tmpdir, batterystats_plugin):
         tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
         open(tmp_file, "w+")
-        chmod(tmp_file, 0222)
+        chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             batterystats_plugin.load_json(tmp_file)
         assert "Permission denied" in except_result.value
@@ -1182,7 +1182,7 @@ class TestTrepnPlugin(object):
         assert len(files_in_path) == 1
 
     def test_makedirs_fail(self, tmpdir, trepn_plugin):
-        chmod(str(tmpdir), 0444)
+        chmod(str(tmpdir), 0o444)
         dir_path = op.join(str(tmpdir), 'test2')
         assert op.isdir(dir_path) is False
         with pytest.raises(OSError) as except_result:
@@ -1210,7 +1210,7 @@ class TestTrepnPlugin(object):
     def test_load_json_file_permission_denied(self, tmpdir, trepn_plugin):
         tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
         open(tmp_file, "w+")
-        chmod(tmp_file, 0222)
+        chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             trepn_plugin.load_json(tmp_file)
         assert "Permission denied" in except_result.value

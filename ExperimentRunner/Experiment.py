@@ -4,12 +4,12 @@ import time
 from os import remove, rmdir, walk
 from threading import Thread
 
-import Tests
+from . import Tests
 import paths
-from Devices import Devices
-from Profilers import Profilers
-from Scripts import Scripts
-from util import ConfigError, makedirs, slugify_dir
+from .Devices import Devices
+from .Profilers import Profilers
+from .Scripts import Scripts
+from .util import ConfigError, makedirs, slugify_dir
 
 
 # noinspection PyUnusedLocal
@@ -64,9 +64,9 @@ class Experiment(object):
                 current_run = self.get_experiment()
                 self.run_experiment(current_run)
                 self.save_progress()
-        except Exception, e:
+        except Exception as e:
             import traceback
-            print(traceback.format_exc())
+            print((traceback.format_exc()))
             self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
             self.finish_experiment(True, False)
             raise e

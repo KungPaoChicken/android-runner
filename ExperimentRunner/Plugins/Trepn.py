@@ -8,7 +8,8 @@ from collections import OrderedDict
 
 import lxml.etree as et
 
-from Profiler import Profiler
+from .Profiler import Profiler
+from functools import reduce
 
 
 class Trepn(Profiler):
@@ -166,13 +167,13 @@ class Trepn(Profiler):
     @staticmethod
     def write_to_file(filename, rows):
         with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, rows[0].keys())
+            writer = csv.DictWriter(f, list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
 
     def aggregate_trepn_subject(self, logs_dir):
         def add_row(accum, new):
-            row = {key: value + float(new[key]) for key, value in accum.items() if key not in ['Component', 'count']}
+            row = {key: value + float(new[key]) for key, value in list(accum.items()) if key not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
@@ -182,22 +183,22 @@ class Trepn(Profiler):
                 run_dict = {}
                 reader = csv.DictReader(run)
                 column_readers = self.split_reader(reader)
-                for k, v in column_readers.items():
+                for k, v in list(column_readers.items()):
                     init = dict({k: 0}, **{'count': 0})
                     run_total = reduce(add_row, v, init)
                     if not run_total['count'] == 0:
                         run_dict[k] = run_total[k] / run_total['count']
                 runs.append(run_dict)
-        init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
+        init = dict({fn: 0 for fn in list(runs[0].keys())}, **{'count': 0})
         runs_total = reduce(add_row, runs, init)
         return OrderedDict(
-            sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+            sorted(list({k: v / len(runs) for k, v in list(runs_total.items()) if not k == 'count'}.items()), key=lambda x: x[0]))
 
     @staticmethod
     def split_reader(reader):
         column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
         for row in reader:
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 if not k.split('[')[0].strip() == 'Time' and not v == '':
                     column_dicts[k].append({k: v})
         return column_dicts

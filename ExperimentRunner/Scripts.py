@@ -2,19 +2,19 @@ import logging
 import os.path as op
 
 import paths
-from MonkeyReplay import MonkeyReplay
-from MonkeyRunner import MonkeyRunner
-from Python2 import Python2
-from util import ConfigError
+from .MonkeyReplay import MonkeyReplay
+from .MonkeyRunner import MonkeyRunner
+from .Python2 import Python2
+from .util import ConfigError
 
 
 class Scripts(object):
     def __init__(self, config, monkeyrunner_path='monkeyrunner'):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.scripts = {}
-        for name, script in config.items():
+        for name, script in list(config.items()):
             self.scripts[name] = []
-            if isinstance(script, basestring):
+            if isinstance(script, str):
                 path = op.join(paths.CONFIG_DIR, script)
                 self.scripts[name].append(Python2(path))
                 continue

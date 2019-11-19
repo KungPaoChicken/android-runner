@@ -5,8 +5,8 @@ from shutil import copyfile
 from pluginbase import PluginBase
 
 import paths
-from Python2 import Python2
-from util import makedirs
+from .Python2 import Python2
+from .util import makedirs
 
 
 class PluginHandler(object):

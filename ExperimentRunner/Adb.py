@@ -1,7 +1,7 @@
 import logging
 import os.path as op
 
-from pyand import ADB
+from .pyand import ADB
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def connect(device_id):
     if not device_list:
         raise ConnectionError('No devices are connected')
     logger.debug('Device list:\n%s' % device_list)
-    if device_id not in device_list.values():
+    if device_id not in list(device_list.values()):
         raise ConnectionError('%s: Device can not connected' % device_id)
 
 

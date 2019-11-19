@@ -1404,7 +1404,7 @@ class TestExperimentFactory(object):
         makedirs(paths.OUTPUT_DIR)
         tmp_file = tmpdir.join('tmp.txt')
         tmp_file.write('{"type":"plugintest", "devices": {"nexus6p": {}}}')
-        config = OrderedDict([(u'type', u'plugintest'), (u'devices', OrderedDict([(u'nexus6p', OrderedDict())]))])
+        config = OrderedDict([('type', 'plugintest'), ('devices', OrderedDict([('nexus6p', OrderedDict())]))])
         experiment = ExperimentFactory.from_json(str(tmp_file), None)
 
         assert mock_progress.call_count == 0

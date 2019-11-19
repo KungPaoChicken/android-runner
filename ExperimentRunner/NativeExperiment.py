@@ -1,9 +1,9 @@
 import os.path as op
 import time
 
-import Tests
-from Experiment import Experiment
-from util import ConfigError
+from . import Tests
+from .Experiment import Experiment
+from .util import ConfigError
 
 
 class NativeExperiment(Experiment):

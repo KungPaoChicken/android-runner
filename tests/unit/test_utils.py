@@ -38,7 +38,7 @@ class TestUtilClass(object):
         assert "FileNotFoundError" in except_result.typename
 
     def test_load_json_file_permission_denied(self, tmp_file):
-        os.chmod(tmp_file, 0222)
+        os.chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             util.load_json(tmp_file)
         assert "Permission denied" in except_result.value
@@ -60,7 +60,7 @@ class TestUtilClass(object):
         assert len(files_in_path) == 1
 
     def test_makedirs_fail(self, tmpdir):
-        os.chmod(str(tmpdir), 0444)
+        os.chmod(str(tmpdir), 0o444)
         dir_path = op.join(str(tmpdir), 'test2')
         assert op.isdir(dir_path) is False
         with pytest.raises(OSError) as except_result:

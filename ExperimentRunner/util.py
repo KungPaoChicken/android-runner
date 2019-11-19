@@ -53,5 +53,5 @@ def slugify_dir(value):
     import unicodedata
     value = value.decode('unicode-escape')
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(re.sub(r'[^\w\s-]', '', value).strip().lower())
-    return unicode(re.sub(r'[-\s]+', '-', value))
+    value = str(re.sub(r'[^\w\s-]', '', value).strip().lower())
+    return str(re.sub(r'[-\s]+', '-', value))

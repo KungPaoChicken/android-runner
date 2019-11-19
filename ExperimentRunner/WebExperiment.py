@@ -1,11 +1,11 @@
 import os.path as op
 import time
 
-import Tests
+from . import Tests
 import paths
-from BrowserFactory import BrowserFactory
-from Experiment import Experiment
-from util import makedirs, slugify_dir
+from .BrowserFactory import BrowserFactory
+from .Experiment import Experiment
+from .util import makedirs, slugify_dir
 
 
 class WebExperiment(Experiment):

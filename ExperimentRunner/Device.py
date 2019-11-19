@@ -3,9 +3,9 @@ import os.path as op
 import re
 import time
 
-import Adb
-from Adb import AdbError
-from util import ConfigError, makedirs
+from . import Adb
+from .Adb import AdbError
+from .util import ConfigError, makedirs
 
 
 class Device:
@@ -56,7 +56,7 @@ class Device:
         Adb.shell_su(self.id, 'echo %s > %s' % (self.root_unplug_value, self.root_unplug_file))
 
     def check_plug_value(self):
-        if isinstance(self.root_unplug_value, (int, long)):
+        if isinstance(self.root_unplug_value, int):
             try:
                 self.root_plug_value = int(self.root_plug_value)
             except ValueError:

@@ -9,7 +9,7 @@ def run_input(action):
     counter = action['up'] - action['down']
     # time.sleep(counter)
     # newdevice.touch(action['x'], action['y'], UP)
-    print 'touch at (' + str(action['x']) + ", " + str(action['y']) + ") for " + str(counter) + " seconds"
+    print('touch at (' + str(action['x']) + ", " + str(action['y']) + ") for " + str(counter) + " seconds")
 
 
 def run_jblock(filename):
@@ -21,7 +21,7 @@ def run_jblock(filename):
 
 def main():
     if len(sys.argv) != 2:
-        print 'usage: ./replay.py file'
+        print('usage: ./replay.py file')
         sys.exit(1)
     filename = sys.argv[1]
     # newdevice = MonkeyRunner.waitForConnection()
