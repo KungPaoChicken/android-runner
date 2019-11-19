@@ -5,7 +5,7 @@ from shutil import copyfile
 from pluginbase import PluginBase
 
 import paths
-from Python2 import Python2
+from Python3 import Python3
 from util import makedirs
 
 
@@ -86,7 +86,7 @@ class PluginHandler(object):
             self.subject_aggregated = True
             self.subject_aggregated_default = True
         else:
-            aggregate_subject_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_subject_function))
+            aggregate_subject_script = Python3(os.path.join(paths.CONFIG_DIR, aggregate_subject_function))
             self.logger.debug('%s: aggregating subject results')
             self.subject_aggregated = True
             self.subject_aggregated_default = False
@@ -114,7 +114,7 @@ class PluginHandler(object):
                                  " default experiment aggregation not possible.".format(self.moduleName))
                 return
         else:
-            aggregate_script = Python2(os.path.join(paths.CONFIG_DIR, aggregate_function))
+            aggregate_script = Python3(os.path.join(paths.CONFIG_DIR, aggregate_function))
             self.logger.debug('%s: aggregating results')
             aggregate_script.run(None, data_dir, result_file)
 

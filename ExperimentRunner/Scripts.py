@@ -4,7 +4,7 @@ import os.path as op
 import paths
 from .MonkeyReplay import MonkeyReplay
 from .MonkeyRunner import MonkeyRunner
-from .Python2 import Python2
+from .Python3 import Python3
 from .util import ConfigError
 
 
@@ -16,15 +16,15 @@ class Scripts(object):
             self.scripts[name] = []
             if isinstance(script, str):
                 path = op.join(paths.CONFIG_DIR, script)
-                self.scripts[name].append(Python2(path))
+                self.scripts[name].append(Python3(path))
                 continue
             for s in script:
                 path = op.join(paths.CONFIG_DIR, s['path'])
                 timeout = s.get('timeout', 0)
                 logcat_regex = s.get('logcat_regex', None)
 
-                if s['type'] == 'python2':
-                    script = Python2(path, timeout, logcat_regex)
+                if s['type'] == 'python3':
+                    script = Python3(path, timeout, logcat_regex)
                 elif s['type'] == 'monkeyreplay':
                     script = MonkeyReplay(path, timeout, logcat_regex, monkeyrunner_path)
                 elif s['type'] == 'monkeyrunner':
