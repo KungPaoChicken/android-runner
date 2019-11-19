@@ -101,6 +101,6 @@ ENV/
 .idea/
 *.apk
 *.pdf
-example/trepn.pref
-example/output
-example/logs
+examples/trepn.pref
+examples/output
+examples/logs

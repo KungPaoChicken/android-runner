@@ -1,6 +1,6 @@
-import sys
-import os
 import csv
+import os
+import sys
 from collections import OrderedDict
 
 
@@ -12,21 +12,36 @@ def list_subdir(a_dir):
 
 
 def aggregate_trepn_final(logs_dir):
-    def format_stats(accum, new):
-        column_name = new['Name']
-        if '[' in new['Type']:
-            column_name += ' [' + new['Type'].split('[')[1]
-        accum.update({column_name: float(new['Average'])})
-        return accum
+    def add_row(accum, new):
+        row = {key: value + float(new[key]) for key, value in accum.items() if key not in ['Component', 'count']}
+        count = accum['count'] + 1
+        return dict(row, **{'count': count})
+
     runs = []
     for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
         with open(os.path.join(logs_dir, run_file), 'rb') as run:
-            contents = run.read()   # Be careful with large files, this loads everything into memory
-            system_stats = contents.split('System Statistics:')[1].strip().splitlines()
-            reader = csv.DictReader(system_stats)
-            runs.append(reduce(format_stats, reader, {}))
-    runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
-    return OrderedDict(sorted({k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+            run_dict = {}
+            reader = csv.DictReader(run)
+            column_readers = split_reader(reader)
+            for k, v in column_readers.items():
+                init = dict({k: 0}, **{'count': 0})
+                run_total = reduce(add_row, v, init)
+                if not run_total['count'] == 0:
+                    run_dict[k] = run_total[k] / run_total['count']
+            runs.append(run_dict)
+    init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
+    runs_total = reduce(add_row, runs, init)
+    return OrderedDict(
+        sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+
+
+def split_reader(reader):
+    column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
+    for row in reader:
+        for k, v in row.items():
+            if not k.split('[')[0].strip() == 'Time' and not v == '':
+                column_dicts[k].append({k: v})
+    return column_dicts
 
 
 def aggregate(data_dir):
@@ -57,6 +72,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
+# noinspection PyUnusedLocal
 def main(dummy, data_dir, result_file):
     print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
@@ -65,4 +81,5 @@ def main(dummy, data_dir, result_file):
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
+        # noinspection PyArgumentList
         main(sys.argv[1], sys.argv[2])

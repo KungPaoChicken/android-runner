@@ -1,7 +1,8 @@
-from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
 import sys
 # import os
 import time
+
+from com.android.monkeyrunner import MonkeyDevice, MonkeyRunner
 from com.xhaus.jyson import JysonCodec as json
 
 
@@ -9,7 +10,7 @@ def run_input(action, newdevice, test):
     action_complete = True
     if action['type'] == 'touch':
         if 'x' in action and 'y' in action and 'up' in action and 'down' in action:
-            counter = (float(action['up']) - float(action['down']))/1000
+            counter = (float(action['up']) - float(action['down'])) / 1000
             if test:
                 print 'touch at (' + str(action['x']) + ", " + str(action['y']) + ") for " + str(counter) + " seconds"
             else:
@@ -21,7 +22,7 @@ def run_input(action, newdevice, test):
                     action_complete = False
         else:
             action_complete = False
-        
+
     elif action['type'] == 'drag':
         counter = float(action['up']) - float(action['down'])
         str_tuple = (action['points'][0]['x'], action['points'][0]['y'])
@@ -112,7 +113,7 @@ def main():
         filename = 'testLogicLog.txt'
     else:
         filename = sys.argv[1]
-    newdevice = MonkeyRunner.waitForConnection(5.0)  
+    newdevice = MonkeyRunner.waitForConnection(5.0)
     run_jblock(filename, newdevice)
     print 'done'
 

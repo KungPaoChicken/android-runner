@@ -12,8 +12,8 @@ except ImportError as e:
     sys.exit(-1)
 
 
+# noinspection PyUnusedLocal
 class ADB(object):
-
     __adb_path = None
     __output = None
     __error = None
@@ -98,8 +98,8 @@ class ADB(object):
                 self.__error = "[-] Device unauthorized"
                 return False
             return self.__output.rstrip('\n')
-        except OSError, e:
-            self.__error = str(e)
+        except OSError, error:
+            self.__error = str(error)
 
         return
 
@@ -222,7 +222,6 @@ class ADB(object):
         example: set_target_device('emulator-5554')
         """
         if device is None or self.__devices is None or device not in self.__devices.values():
-
             self.__error = 'Must get device list first'
             print "[!] Device not found in device list"
             return False
@@ -271,9 +270,9 @@ class ADB(object):
                     pattern = r"model:(.+)\sdevice"
                     pat = re.compile(pattern)
                     device_model = pat.findall(line)
-                    device_model = re.sub("[\[\]\'{\}<>]", '', str(device_model))
-        except Exception as e:
-            return "[-] Error: %s" % e.args[0]
+                    device_model = re.sub(r"[\[\]\'{\}<>]", '', str(device_model))
+        except Exception as error:
+            return "[-] Error: %s" % error.args[0]
 
         return device_model
 

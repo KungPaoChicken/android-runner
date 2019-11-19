@@ -1,23 +1,17 @@
 {
   "type": "native",
-  "devices": ["5x"],
-  "replications": 2,
-  "paths": [
-    "/home/yoyo/android-runner/example/coolcherrytrees.games.reactor4.apk"
+  "devices": {
+    "nexus6p": {}
+  },
+  "replications": 1,
+  "apps": [
+    "com.experimental.rvs960.ioapp"
   ],
   "profilers": {
-    "trepn": {
-      "subject_aggregation" : "default",
-      "experiment_aggregation" : "default",
-      "sample_interval": 100,
-      "data_points": ["battery_power", "mem_usage"]
-    },
-    "android": {
-      "subject_aggregation" : "default",
-      "experiment_aggregation" : "default",
-      "sample_interval": 0,
-      "data_points": ["cpu", "mem"]
-    }
+     "trepn": {
+      "sample_interval": 200,
+      "data_points": ["battery_power"]
+     }
  },
   "scripts": {
     "before_experiment": "Scripts/before_experiment.py",
@@ -29,10 +23,6 @@
         "path": "Scripts/interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"
-      },
-      {
-        "type": "monkeyreplay",
-        "path": "Scripts/monkey.txt"
       }
     ],
     "before_close": "Scripts/before_close.py",

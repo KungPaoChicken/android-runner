@@ -1,22 +1,22 @@
 import os.path as op
-from paths import ROOT_DIR
 
 # This is basically a singleton
 # https://stackoverflow.com/a/10936915
 import Adb
 from Device import Device
-from util import load_json, ConfigError
+from paths import ROOT_DIR
+from util import ConfigError, load_json
 
 
 class Devices:
-    def __init__(self, names, adb_path='adb'):
+    def __init__(self, devices, adb_path='adb'):
         Adb.setup(adb_path)
         mapping_file = load_json(op.join(ROOT_DIR, 'devices.json'))
-        self._device_map = {n: mapping_file.get(n, None) for n in names}
+        self._device_map = {n: mapping_file.get(n, None) for n in devices}
         for name, device_id in self._device_map.items():
             if not device_id:
                 raise ConfigError(name)
-        self.devices = [Device(name, device_id) for name, device_id in self._device_map.items()]
+        self.devices = [Device(name, device_id, devices[name]) for name, device_id in self._device_map.items()]
 
     def __iter__(self):
         return iter(self.devices)
@@ -36,4 +36,6 @@ class Devices:
         return self._device_map[name]
 
     def get_name(self, device_id):
-        return (k for k, v in self._device_map if v == device_id)
+        for k, v in self._device_map.items():
+            if v == device_id:
+                return k

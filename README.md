@@ -49,19 +49,61 @@ Path to Systrace.py. Example path: `/home/user/Android/Sdk/platform-tools/systra
 Path to power_profile.xml. Example path: `android-runner/example/batterystats/power_profile.xml`
 
 **type** *string*
-Type of the experiment. Can be `web` or `native`
+Type of the experiment. Can be `web`, `native` or 'plugintest'
 
 **replications** *positive integer*
 Number of times an experiment is run.
 
+**randomization** *boolean*
+Random order of run execution. Default is *false*.
+
 **duration** *positive integer*
 The duration of each run in milliseconds.
 
-**devices** *Array\<String\>*
-The names of devices to use. They will be translated into ids defined in devices.json.
+**devices** *JSON*
+A JSON object to describe the devices to be used and their arguments. Below are several examples:
+```json
+  "devices": {
+    "nexus6p": {
+      "root_disable_charging": "True",
+      "charging_disabled_value": 0,
+      "usb_charging_disabled_file": "/sys/class/power_supply/usb/device/charge"
+    }
+  }
+```
+
+```json
+  "devices": {
+    "nexus6p": {
+      "root_disable_charging": "False"
+    }
+  }
+```
+
+```json
+  "devices": {
+    "nexus6p": {}
+  }
+```
+Note that the last two examples result in the same behaviour.
+
+**WARNING:** Always check the battery settings of the device for the charging status of the device after using root disable charging.
+If the device isn't charging after the experiment is finished, reset the charging file yourself via ADB SU command line using:
+```shell
+adb su -c 'echo <charging enabled value> > <usb_charging_disabled_file>'
+```
 
 **paths** *Array\<String\>*
-The paths to the APKs/URLs to test with.
+The paths to the APKs/URLs to test with. In case of the APKs, the path on the local file system.
+
+**apps** *Array\<String\>*
+The package names of to the apps to test of the app that are already installed in the device. For example:
+```json
+  "apps": [
+    "org.mozilla.firefox",
+    "com.quicinc.trepn"
+  ]
+```
 
 **browsers** *Array\<String\>*
 *Dependent on type = web*
@@ -122,6 +164,16 @@ Below are the supported types:
   executes after a run completes
 - after_experiment
   executes once after the last run
+
+## Plugin profilers
+It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
+that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. You can use your own
+profiler in the same way as the default profilers, you just need to make sure that:
+- The profiler name is the same as your python file and class name.
+- Your python file isn't called 'Profiler.py' as this file will be overwritten.
+- The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
+
+To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
 
 ## Detailed documentation
 The original thesis can be found here:

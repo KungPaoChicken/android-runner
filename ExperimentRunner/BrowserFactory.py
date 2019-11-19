@@ -10,4 +10,4 @@ class BrowserFactory(object):
             return Firefox.Firefox
         if name == "opera":
             return Opera.Opera
-        return Exception("No Browser found")
+        raise Exception("No Browser found")

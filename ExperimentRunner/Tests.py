@@ -1,11 +1,6 @@
 import logging
-import os.path as op
+
 from util import ConfigError
-
-
-def valid_files(paths):
-    for f in filter(lambda x: not op.isfile(x), paths):
-        raise ConfigError("File %s not found" % f)
 
 
 def is_integer(number, minimum=0):
@@ -29,4 +24,4 @@ def check_dependencies(devices, dependencies):
         if not_installed_apps:
             for name in not_installed_apps:
                 logging.error('%s: Required package %s is not installed' % (device.id, name))
-            raise ConfigError('Required packages %s are not installed on %s' % (not_installed_apps, device))
+            raise ConfigError('Required packages %s are not installed on device %s' % (not_installed_apps, device.id))

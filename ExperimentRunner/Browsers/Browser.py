@@ -4,6 +4,7 @@ import logging
 class Browser(object):
     # https://stackoverflow.com/a/1151260
 
+    # noinspection PyUnusedLocal
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.package_name = ""

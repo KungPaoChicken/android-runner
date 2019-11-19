@@ -10,7 +10,6 @@ except ImportError, e:
 
 
 class Fastboot(object):
-
     __fastboot_path = None
     __output = None
     __error = None
@@ -44,26 +43,26 @@ class Fastboot(object):
         return ret
 
     def __build_command__(self, cmd):
-            """
-            Build command parameters for Fastboot command
-            """
-            if self.__devices is not None and len(self.__devices) > 1 and self.__target is None:
-                self.__error = "[!] Must set target device first"
-                return None
+        """
+        Build command parameters for Fastboot command
+        """
+        if self.__devices is not None and len(self.__devices) > 1 and self.__target is None:
+            self.__error = "[!] Must set target device first"
+            return None
 
-            if type(cmd) is tuple:
-                a = list(cmd)
-            elif type(cmd) is list:
-                a = cmd
-            else:
-                a = cmd.split(" ")
-            a.insert(0, self.__fastboot_path)
-            if self.__target is not None:
-                # add target device arguments to the command
-                a.insert(1, '-s')
-                a.insert(2, self.__target)
+        if type(cmd) is tuple:
+            a = list(cmd)
+        elif type(cmd) is list:
+            a = cmd
+        else:
+            a = cmd.split(" ")
+        a.insert(0, self.__fastboot_path)
+        if self.__target is not None:
+            # add target device arguments to the command
+            a.insert(1, '-s')
+            a.insert(2, self.__target)
 
-            return a
+        return a
 
     def run_cmd(self, cmd):
         """
@@ -83,8 +82,8 @@ class Fastboot(object):
             self.__output, self.__error = cmdp.communicate()
             retcode = cmdp.wait()
             return self.__output
-        except OSError, e:
-            self.__error = str(e)
+        except OSError, error:
+            self.__error = str(error)
 
         return
 
@@ -110,6 +109,7 @@ class Fastboot(object):
         """
         return self.__fastboot_path_path
 
+    # noinspection PyUnusedLocal
     def get_devices(self):
         """
         Return a dictionary of fastboot connected devices along with an incremented Id.
@@ -145,7 +145,6 @@ class Fastboot(object):
         example: set_target_device('emulator-5554')
         """
         if device is None or device not in self.__devices.values():
-
             self.__error = 'Must get device list first'
             print "[!] Device not found in device list"
             return False

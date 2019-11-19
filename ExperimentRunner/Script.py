@@ -2,8 +2,9 @@ import logging
 import multiprocessing as mp
 import os.path as op
 import signal
-from util import FileNotFoundError
+
 import Tests
+from util import FileNotFoundError
 
 
 class ScriptError(Exception):
@@ -14,9 +15,9 @@ class Script(object):
     def __init__(self, path, timeout=0, logcat_regex=None):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.path = path
-        self.filename = op.basename(path)
         if not op.isfile(path):
-            raise FileNotFoundError(self.filename)
+            raise FileNotFoundError(path)
+        self.filename = op.basename(path)
         self.timeout = float(Tests.is_integer(timeout)) / 1000
         self.logcat_event = logcat_regex
         if logcat_regex is not None:
@@ -36,7 +37,8 @@ class Script(object):
             queue.put((e, traceback.format_exc()))
         queue.put('script')
 
-    def mp_logcat_regex(self, queue, device, regex):
+    @staticmethod
+    def mp_logcat_regex(queue, device, regex):
         """The multiprocessing wrapper of Device.logcat_regex()"""
         # https://stackoverflow.com/a/21936682
         # pyadb uses subprocess.communicate(), therefore it blocks

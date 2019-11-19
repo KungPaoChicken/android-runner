@@ -1,6 +1,6 @@
-import sys
-import os
 import csv
+import os
+import sys
 from collections import OrderedDict
 
 
@@ -57,6 +57,7 @@ def write_to_file(filename, rows):
         writer.writerows(rows)
 
 
+# noinspection PyUnusedLocal
 def main(dummy, data_dir, result_file):
     print('Output file: {}'.format(result_file))
     rows = aggregate(data_dir)
@@ -65,5 +66,5 @@ def main(dummy, data_dir, result_file):
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
+        # noinspection PyArgumentList
         main(sys.argv[1], sys.argv[2])
-

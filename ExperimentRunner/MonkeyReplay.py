@@ -1,6 +1,7 @@
-from Script import Script
 import subprocess
+
 import paths
+from Script import Script
 
 
 class MonkeyReplayError(Exception):
@@ -26,8 +27,6 @@ class MonkeyReplay(Script):
             'args': self.path,
         }
         args['plugins'] = ' '.join(['-plugin %s' % p for p in args['plugins']])
-        if isinstance(args['args'], list):
-            args['args'] = ' '.join(args['args'])
         args = '{monkey} {plugins} {program} {args}'.format(**args).split(' ')
         cmdp = subprocess.Popen(args, cwd=paths.ROOT_DIR, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output, error = cmdp.communicate()

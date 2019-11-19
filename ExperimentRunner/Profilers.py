@@ -1,5 +1,6 @@
 import logging
 from itertools import chain
+
 from PluginHandler import PluginHandler
 
 
@@ -8,7 +9,7 @@ class Profilers(object):
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.profilers = []
-        self.loaded_devices =[]
+        self.loaded_devices = []
         for name, params in config.items():
             try:
                 self.profilers.append(PluginHandler(name, params))
@@ -25,7 +26,7 @@ class Profilers(object):
         if device.name not in self.loaded_devices:
             for p in self.profilers:
                 p.load(device)
-                self.loaded_devices.append(device.name)
+            self.loaded_devices.append(device.name)
 
     def start_profiling(self, device, **kwargs):
         self.logger.info('Start profiling')
@@ -37,10 +38,10 @@ class Profilers(object):
         for p in self.profilers:
             p.stop_profiling(device, **kwargs)
 
-    def collect_results(self, device, path=None):
+    def collect_results(self, device):
         self.logger.info('Collecting results')
         for p in self.profilers:
-            p.collect_results(device, path)
+            p.collect_results(device)
 
     def unload(self, device):
         self.logger.info('Unloading')

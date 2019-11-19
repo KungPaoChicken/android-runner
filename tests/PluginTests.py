@@ -1,15 +1,17 @@
-import logging
-import paths
 import inspect
+import logging
 import os
 import time
 import traceback
-from PluginHandler import PluginHandler
-from Devices import Devices
-from util import makedirs
+
+from ExperimentRunner.Devices import Devices
+from ExperimentRunner.PluginHandler import PluginHandler
+from ExperimentRunner.util import makedirs
+import paths
 
 
-class Tests(object):
+# noinspection PyUnusedLocal
+class PluginTests(object):
 
     def __init__(self, config):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -22,22 +24,23 @@ class Tests(object):
         self.result_file = os.path.join(self.output_root, 'Test_results.txt')
         self.dirs = {}
 
-    def get_progress_xml_file(self):
+    @staticmethod
+    def get_progress_xml_file():
         return "Testing, no progress file has been made"
 
     def check_profilers(self):
         self.check_init_profilers()
         default_profilers = ['android', 'batterystats', 'trepn']
         for profiler in self.profilers:
-            if profiler.nameLower not in default_profilers:
-                self.check_profiler(profiler.currentProfiler, profiler.moduleName)
+            if profiler.name.lower() not in default_profilers:
+                self.check_profiler(profiler.currentProfiler, profiler.name)
 
     def check_init_profilers(self):
         self.profilers = []
         for name, params in self.config.get('profilers', {}).items():
             try:
                 self.profilers.append(PluginHandler(name, params))
-            except Exception as e:
+            except Exception:
                 self.errors.append('Profiler {}: Initializing profiler resulted in the following error:\n{}'.
                                    format(name, traceback.format_exc()))
 
@@ -63,9 +66,9 @@ class Tests(object):
 
     def set_dirs(self, device, profiler_name):
         self.dirs['subject'] = os.path.join(self.output_root, 'data', device.name, 'test_dir_1', 'test_dir_2',
-                                       profiler_name.lower())
+                                            profiler_name)
         self.dirs['aggregated'] = os.path.join(paths.OUTPUT_DIR, '{}_aggregated.csv'.format(profiler_name))
-        self.dirs['base'] = os.path.join(paths.OUTPUT_DIR, 'data')
+        self.dirs['data_folder'] = os.path.join(paths.OUTPUT_DIR, 'data')
         makedirs(self.dirs['subject'])
 
     def check_profiler_method(self, device, profiler, current_method, profiler_name):
@@ -79,7 +82,7 @@ class Tests(object):
             elif current_method == 'aggregate_subject':
                 method_result = getattr(profiler, current_method)()
             elif current_method == 'aggregate_end':
-                method_result = getattr(profiler, current_method)(self.dirs['base'], self.dirs['aggregated'])
+                method_result = getattr(profiler, current_method)(self.dirs['data_folder'], self.dirs['aggregated'])
             else:
                 method_result = getattr(profiler, current_method)(device)
 
@@ -88,7 +91,7 @@ class Tests(object):
                                    format(profiler_name, current_method))
         except NotImplementedError:
             self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, current_method))
-        except Exception as e:
+        except Exception:
             self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
                                .format(profiler_name, current_method, traceback.format_exc()))
 
@@ -99,7 +102,7 @@ class Tests(object):
             self.check_dependencies(method_result, profiler_name)
         except NotImplementedError:
             self.errors.append('Profiler {}: Method {} not implemented.'.format(profiler_name, method))
-        except Exception as e:
+        except Exception:
             self.errors.append('Profiler {}: Method {} gave the following error: \n{}'
                                .format(profiler_name, method, traceback.format_exc()))
 

@@ -5,14 +5,18 @@ import time
 
 import Adb
 from Adb import AdbError
-from util import makedirs
+from util import ConfigError, makedirs
 
 
 class Device:
-    def __init__(self, name, device_id):
+    def __init__(self, name, device_id, settings):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.name = name
         self.id = device_id
+        self.root_unplug = settings.get('root_disable_charging', False)
+        self.root_unplug_value = settings.get('charging_disabled_value', None)
+        self.root_unplug_file = settings.get('usb_charging_disabled_file', None)
+        self.root_plug_value = None
         Adb.connect(device_id)
 
     def get_version(self):
@@ -41,24 +45,60 @@ class Device:
         """Uninstalls the package on the device"""
         Adb.uninstall(self.id, name)
 
-    def unplug(self):
+    def su_unplug(self, restart):
+        self.root_plug_value = Adb.shell_su(self.id, 'cat %s' % self.root_unplug_file)
+        if 'su: not found' in self.root_plug_value:
+            raise AdbError("%s %s: is not rooted" % (self.id, self.name))
+        if 'No such file or directory' in self.root_plug_value:
+            raise ConfigError('%s %s: the root unplug file seems to be invalid' % (self.id, self.name))
+        if restart:
+            self.check_plug_value()
+        Adb.shell_su(self.id, 'echo %s > %s' % (self.root_unplug_value, self.root_unplug_file))
+
+    def check_plug_value(self):
+        if isinstance(self.root_unplug_value, (int, long)):
+            try:
+                self.root_plug_value = int(self.root_plug_value)
+            except ValueError:
+                logging.info('Error setting root plug value, check manually after experiment if charging is enabled')
+        if self.root_plug_value == self.root_unplug_value:
+            try:
+                self.root_plug_value = abs(self.root_plug_value - 1)
+            except TypeError:
+                if 'enabled' in self.root_plug_value:
+                    self.root_plug_value = 'disabled'
+                elif 'disabled' in self.root_plug_value:
+                    self.root_plug_value = 'enabled'
+
+    def unplug(self, restart):
         """Fakes the device to think it is unplugged, so the Doze mode can be activated"""
-        if self.get_api_level() < 23:
-            # API level < 23, 4.4.3+ tested, WARNING: hardcoding
-            Adb.shell(self.id, 'dumpsys battery set usb 0')
-            # Adb.shell(self.id, 'dumpsys battery set ac 0')
-            # Adb.shell(self.id, 'dumpsys battery set wireless 0')
+        if self.root_unplug:
+            self.su_unplug(restart)
+            self.logger.info('Root unpluged')
         else:
-            # API level 23+ (Android 6.0+)
-            Adb.shell(self.id, 'dumpsys battery unplug')
+            self.logger.info('Default unplug')
+            if self.get_api_level() < 23:
+                # API level < 23, 4.4.3+ tested, WARNING: hardcoding
+                Adb.shell(self.id, 'dumpsys battery set usb 0')
+                # Adb.shell(self.id, 'dumpsys battery set ac 0')
+                # Adb.shell(self.id, 'dumpsys battery set wireless 0')
+            else:
+                # API level 23+ (Android 6.0+)
+                Adb.shell(self.id, 'dumpsys battery unplug')
+
+    def su_plug(self):
+        self.logger.info('Root pluged, please check if device is charging')
+        Adb.shell_su(self.id, 'echo %s > %s' % (self.root_plug_value, self.root_unplug_file))
 
     def plug(self):
         """Reset the power status of the device"""
-        if self.get_api_level() < 23:
-            # API level < 23, 4.4.3+ tested, WARNING: hardcoding
-            # reset only restarts auto-update
-            Adb.shell(self.id, 'dumpsys battery set usb 1')
+        # if self.get_api_level() < 23:
+        # API level < 23, 4.4.3+ tested, WARNING: hardcoding
+        # reset only restarts auto-update
+        #    Adb.shell(self.id, 'dumpsys battery set usb 1')
         # API level 23+ (Android 6.0+)
+        if self.root_unplug:
+            self.su_plug()
         Adb.shell(self.id, 'dumpsys battery reset')
 
     def current_activity(self):

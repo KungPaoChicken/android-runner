@@ -1,6 +1,8 @@
 {
   "type": "native",
-  "devices": ["nexus7"],
+  "devices": {
+    "nexus6p": {}
+  },
   "replications": 3,
   "duration": 60000,
   "monkeyrunner_path": "/home/user/Android/Sdk/tools/bin/monkeyrunner",

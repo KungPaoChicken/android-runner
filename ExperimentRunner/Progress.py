@@ -1,10 +1,12 @@
-import os
-import paths
 import hashlib
 import logging
+import os
 import sys
-import lxml.etree as et
 from random import randint
+
+import lxml.etree as et
+
+import paths
 
 
 class Progress(object):
@@ -22,7 +24,8 @@ class Progress(object):
     def get_progress_xml_file(self):
         return self.progress_xml_file
 
-    def file_to_hash(self, path):
+    @staticmethod
+    def file_to_hash(path):
         with open(path, 'r') as myfile:
             content_string = myfile.read().replace('\n', '')
         hashed_string_obj = hashlib.md5(content_string.encode())
@@ -36,32 +39,17 @@ class Progress(object):
             print 'Current config.json and config.json from progress.xml are not the same, cannot continue'
             sys.exit()
 
-
     def build_progress_xml(self, config, config_file):
         config_hash_xml = '<configHash>{}</configHash>'.format(self.file_to_hash(config_file))
         output_dir_xml = '<outputDir>{}</outputDir>'.format(paths.OUTPUT_DIR)
-        subjects_xml = '<subjects>{}</subjects>'.format(self.build_aggregated_xml(config))
         runs_to_run_xml = '<runsToRun>{}</runsToRun>'.format(self.build_runs_xml(config))
         runs_done_xml = '<runsDone></runsDone>'
-        experiment_xml = '<experiment>{}{}{}{}{}</experiment>'.format(config_hash_xml, output_dir_xml, subjects_xml,
-                                                                      runs_to_run_xml, runs_done_xml)
+        experiment_xml = '<experiment>{}{}{}{}</experiment>'.format(config_hash_xml, output_dir_xml,
+                                                                    runs_to_run_xml, runs_done_xml)
         return et.fromstring(experiment_xml)
 
-    def build_aggregated_xml(self, config):
-        subjects_xml = ''
-        aggregated_xml = '<aggregated>0</aggregated>'
-        for device in config['devices']:
-            for path in config['paths']:
-                if config['type'] == 'web':
-                    for browser in config['browsers']:
-                        subjects_xml = subjects_xml + '<subject>{}{}</subject>'.format(
-                            self.build_subject_xml(device, path, browser), aggregated_xml)
-                else:
-                    subjects_xml = subjects_xml + '<subject>{}{}</subject>'.format(
-                        self.build_subject_xml(device, path), aggregated_xml)
-        return subjects_xml
-
-    def build_subject_xml(self, device, path, browser=None):
+    @staticmethod
+    def build_subject_xml(device, path, browser=None):
         device_xml = '<device>{}</device>'.format(device)
         path_xml = '<path>{}</path>'.format(path)
         if browser is not None:
@@ -74,17 +62,20 @@ class Progress(object):
         runs_xml = ''
         run_id = 0
         for device in config['devices']:
-            for path in config['paths']:
+            current_paths = config.get('paths', []) + config.get('apps', [])
+            for path in current_paths:
                 if config['type'] == 'web':
                     for browser in config['browsers']:
+                        subject_xml = self.build_subject_xml(device, path, browser)
                         for run in range(config['replications']):
-                            runs_xml = runs_xml + '<run runId="{}">{}<runCount>{}</runCount></run>'.\
-                                format(run_id, self.build_subject_xml(device, path, browser), run+1)
+                            runs_xml = runs_xml + '<run runId="{}">{}<runCount>{}</runCount></run>'. \
+                                format(run_id, subject_xml, run + 1)
                             run_id += 1
                 else:
+                    subject_xml = self.build_subject_xml(device, path)
                     for run in range(config['replications']):
-                        runs_xml = runs_xml + '<run runId="{}">{}<runCount>{}</runCount></run>'.\
-                            format(run_id, self.build_subject_xml(device, path), run+1)
+                        runs_xml = runs_xml + '<run runId="{}">{}<runCount>{}</runCount></run>'. \
+                            format(run_id, subject_xml, run + 1)
                         run_id += 1
 
         return runs_xml
@@ -97,6 +88,7 @@ class Progress(object):
         return self.progress_xml_content.find('outputDir').text
 
     """Get a random run from the <runsToRuns> element"""
+
     def get_random_run(self):
         runs_to_run = self.progress_xml_content.find('runsToRun')
         count = len(runs_to_run.getchildren())
@@ -105,23 +97,37 @@ class Progress(object):
         return self.run_to_dict(next_run_xml)
 
     """Get the top run of the list"""
+
     def get_next_run(self):
         next_run_xml = self.progress_xml_content.find('runsToRun')[0]  # First run in list
         return self.run_to_dict(next_run_xml)
 
     """Turn a <run> element and its childeren into a dictionary"""
+
     def run_to_dict(self, run_xml):
         run = dict()
         run['runId'] = run_xml.get('runId')
         run['device'] = run_xml.find('device').text
         run['path'] = run_xml.find('path').text
-        run['runCount'] = run_xml.find('runCount').text
+        run['runCount'] = self.get_run_count(run_xml, run['device'], run['path'])
         browser = run_xml.find('browser')
         if browser is not None:
             run['browser'] = run_xml.find('browser').text
         return run
 
-    """Move run from to do, to done"""
+    def get_run_count(self, run_xml, device, path):
+        runs_done = self.progress_xml_content.find('runsDone')
+        browser_val = run_xml.find('browser')
+        if browser_val is not None:
+            browser_name = browser_val.text
+            query = "run[device='{}' and path='{}' and browser='{}']".format(device, path, browser_name)
+        else:
+            query = "run[device='{}' and path='{}']".format(device, path)
+        elements = runs_done.xpath(query)
+        return len(elements) + 1
+
+    """Marks run as finished"""
+
     def run_finished(self, run_id):
         runs_to_run = self.progress_xml_content.find('runsToRun')
         runs_done = self.progress_xml_content.find('runsDone')
@@ -131,6 +137,7 @@ class Progress(object):
             runs_done.append(el)
 
     """Check if this subject already had it's first run"""
+
     def subject_first(self, device, path, browser=None):
         runs_done = self.progress_xml_content.find('runsDone')
         if browser is not None:
@@ -145,6 +152,7 @@ class Progress(object):
             return False
 
     """Checks if all subject runs are done"""
+
     def subject_finished(self, device, path, browser=None):
         runs_to_run = self.progress_xml_content.find('runsToRun')
         if browser is not None:
@@ -179,17 +187,6 @@ class Progress(object):
             return True
         else:
             return False
-
-    def subject_aggregated(self, device, path, browser=None):
-        subjects = self.progress_xml_content.find('subjects')
-        if browser is not None:
-            elements = subjects.xpath(
-                "subject[device='{}' and path='{}' and browser='{}']".format(device, path, browser))
-        else:
-            elements = subjects.xpath(
-                "subject[device='{}' and path='{}']".format(device, path))
-        if len(elements) == 1:
-            elements[0].find('aggregated').text = '1'
 
     def experiment_finished_check(self):
         runs_to_run = self.progress_xml_content.find('runsToRun')

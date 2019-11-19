@@ -1,13 +1,14 @@
 import logging
-import shutil
-import paths
 import os.path as op
+import shutil
+
+import paths
 import util
-from PluginTests import Tests
-from Progress import Progress
 from Experiment import Experiment
 from NativeExperiment import NativeExperiment
+from Progress import Progress
 from WebExperiment import WebExperiment
+from tests.PluginTests import PluginTests
 
 logger = logging.getLogger('ExperimentFactory')
 
@@ -23,13 +24,16 @@ class ExperimentFactory(object):
         shutil.copy(path, op.join(paths.OUTPUT_DIR, 'config.json'))
         config = util.load_json(path)
         experiment_type = config['type']
-        if progress is None and not experiment_type == 'test':
+        if experiment_type == 'plugintest':
+            return PluginTests(config)
+        if progress is None:
             progress = Progress(config_file=path, config=config, load_progress=False)
-        if experiment_type == 'native':
-            return NativeExperiment(config, progress)
-        elif experiment_type == 'web':
-            return WebExperiment(config, progress)
-        elif experiment_type == 'test':
-            return Tests(config)
+            restart = False
         else:
-            return Experiment(config, progress)
+            restart = True
+        if experiment_type == 'native':
+            return NativeExperiment(config, progress, restart)
+        elif experiment_type == 'web':
+            return WebExperiment(config, progress, restart)
+        else:
+            return Experiment(config, progress, restart)
