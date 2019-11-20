@@ -124,7 +124,7 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
   "profilers": {
     "android": {
       "sample_interval": 100,
-      "data_points": ["cpu", "mem"]
+      "data_points": ["cpu", "mem"],
       "subject_aggregation": "user_subject_aggregation.py",
       "experiment_aggregation": "user_experiment_aggregation.py"
     }
