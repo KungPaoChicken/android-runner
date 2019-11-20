@@ -94,10 +94,10 @@ adb su -c 'echo <charging enabled value> > <usb_charging_disabled_file>'
 ```
 
 **paths** *Array\<String\>*
-The paths to the APKs/URLs to test with. In case of the APKs, the path on the local file system.
+The paths to the APKs/URLs to test with. In case of the APKs, this is the path on the local file system.
 
 **apps** *Array\<String\>*
-The package names of to the apps to test of the app that are already installed in the device. For example:
+The package names of the apps to test when the apps are already installed on the device. For example:
 ```json
   "apps": [
     "org.mozilla.firefox",
