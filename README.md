@@ -125,6 +125,8 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
     "android": {
       "sample_interval": 100,
       "data_points": ["cpu", "mem"]
+      "subject_aggregation": "user_subject_aggregation.py",
+      "experiment_aggregation": "user_experiment_aggregation.py"
     }
   }
 ```
@@ -132,10 +134,17 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
 ```json
   "profilers": {
     "batterystats": {
-      "cleanup": true
+      "cleanup": true,
+      "subject_aggregation": "default",
+      "experiment_aggregation": "default"
     }
   }
 ```
+**subject_aggregation** *string*
+Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler.
+
+**experiment_aggregation** *string*
+Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler.
 
 **cleanup** *boolean*
 Delete log files required by Batterystats after completion of the experiment. The default is *true*.
