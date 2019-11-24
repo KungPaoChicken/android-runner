@@ -6,7 +6,7 @@ try:
     import subprocess
     import re
     import platform
-    from os import popen3 as pipe
+    from os import popen as pipe
 except ImportError as e:
     print("[!] Required module missing. %s" % e.args[0])
     sys.exit(-1)
