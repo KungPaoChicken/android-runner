@@ -94,10 +94,10 @@ class ADB(object):
             cmdp = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.__output, self.__error = cmdp.communicate()
             retcode = cmdp.wait()
-            if "device unauthorized" in self.__output:
+            if "device unauthorized" in self.__output.decode('utf-8'):
                 self.__error = "[-] Device unauthorized"
                 return False
-            return self.__output.rstrip('\n')
+            return self.__output.decode('utf-8').rstrip('\n')
         except OSError as error:
             self.__error = str(error)
 
