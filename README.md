@@ -188,7 +188,7 @@ To test your own profiler, you can make use of the 'plugintest' experiment type 
 ## Experiment continuation
 In case of an error or a user abort during experiment execution, it is possible to continue the experiment if desired. This is possible by using a ```--progress``` tag with the starting command. For example:
 
-```python android_runner your_config.json --progress path path/to/progress.xml```
+```python android_runner your_config.json --progress path/to/progress.xml```
 
 ## Detailed documentation
 The original thesis can be found here:
