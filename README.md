@@ -176,13 +176,14 @@ Below are the supported types:
 
 ## Plugin profilers
 It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
-that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. You can use your own
-profiler in the same way as the default profilers, you just need to make sure that:
+that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. The device object that is mentioned within the profiler.py class is based on the device.py of this repo. To see what can be done with this object, see the source code [here](ExperimentRunner/Device.py).
+
+You can use your own profiler in the same way as the default profilers, you just need to make sure that:
 - The profiler name is the same as your python file and class name.
 - Your python file isn't called 'Profiler.py' as this file will be overwritten.
 - The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
-To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
+To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](examples/plugintest/)
 
 ## Detailed documentation
 The original thesis can be found here:
