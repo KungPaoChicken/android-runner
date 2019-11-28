@@ -185,7 +185,7 @@ You can use your own profiler in the same way as the default profilers, you just
 
 To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](examples/plugintest/)
 
-## Experiment
+## Experiment continuation
 In case of an error or a user abort during experiment execution, it is possible to continue the experiment if desired. This is possible by using a ```--progress``` tag with the starting command. For example:
 
 ```python android_runner your_config.json --progress path path/to/progress.xml```
