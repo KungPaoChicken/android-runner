@@ -141,10 +141,10 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
   }
 ```
 **subject_aggregation** *string*
-Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler. If a user specified aggregation script is used then the script should containt a ```bash main((dummy, data_dir)``` method, as this method is used as the entry point to the script.
+Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler. If a user specified aggregation script is used then the script should containt a ```bash main(dummy, data_dir)``` method, as this method is used as the entry point to the script.
 
 **experiment_aggregation** *string*
-Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler. If a user specified aggregation script is used then the script should containt a ```bash main((dummy, data_dir, result_file)``` method, as this method is used as the entry point to the script.
+Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler. If a user specified aggregation script is used then the script should containt a ```bash main(dummy, data_dir, result_file)``` method, as this method is used as the entry point to the script.
 
 **cleanup** *boolean*
 Delete log files required by Batterystats after completion of the experiment. The default is *true*.
