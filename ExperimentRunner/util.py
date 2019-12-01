@@ -50,4 +50,5 @@ def slugify_dir(value):
     Normalizes string, converts to lowercase, removes non-alpha characters,
     and converts spaces to hyphens.
     """
+
     return slugify(value)
