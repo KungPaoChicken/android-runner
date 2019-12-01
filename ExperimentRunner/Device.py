@@ -77,7 +77,7 @@ class Device:
             self.logger.info('Root unpluged')
         else:
             self.logger.info('Default unplug')
-            if self.get_api_level() < 23:
+            if int(self.get_api_level()) < 23:
                 # API level < 23, 4.4.3+ tested, WARNING: hardcoding
                 Adb.shell(self.id, 'dumpsys battery set usb 0')
                 # Adb.shell(self.id, 'dumpsys battery set ac 0')
