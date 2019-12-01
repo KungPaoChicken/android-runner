@@ -46,7 +46,8 @@ class Android(Profiler):
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
             # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
-            return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
+            # https://stackoverflow.com/questions/23175809/str-translate-gives-typeerror-translate-takes-one-argument-2-given-worked-i
+            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('','', '(kB,K')).split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
             if result == '':
