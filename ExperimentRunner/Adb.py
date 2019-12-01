@@ -50,6 +50,7 @@ def shell_su(device_id, cmd):
 def shell(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command(cmd)
+    result = result.decode('utf-8')
     logger.debug('%s: "%s" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
         raise AdbError(result)
