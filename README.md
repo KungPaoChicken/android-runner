@@ -4,7 +4,7 @@ Automated experiment execution on Android devices
 ## Install
 This tool is only tested on Ubuntu, but it should work in other linux distributions.
 You'll need:
-- Python 2.7
+- Python 3
 - Android Debug Bridge (`sudo apt install android-tools-adb`)
 - Android SDK Tools (`sudo apt install monkeyrunner`)
 - JDK 8 (NOT JDK 9) (`sudo apt install openjdk-8-jre`)
