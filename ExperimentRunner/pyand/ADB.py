@@ -190,19 +190,23 @@ class ADB(object):
         Return a dictionary of connected devices along with an incremented Id.
         adb devices
         """
+        print("Inside get_devices")
         error = 0
         # Clear existing list of devices
         self.__devices = None
         self.run_cmd("devices")
+        print("self.__error is: " +str(self.__error))
         device_dict = {}
         if self.__error is not None:
             return None
         try:
             n = 0
-            output_list = self.__output.split("\n")
+            print(self.__output)
+            output_list = self.__output.decode('utf-8').split("\n")
+            print("output list: + " +str(output_list))
             # Split on \r if we are on Windows
             if platform.system().lower == "windows":
-                output_list = self.__output.split("\r")
+                output_list = self.__output.decode('utf-8').split("\r")
 
             for line in output_list:
                 pattern = re.compile(r"([^\s]+)\t+.+$")
@@ -265,7 +269,7 @@ class ADB(object):
         if self.__error is not None:
             return self.__error
         try:
-            for line in self.__output.split("\n"):
+            for line in self.__output.decode('utf-8').split("\n"):
                 if line.startswith(self.__target):
                     pattern = r"model:(.+)\sdevice"
                     pat = re.compile(pattern)
