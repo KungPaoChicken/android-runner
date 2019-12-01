@@ -3,6 +3,7 @@ import json
 import os
 import re
 from collections import OrderedDict
+from slugify import slugify
 
 
 class ConfigError(Exception):
@@ -50,8 +51,9 @@ def slugify_dir(value):
     Normalizes string, converts to lowercase, removes non-alpha characters,
     and converts spaces to hyphens.
     """
-    import unicodedata
-    value = value.decode('unicode-escape')
-    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = str(re.sub(r'[^\w\s-]', '', value).strip().lower())
-    return str(re.sub(r'[-\s]+', '-', value))
+    return slugify(value)
+    # import unicodedata
+    # #value = value.decode('unicode-escape')
+    # value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    # value = str(re.sub(r'[^\w\s-]', '', value).strip().lower())
+    # return str(re.sub(r'[-\s]+', '-', value))
