@@ -44,7 +44,6 @@ def makedirs(path):
             raise
 
 
-# https://stackoverflow.com/a/295466
 # noinspection PyTypeChecker
 def slugify_dir(value):
     """
@@ -52,8 +51,3 @@ def slugify_dir(value):
     and converts spaces to hyphens.
     """
     return slugify(value)
-    # import unicodedata
-    # #value = value.decode('unicode-escape')
-    # value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    # value = str(re.sub(r'[^\w\s-]', '', value).strip().lower())
-    # return str(re.sub(r'[-\s]+', '-', value))
