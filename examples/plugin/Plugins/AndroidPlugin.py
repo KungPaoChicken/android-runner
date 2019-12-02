@@ -6,7 +6,7 @@ import time
 import timeit
 from collections import OrderedDict
 
-from Profiler import Profiler
+from .Profiler import Profiler
 from functools import reduce
 
 
@@ -41,7 +41,7 @@ class AndroidPlugin(Profiler):
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
             # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
-            return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
+            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('','', '(kB,K')).split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
             if 'No process found' in result:
