@@ -42,7 +42,6 @@ class Trepn(Profiler):
                     i.set('value', str(params['sample_interval']))
         preferences_file.write(op.join(self.pref_dir, 'com.quicinc.trepn_preferences.xml'), encoding='utf-8',
                                xml_declaration=True, standalone=True)
-
         datapoints_file = et.parse(op.join(current_dir, 'trepn/data_points.xml'))
         dp_root = datapoints_file.getroot()
         data_points_dict = self.load_json(op.join(current_dir, 'trepn/data_points.json'))
@@ -179,7 +178,7 @@ class Trepn(Profiler):
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+            with open(os.path.join(logs_dir, run_file), 'r') as run:
                 run_dict = {}
                 reader = csv.DictReader(run)
                 column_readers = self.split_reader(reader)
@@ -227,7 +226,7 @@ class Trepn(Profiler):
     def aggregate_trepn_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
-                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                with open(os.path.join(logs_dir, aggregated_file), 'r') as aggregated:
                     reader = csv.DictReader(aggregated)
                     row_dict = OrderedDict()
                     for row in reader:
