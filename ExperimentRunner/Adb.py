@@ -40,7 +40,7 @@ def connect(device_id):
 
 def shell_su(device_id, cmd):
     adb.set_target_by_name(device_id)
-    result = adb.shell_command("su -c \'%s\'" % cmd)
+    result = adb.shell_command("su -c \'%s\'" % cmd).decode('utf-8')
     logger.debug('%s: "su -c \'%s\'" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
         raise AdbError(result)
