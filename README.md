@@ -141,10 +141,10 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
   }
 ```
 **subject_aggregation** *string*
-Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler.
+Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler. If a user specified aggregation script is used then the script should contain a ```bash main(dummy, data_dir)``` method, as this method is used as the entry point to the script.
 
 **experiment_aggregation** *string*
-Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler.
+Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler. If a user specified aggregation script is used then the script should contain a ```bash main(dummy, data_dir, result_file)``` method, as this method is used as the entry point to the script.
 
 **cleanup** *boolean*
 Delete log files required by Batterystats after completion of the experiment. The default is *true*.
@@ -176,13 +176,19 @@ Below are the supported types:
 
 ## Plugin profilers
 It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
-that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. You can use your own
-profiler in the same way as the default profilers, you just need to make sure that:
+that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. The device object that is mentioned within the profiler.py class is based on the device.py of this repo. To see what can be done with this object, see the source code [here](ExperimentRunner/Device.py).
+
+You can use your own profiler in the same way as the default profilers, you just need to make sure that:
 - The profiler name is the same as your python file and class name.
 - Your python file isn't called 'Profiler.py' as this file will be overwritten.
 - The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
-To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
+To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](examples/plugintest/)
+
+## Experiment continuation
+In case of an error or a user abort during experiment execution, it is possible to continue the experiment if desired. This is possible by using a ```--progress``` tag with the starting command. For example:
+
+```python android_runner your_config.json --progress path/to/progress.xml```
 
 ## Detailed documentation
 The original thesis can be found here:
