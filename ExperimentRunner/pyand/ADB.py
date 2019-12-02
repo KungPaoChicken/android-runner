@@ -190,20 +190,16 @@ class ADB(object):
         Return a dictionary of connected devices along with an incremented Id.
         adb devices
         """
-        print("Inside get_devices")
         error = 0
         # Clear existing list of devices
         self.__devices = None
         self.run_cmd("devices")
-        print("self.__error is: " +str(self.__error))
         device_dict = {}
         if self.__error is not None:
             return None
         try:
             n = 0
-            print(self.__output)
             output_list = self.__output.decode('utf-8').split("\n")
-            print("output list: + " +str(output_list))
             # Split on \r if we are on Windows
             if platform.system().lower == "windows":
                 output_list = self.__output.decode('utf-8').split("\r")
