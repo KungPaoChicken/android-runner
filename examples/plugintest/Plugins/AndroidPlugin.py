@@ -6,7 +6,7 @@ import time
 import timeit
 from collections import OrderedDict
 
-from Profiler import Profiler
+from .Profiler import Profiler
 from functools import reduce
 
 
@@ -46,7 +46,7 @@ class AndroidPlugin(Profiler):
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
             # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
-            return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
+            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('','', '(kB,K')).split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
             if result == '':
@@ -117,7 +117,7 @@ class AndroidPlugin(Profiler):
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+            with open(os.path.join(logs_dir, run_file), 'r') as run:
                 reader = csv.DictReader(run)
                 init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                 run_total = reduce(add_row, reader, init)
@@ -150,7 +150,7 @@ class AndroidPlugin(Profiler):
     def aggregate_android_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
-                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                with open(os.path.join(logs_dir, aggregated_file), 'r') as aggregated:
                     reader = csv.DictReader(aggregated)
                     row_dict = OrderedDict()
                     for row in reader:
