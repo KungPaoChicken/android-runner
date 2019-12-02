@@ -99,6 +99,7 @@ def clear_app_data(device_id, name):
 
 
 def success_or_exception(result, success_msg, fail_msg):
+    result = result.decode('utf-8')
     if 'Success' in result:
         logger.info(success_msg)
     else:
