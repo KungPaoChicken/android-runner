@@ -3,6 +3,7 @@ import os
 import sys
 from collections import OrderedDict
 from functools import reduce
+import pdb
 
 
 def list_subdir(a_dir):
@@ -20,7 +21,7 @@ def aggregate_android_final(logs_dir):
 
     runs = []
     for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-        with open(os.path.join(logs_dir, run_file), 'rb') as run:
+        with open(os.path.join(logs_dir, run_file), 'r') as run:
             reader = csv.DictReader(run)
             init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
             run_total = reduce(add_row, reader, init)
@@ -38,15 +39,15 @@ def aggregate(data_dir):
         for subject in list_subdir(device_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            if os.path.isdir(os.path.join(subject_dir, 'android')):
-                row.update(aggregate_android_final(os.path.join(subject_dir, 'android')))
+            if os.path.isdir(os.path.join(subject_dir, 'AndroidPlugin')):
+                row.update(aggregate_android_final(os.path.join(subject_dir, 'AndroidPlugin')))
                 rows.append(row.copy())
             else:
                 for browser in list_subdir(subject_dir):
                     row.update({'browser': browser})
                     browser_dir = os.path.join(subject_dir, browser)
-                    if os.path.isdir(os.path.join(browser_dir, 'android')):
-                        row.update(aggregate_android_final(os.path.join(browser_dir, 'android')))
+                    if os.path.isdir(os.path.join(browser_dir, 'AndroidPlugin')):
+                        row.update(aggregate_android_final(os.path.join(browser_dir, 'AndroidPlugin')))
                         rows.append(row.copy())
     return rows
 
