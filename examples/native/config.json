@@ -1,11 +1,12 @@
 {
   "type": "native",
   "devices": {
-    "nexus6p": {}
+    "j7duo2": {}
   },
+  "duration": 5000,
   "replications": 1,
   "apps": [
-    "com.experimental.rvs960.ioapp"
+    "com.samsung.android.messaging"
   ],
   "profilers": {
      "trepn": {
