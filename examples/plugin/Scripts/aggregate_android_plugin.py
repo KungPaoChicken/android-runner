@@ -37,15 +37,15 @@ def aggregate(data_dir):
         for subject in list_subdir(device_dir):
             row.update({'subject': subject})
             subject_dir = os.path.join(device_dir, subject)
-            if os.path.isdir(os.path.join(subject_dir, 'android')):
-                row.update(aggregate_android_final(os.path.join(subject_dir, 'android')))
+            if os.path.isdir(os.path.join(subject_dir, 'AndroidPlugin')):
+                row.update(aggregate_android_final(os.path.join(subject_dir, 'AndroidPlugin')))
                 rows.append(row.copy())
             else:
                 for browser in list_subdir(subject_dir):
                     row.update({'browser': browser})
                     browser_dir = os.path.join(subject_dir, browser)
-                    if os.path.isdir(os.path.join(browser_dir, 'android')):
-                        row.update(aggregate_android_final(os.path.join(browser_dir, 'android')))
+                    if os.path.isdir(os.path.join(browser_dir, 'AndroidPlugin')):
+                        row.update(aggregate_android_final(os.path.join(browser_dir, 'AndroidPlugin')))
                         rows.append(row.copy())
     return rows
 
