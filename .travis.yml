@@ -5,6 +5,8 @@ install:
   - pip install pytest
   - pip install pytest-cov
   - pip install coveralls
+  - apt install python-lxml
+  - pip install pluginbase
 script:
   - py.test tests/unit --cov android-runner
 after_success:
