@@ -742,7 +742,7 @@ class TestBatterystatsPlugin(object):
         test_logs_aggregated = batterystats_plugin.aggregate_battery_subject(test_subject_log_dir, True)
 
         assert len(test_logs_aggregated) == 1
-        assert test_logs_aggregated['batterystats_Joule_calculated'] == 101.227896
+        assert round(test_logs_aggregated['batterystats_Joule_calculated'],6) == 101.227896
 
     @patch("ExperimentRunner.Plugins.Batterystats.Batterystats.aggregate_battery_final")
     def test_aggregate_final_web(self, aggregate_mock, batterystats_plugin, fixture_dir):
