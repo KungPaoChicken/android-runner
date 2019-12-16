@@ -1,3 +1,4 @@
+[![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
 # Android Runner
 Automated experiment execution on Android devices
 
