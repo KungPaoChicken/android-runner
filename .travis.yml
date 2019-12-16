@@ -8,6 +8,6 @@ install:
   - pip install lxml
   - pip install pluginbase
 script:
-  - py.test tests/unit --cov android-runner
+  - py.test tests/unit
 after_success:
   - coveralls
