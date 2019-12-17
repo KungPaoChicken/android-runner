@@ -5,4 +5,4 @@ omit = */old tests*
 	*/unit* 
 	*/tests/*
 	*BatterystatsParser*
-	*travis*
+	*pytest*
