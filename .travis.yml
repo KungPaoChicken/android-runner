@@ -1,0 +1,15 @@
+language: python
+python:
+  - "2.7"
+before_script:
+  - ls -R tests/unit/fixtures
+install:
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install coveralls
+  - pip install lxml
+  - pip install pluginbase
+script:
+  - py.test tests/unit
+after_success:
+  - coveralls

@@ -4,6 +4,7 @@
     "nexus6p": {}
   },
   "replications": 1,
+  "duration": 5000,
   "apps": [
     "com.experimental.rvs960.ioapp"
   ],
