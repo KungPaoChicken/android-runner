@@ -2,6 +2,7 @@ language: python
 python:
   - "2.7"
 before_script:
+  - cd ../
 install:
   - pip install pytest
   - pip install pytest-cov
@@ -9,6 +10,6 @@ install:
   - pip install lxml
   - pip install pluginbase
 script:
-  - coverage run -m py.test tests/unit --cov
+  - coverage run -m py.test py.test android-runner/tests/unit --cov android-runner
 after_success:
   - coveralls
