@@ -6,3 +6,4 @@ omit = */old tests*
 	*/tests/*
 	*BatterystatsParser*
 	*pytest*
+	*/python2.7/site-packages/*
