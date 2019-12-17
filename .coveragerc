@@ -6,4 +6,3 @@ omit = */old tests*
 	*/tests/*
 	*BatterystatsParser*
 	*pytest*
-source = android-runner
