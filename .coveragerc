@@ -1,0 +1,7 @@
+[run]
+omit = */old tests*
+       */pyand*
+       */PluginTests*
+	*/unit* 
+	*/tests/*
+	*BatterystatsParser*
