@@ -10,6 +10,6 @@ install:
   - pip install lxml
   - pip install pluginbase
 script:
-  - coverage run -m py.test py.test android-runner/tests/unit --cov android-runner
+  - coverage run -m py.test android-runner/tests/unit --cov android-runner
 after_success:
   - coveralls
