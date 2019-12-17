@@ -323,11 +323,6 @@ class TestAndroidPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsapplecom'), ('browser', 'firefox'),
-                     ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsgooglecom'), ('browser', 'firefox'),
-                     ('avg', 2)]) in final_aggregated_result
-
 
     @patch("ExperimentRunner.Plugins.Android.Android.aggregate_android_final")
     def test_aggregate_final_native(self, aggregate_mock, android_plugin, fixture_dir):
@@ -338,8 +333,6 @@ class TestAndroidPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp1'), ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp2'), ('avg', 2)]) in final_aggregated_result
 
     def test_aggregate_android_final(self, android_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'android')
@@ -746,10 +739,6 @@ class TestBatterystatsPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsapplecom'), ('browser', 'firefox'),
-                     ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsgooglecom'), ('browser', 'firefox'),
-                     ('avg', 2)]) in final_aggregated_result
 
     @patch("ExperimentRunner.Plugins.Batterystats.Batterystats.aggregate_battery_final")
     def test_aggregate_final_native(self, aggregate_mock, batterystats_plugin, fixture_dir):
@@ -760,8 +749,6 @@ class TestBatterystatsPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp1'), ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp2'), ('avg', 2)]) in final_aggregated_result
 
     def test_aggregate_battery_final(self, batterystats_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'batterystats')
@@ -1106,11 +1093,6 @@ class TestTrepnPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsapplecom'), ('browser', 'firefox'),
-                     ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'httpsgooglecom'), ('browser', 'firefox'),
-                     ('avg', 2)]) in final_aggregated_result
-
 
     @patch("ExperimentRunner.Plugins.Trepn.Trepn.aggregate_trepn_final")
     def test_aggregate_final_native(self, aggregate_mock, trepn_plugin, fixture_dir):
@@ -1121,8 +1103,6 @@ class TestTrepnPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp1'), ('avg', 1)]) in final_aggregated_result
-        assert dict([('device', 'nexus6p'), ('subject', 'testapp2'), ('avg', 2)]) in final_aggregated_result
 
     def test_aggregate_trepn_final(self, trepn_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'trepn')
