@@ -5,9 +5,4 @@ omit = */old tests*
 	*/unit* 
 	*/tests/*
 	*BatterystatsParser*
-	*pytest*
-	*/py/*
-	*/pluggy/*
-	*/pkg_resources/*
-	*/pbr/*
-	*/lib/python*
+
