@@ -1,4 +1,5 @@
 [![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
+[![Build Status](https://travis-ci.org/devries123/android-runner.svg?branch=master)](https://travis-ci.org/devries123/android-runner)
 [![Coverage Status](https://coveralls.io/repos/github/devries123/android-runner/badge.svg?branch=master)](https://coveralls.io/github/devries123/android-runner?branch=master)
 # Android Runner
 Automated experiment execution on Android devices
