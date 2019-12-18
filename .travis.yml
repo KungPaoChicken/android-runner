@@ -9,6 +9,6 @@ install:
   - pip install lxml
   - pip install pluginbase
 script:
-  - coverage run -m py.test tests/unit --cov
+  - coverage run -m py.test tests/unit
 after_success:
   - coveralls --rcfile=.coveragerc
