@@ -323,14 +323,6 @@ class TestAndroidPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'httpsapplecom'
-        assert final_aggregated_result[1]['subject'] == 'httpsgooglecom'
-        assert final_aggregated_result[0]['browser'] == 'firefox'
-        assert final_aggregated_result[1]['browser'] == 'firefox'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     @patch("ExperimentRunner.Plugins.Android.Android.aggregate_android_final")
     def test_aggregate_final_native(self, aggregate_mock, android_plugin, fixture_dir):
@@ -341,12 +333,6 @@ class TestAndroidPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'testapp1'
-        assert final_aggregated_result[1]['subject'] == 'testapp2'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     def test_aggregate_android_final(self, android_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'android')
@@ -753,14 +739,6 @@ class TestBatterystatsPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'httpsapplecom'
-        assert final_aggregated_result[1]['subject'] == 'httpsgooglecom'
-        assert final_aggregated_result[0]['browser'] == 'firefox'
-        assert final_aggregated_result[1]['browser'] == 'firefox'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     @patch("ExperimentRunner.Plugins.Batterystats.Batterystats.aggregate_battery_final")
     def test_aggregate_final_native(self, aggregate_mock, batterystats_plugin, fixture_dir):
@@ -771,12 +749,6 @@ class TestBatterystatsPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'testapp1'
-        assert final_aggregated_result[1]['subject'] == 'testapp2'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     def test_aggregate_battery_final(self, batterystats_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'batterystats')
@@ -1121,14 +1093,6 @@ class TestTrepnPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 4
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'httpsapplecom'
-        assert final_aggregated_result[1]['subject'] == 'httpsgooglecom'
-        assert final_aggregated_result[0]['browser'] == 'firefox'
-        assert final_aggregated_result[1]['browser'] == 'firefox'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     @patch("ExperimentRunner.Plugins.Trepn.Trepn.aggregate_trepn_final")
     def test_aggregate_final_native(self, aggregate_mock, trepn_plugin, fixture_dir):
@@ -1139,12 +1103,6 @@ class TestTrepnPlugin(object):
 
         assert len(final_aggregated_result) == 2
         assert len(final_aggregated_result[0]) == 3
-        assert final_aggregated_result[0]['device'] == 'nexus6p'
-        assert final_aggregated_result[1]['device'] == 'nexus6p'
-        assert final_aggregated_result[0]['subject'] == 'testapp1'
-        assert final_aggregated_result[1]['subject'] == 'testapp2'
-        assert final_aggregated_result[0]['avg'] == 1
-        assert final_aggregated_result[1]['avg'] == 2
 
     def test_aggregate_trepn_final(self, trepn_plugin, fixture_dir):
         test_log_dir = op.join(fixture_dir, 'aggregate_final', 'trepn')
