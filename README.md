@@ -173,7 +173,7 @@ Below are the supported types:
   executes once before the first run
 - before_run
   executes before every run
-  - after_launch
+- after_launch
   executes after the target app/website is launched, but before profiling starts
 - interaction
   executes between the start and end of a run
