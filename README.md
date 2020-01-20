@@ -177,6 +177,8 @@ Below are the supported types:
   executes after the target app/website is launched, but before profiling starts
 - interaction
   executes between the start and end of a run
+- before_close
+  executes before the target app/website is closed
 - after_run
   executes after a run completes
 - after_experiment
@@ -188,11 +190,12 @@ Instead of a path to string it is also possible to provide a JSON object in the 
       {
         "type": "python2",
         "path": "Scripts/interaction.py",
-        "timeout": 500
+        "timeout": 500,
+        "logcat_regex": "<expr>"
       }
    ]
 ```
-Within the JSON object you can use "type" to "python2", "monkeyrunner" or, "monkeyreplay" depending on the type of script. "python2" can be used for a standard python script,  "monkeyreplay" for running a Monkeyrunner script with the use of the Monkeyrunner framework and "monkeyrunner" can be used to run a Monkeyrunner directly without the entire Monkeyrunner framework. The "timeout" option is to set a maximum run time in miliseconds for the specified script.
+Within the JSON object you can use "type" to "python2", "monkeyrunner" or, "monkeyreplay" depending on the type of script. "python2" can be used for a standard python script,  "monkeyreplay" for running a Monkeyrunner script with the use of the Monkeyrunner framework and "monkeyrunner" can be used to run a Monkeyrunner directly without the entire Monkeyrunner framework. The "timeout" option is to set a maximum run time in miliseconds for the specified script. The optional option "logcat_regex" filters the logcat messages such that it only keeps lines where the log message matches "\<expr\>" where "\<expr\>" is a regular expression.
 
 ## Plugin profilers
 It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
