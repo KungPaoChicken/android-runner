@@ -164,7 +164,7 @@ class Batterystats(Profiler):
 
     @staticmethod
     def write_to_file(filename, rows):
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.DictWriter(f, list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
@@ -181,7 +181,7 @@ class Batterystats(Profiler):
         runs_total = dict()
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if ('Joule' in run_file) and joules:
-                with open(os.path.join(logs_dir, run_file), 'rb') as run:
+                with open(os.path.join(logs_dir, run_file), 'r', encoding='utf-8') as run:
                     reader = csv.DictReader(run)
                     init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                     run_total = reduce(add_row, reader, init)
@@ -214,7 +214,7 @@ class Batterystats(Profiler):
     def aggregate_battery_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
-                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                with open(os.path.join(logs_dir, aggregated_file), 'r', encoding='utf-8') as aggregated:
                     reader = csv.DictReader(aggregated)
                     row_dict = OrderedDict()
                     for row in reader:
