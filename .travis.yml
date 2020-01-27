@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+before_script:
+install:
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install coveralls
+  - pip install lxml
+  - pip install pluginbase
+script:
+  - coverage run -m py.test tests/unit
+after_success:
+  - coveralls --rcfile=.coveragerc

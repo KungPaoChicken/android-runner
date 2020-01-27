@@ -5,6 +5,7 @@
   },
   "duration": 5000,
   "replications": 1,
+  "duration": 5000,
   "apps": [
     "com.samsung.android.messaging"
   ],

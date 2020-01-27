@@ -1,3 +1,6 @@
+[![Github All Releases](https://img.shields.io/github/downloads/kotlin-graphics/kotlin-unsigned/total.svg)]()
+[![Build Status](https://travis-ci.org/S2-group/android-runner.svg?branch=master)](https://travis-ci.org/S2-group/android-runner)
+[![Coverage Status](https://coveralls.io/repos/github/S2-group/android-runner/badge.svg?branch=master)](https://coveralls.io/github/S2-group/android-runner?branch=master&service=github)
 # Android Runner
 Automated experiment execution on Android devices
 
@@ -59,7 +62,10 @@ Number of times an experiment is run.
 Random order of run execution. Default is *false*.
 
 **duration** *positive integer*
-The duration of each run in milliseconds.
+The duration of each run in milliseconds, default is 0. Setting a too short duration may lead to missing results when running native experiments, adviced is to set a higher duration time if unexpected results appear.
+
+**time_between_run** *positive integer*
+The time that the framework waits between 2 succesive experiment runs. Default is 0.
 
 **devices** *JSON*
 A JSON object to describe the devices to be used and their arguments. Below are several examples:
@@ -88,6 +94,8 @@ A JSON object to describe the devices to be used and their arguments. Below are 
 ```
 Note that the last two examples result in the same behaviour.
 
+The root_disable_charging option specifies if the devices needs to be root charging disabled by writing the charging_disabled_value to the usb_charging_disabled_file. Different devices have different values for the charging_disabled_value and usb_charging_disabled_file, so be carefull when using this feature. Also keep an eye out on the battery percantage when ussing this feature. If the battery dies when the charging is root disabled, it becomes impossible to charge the device via USB. 
+
 **WARNING:** Always check the battery settings of the device for the charging status of the device after using root disable charging.
 If the device isn't charging after the experiment is finished, reset the charging file yourself via ADB SU command line using:
 ```shell
@@ -95,10 +103,10 @@ adb su -c 'echo <charging enabled value> > <usb_charging_disabled_file>'
 ```
 
 **paths** *Array\<String\>*
-The paths to the APKs/URLs to test with. In case of the APKs, the path on the local file system.
+The paths to the APKs/URLs to test with. In case of the APKs, this is the path on the local file system.
 
 **apps** *Array\<String\>*
-The package names of to the apps to test of the app that are already installed in the device. For example:
+The package names of the apps to test when the apps are already installed on the device. For example:
 ```json
   "apps": [
     "org.mozilla.firefox",
@@ -125,7 +133,9 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
   "profilers": {
     "android": {
       "sample_interval": 100,
-      "data_points": ["cpu", "mem"]
+      "data_points": ["cpu", "mem"],
+      "subject_aggregation": "user_subject_aggregation.py",
+      "experiment_aggregation": "user_experiment_aggregation.py"
     }
   }
 ```
@@ -133,10 +143,17 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
 ```json
   "profilers": {
     "batterystats": {
-      "cleanup": true
+      "cleanup": true,
+      "subject_aggregation": "default",
+      "experiment_aggregation": "default"
     }
   }
 ```
+**subject_aggregation** *string*
+Specify which subject aggregation to use. The default is the subject aggregation provided by the profiler. If a user specified aggregation script is used then the script should contain a ```bash main(dummy, data_dir)``` method, as this method is used as the entry point to the script.
+
+**experiment_aggregation** *string*
+Specify which experiment aggregation to use. The default is the experiment aggregation provided by the profiler. If a user specified aggregation script is used then the script should contain a ```bash main(dummy, data_dir, result_file)``` method, as this method is used as the entry point to the script.
 
 **cleanup** *boolean*
 Delete log files required by Batterystats after completion of the experiment. The default is *true*.
@@ -161,20 +178,41 @@ Below are the supported types:
   executes after the target app/website is launched, but before profiling starts
 - interaction
   executes between the start and end of a run
+- before_close
+  executes before the target app/website is closed
 - after_run
   executes after a run completes
 - after_experiment
   executes once after the last run
+  
+Instead of a path to string it is also possible to provide a JSON object in the following form:
+```json
+    "interaction": [
+      {
+        "type": "python2",
+        "path": "Scripts/interaction.py",
+        "timeout": 500,
+        "logcat_regex": "<expr>"
+      }
+   ]
+```
+Within the JSON object you can use "type" to "python2", "monkeyrunner" or, "monkeyreplay" depending on the type of script. "python2" can be used for a standard python script,  "monkeyreplay" for running a Monkeyrunner script with the use of the Monkeyrunner framework and "monkeyrunner" can be used to run a Monkeyrunner directly without the entire Monkeyrunner framework. The "timeout" option is to set a maximum run time in miliseconds for the specified script. The optional option "logcat_regex" filters the logcat messages such that it only keeps lines where the log message matches "\<expr\>" where "\<expr\>" is a regular expression.
 
 ## Plugin profilers
 It is possible to write your own profiler and use this with Android runner. To do so write your profiler in such a way
-that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. You can use your own
-profiler in the same way as the default profilers, you just need to make sure that:
+that it uses [this profiler.py class](ExperimentRunner/Plugins/Profiler.py) as parent class. The device object that is mentioned within the profiler.py class is based on the device.py of this repo. To see what can be done with this object, see the source code [here](ExperimentRunner/Device.py).
+
+You can use your own profiler in the same way as the default profilers, you just need to make sure that:
 - The profiler name is the same as your python file and class name.
 - Your python file isn't called 'Profiler.py' as this file will be overwritten.
 - The python file is placed in a directory called 'Plugin' which resided in the same directory as your config.json
 
-To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](example/plugintest/)
+To test your own profiler, you can make use of the 'plugintest' experiment type which can be seen [here](examples/plugintest/)
+
+## Experiment continuation
+In case of an error or a user abort during experiment execution, it is possible to continue the experiment if desired. This is possible by using a ```--progress``` tag with the starting command. For example:
+
+```python android_runner your_config.json --progress path/to/progress.xml```
 
 ## Detailed documentation
 The original thesis can be found here:
