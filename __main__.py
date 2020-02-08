@@ -27,7 +27,7 @@ def main():
         progress_file = experiment.get_progress_xml_file()
         experiment.start()
     except Exception as e:
-        logger.error('%s: %s' % (e.__class__.__name__, e.message))
+        logger.error('%s: %s' % (e.__class__.__name__, str(e)))
         logger.error('An error occurred, the experiment has been stopped. '
                      'To continue, add progress file argument to experiment startup: '
                      '--progress {}'.format(progress_file))
