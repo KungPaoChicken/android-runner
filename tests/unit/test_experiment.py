@@ -938,8 +938,8 @@ class TestWebExperiment(object):
         web_experiment.prepare_output_dir(fake_dict)
 
         assert os.path.isdir(paths.OUTPUT_DIR)
-        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path',
-                                                'fake_browser')
+        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake-device', 'fake-path',
+                                                'fake-browser')
 
     @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject(self, before_run_subject, web_experiment):
