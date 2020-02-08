@@ -10,6 +10,6 @@ install:
   - pip install pluginbase
   - pip install python-slugify
 script:
-  - coverage run -m py.test tests/unit
+  - coverage run -m py.test --verbose tests/unit
 after_success:
   - coveralls --rcfile=.coveragerc
