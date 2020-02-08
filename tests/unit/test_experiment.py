@@ -938,9 +938,6 @@ class TestWebExperiment(object):
         web_experiment.prepare_output_dir(fake_dict)
 
         assert os.path.isdir(paths.OUTPUT_DIR)
-        print(paths.OUTPUT_DIR)
-        print(os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake-device', 'fake-path',
-                                                'fake-browser'))
         assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake-device', 'fake-path',
                                                 'fake-browser')
 
