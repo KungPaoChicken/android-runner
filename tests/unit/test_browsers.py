@@ -22,7 +22,7 @@ class TestBrowsers(object):
     def test_get_browser_fake(self):
         with pytest.raises(Exception) as except_result:
             BrowserFactory.get_browser("fake_browser")
-        assert "No Browser found" in except_result.value
+        assert "No Browser found" in str(except_result.value)
 
     def test_browsers_to_string_browser(self, browser):
         assert browser.to_string() == ''
