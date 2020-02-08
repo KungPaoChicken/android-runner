@@ -6,7 +6,7 @@ import time
 import timeit
 from collections import OrderedDict
 
-from Profiler import Profiler
+from .Profiler import Profiler
 from functools import reduce
 
 
