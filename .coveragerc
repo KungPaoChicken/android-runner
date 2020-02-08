@@ -5,6 +5,6 @@ omit = */old tests*
 	*/unit* 
 	*/tests/*
 	*BatterystatsParser*
-	*/python2.7/*
+	*/python3.6/*
 	*/pytest-*
 
