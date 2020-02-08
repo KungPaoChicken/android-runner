@@ -58,7 +58,7 @@ class Device:
 
     def check_plug_value(self):
         """Checks the root plug value for validity, if it's not valid it tries to make it valid"""
-        if isinstance(self.root_unplug_value, (int, long)):
+        if isinstance(self.root_unplug_value, (int, int)):
             try:
                 self.root_plug_value = int(self.root_plug_value)
             except ValueError:
