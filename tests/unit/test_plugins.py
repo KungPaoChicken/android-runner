@@ -363,12 +363,12 @@ class TestAndroidPlugin(object):
     def test_is_integer_not_int(self, android_plugin):
         with pytest.raises(AndroidConfigError) as except_result:
             android_plugin.is_integer("error")
-        assert 'error is not an integer' in except_result.value
+        assert 'error is not an integer' in str(except_result.value)
 
     def test_is_integer_too_small(self, android_plugin):
         with pytest.raises(AndroidConfigError) as except_result:
             android_plugin.is_integer(-1)
-        assert '-1 should be equal or larger than 0' in except_result.value
+        assert '-1 should be equal or larger than 0' in str(except_result.value)
 
     def test_is_integer_succes(self, android_plugin):
         assert android_plugin.is_integer(10) == 10
@@ -778,12 +778,12 @@ class TestBatterystatsPlugin(object):
     def test_is_integer_not_int(self, batterystats_plugin):
         with pytest.raises(BsConfigError) as except_result:
             batterystats_plugin.is_integer("error")
-        assert 'error is not an integer' in except_result.value
+        assert 'error is not an integer' in str(except_result.value)
 
     def test_is_integer_too_small(self, batterystats_plugin):
         with pytest.raises(BsConfigError) as except_result:
             batterystats_plugin.is_integer(-1)
-        assert '-1 should be equal or larger than 0' in except_result.value
+        assert '-1 should be equal or larger than 0' in str(except_result.value)
 
     def test_is_integer_succes(self, batterystats_plugin):
         assert batterystats_plugin.is_integer(10) == 10
@@ -798,12 +798,12 @@ class TestBatterystatsPlugin(object):
     def test_load_json_file_format_error(self, batterystats_plugin, fixture_dir):
         with pytest.raises(BsFileFormatError) as except_result:
             batterystats_plugin.load_json(op.join(fixture_dir, 'test_progress.xml'))
-        assert op.join(fixture_dir, 'test_progress.xml') in except_result.value
+        assert op.join(fixture_dir, 'test_progress.xml') in str(except_result.value)
 
     def test_load_json_file_file_not_found(self, batterystats_plugin, fixture_dir):
         with pytest.raises(BsFileNotFounError) as except_result:
             batterystats_plugin.load_json(op.join(fixture_dir, 'fake_file.json'))
-        assert "FileNotFoundError" in except_result.typename
+        assert "FileNotFoundError" in str(except_result.typename)
 
     def test_load_json_file_permission_denied(self, tmpdir, batterystats_plugin):
         tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
@@ -811,7 +811,7 @@ class TestBatterystatsPlugin(object):
         chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             batterystats_plugin.load_json(tmp_file)
-        assert "Permission denied" in except_result.value
+        assert "Permission denied" in str(except_result.value)
 
 
 class TestTrepnPlugin(object):
@@ -1145,7 +1145,7 @@ class TestTrepnPlugin(object):
         assert op.isdir(dir_path) is False
         with pytest.raises(OSError) as except_result:
             trepn_plugin.makedirs(dir_path)
-        assert "Permission denied" in except_result.value
+        assert "Permission denied" in str(except_result.value)
         assert op.isdir(dir_path) is False
 
     def test_load_json_succes(self, trepn_plugin, fixture_dir):
@@ -1158,12 +1158,12 @@ class TestTrepnPlugin(object):
     def test_load_json_file_format_error(self, trepn_plugin, fixture_dir):
         with pytest.raises(TrFileFormatError) as except_result:
             trepn_plugin.load_json(op.join(fixture_dir, 'test_progress.xml'))
-        assert op.join(fixture_dir, 'test_progress.xml') in except_result.value
+        assert op.join(fixture_dir, 'test_progress.xml') in str(except_result.value)
 
     def test_load_json_file_file_not_found(self, trepn_plugin, fixture_dir):
         with pytest.raises(TrFileNotFoundError) as except_result:
             trepn_plugin.load_json(op.join(fixture_dir, 'fake_file.json'))
-        assert "FileNotFoundError" in except_result.typename
+        assert "FileNotFoundError" in str(except_result.typename)
 
     def test_load_json_file_permission_denied(self, tmpdir, trepn_plugin):
         tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
@@ -1171,4 +1171,4 @@ class TestTrepnPlugin(object):
         chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             trepn_plugin.load_json(tmp_file)
-        assert "Permission denied" in except_result.value
+        assert "Permission denied" in str(except_result.value)

@@ -28,20 +28,20 @@ class TestUtilClass(object):
         fixtures = op.join(op.dirname(op.realpath(__file__)), "fixtures")
         with pytest.raises(util.FileFormatError) as except_result:
             util.load_json(op.join(fixtures, 'test_progress.xml'))
-        assert op.join(fixtures, 'test_progress.xml') in except_result.value
+        assert op.join(fixtures, 'test_progress.xml') in str(except_result.value)
 
     def test_load_json_file_file_not_found(self, tmp_file):
         fixtures = op.join(op.dirname(op.realpath(__file__)), "fixtures")
 
         with pytest.raises(util.FileNotFoundError) as except_result:
             util.load_json(op.join(fixtures, 'fake_file.json'))
-        assert "FileNotFoundError" in except_result.typename
+        assert "FileNotFoundError" in str(except_result.typename)
 
     def test_load_json_file_permission_denied(self, tmp_file):
         os.chmod(tmp_file, 0o222)
         with pytest.raises(IOError) as except_result:
             util.load_json(tmp_file)
-        assert "Permission denied" in except_result.value
+        assert "Permission denied" in str(except_result.value)
 
     def test_makedirs_succes(self, tmpdir):
         dir_path = op.join(str(tmpdir), 'test1')
@@ -65,7 +65,7 @@ class TestUtilClass(object):
         assert op.isdir(dir_path) is False
         with pytest.raises(OSError) as except_result:
             util.makedirs(dir_path)
-        assert "Permission denied" in except_result.value
+        assert "Permission denied" in str(except_result.value)
         assert op.isdir(dir_path) is False
 
     def test_slugify(self):
@@ -105,12 +105,12 @@ class TestTestsClass(object):
     def test_is_integer_not_int(self):
         with pytest.raises(util.ConfigError) as except_result:
             Tests.is_integer("error")
-        assert 'error is not an integer' in except_result.value
+        assert 'error is not an integer' in str(except_result.value)
 
     def test_is_integer_too_small(self):
         with pytest.raises(util.ConfigError) as except_result:
             Tests.is_integer(-1)
-        assert '-1 should be equal or larger than 0' in except_result.value
+        assert '-1 should be equal or larger than 0' in str(except_result.value)
 
     def test_is_integer_succes(self):
         assert Tests.is_integer(10) == 10
@@ -118,7 +118,7 @@ class TestTestsClass(object):
     def test_is_string_fail(self):
         with pytest.raises(util.ConfigError) as except_result:
             Tests.is_string(list())
-        assert "String expected, got <type 'list'>" in except_result.value
+        assert "String expected, got <type 'list'>" in str(except_result.value)
 
     def test_is_string_succes(self):
         test_string = 'This is a string'
@@ -133,7 +133,7 @@ class TestTestsClass(object):
 
         with pytest.raises(util.ConfigError) as except_result:
             Tests.check_dependencies(mocked_devices, "")
-        assert "Required packages ['NotInstalled'] are not installed on device Fake_device" in except_result.value
+        assert "Required packages ['NotInstalled'] are not installed on device Fake_device" in str(except_result.value)
         mock_log.assert_called_once_with('Fake_device: Required package NotInstalled is not installed')
 
     @patch('logging.Logger.error')
