@@ -351,12 +351,12 @@ class TestExperiment(object):
 
     def test_prepare_output_dir(self, tmpdir, default_experiment):
         paths.BASE_OUTPUT_DIR = str(tmpdir)
-        fake_dict = {'device': 'fake_device', 'path': 'fake-path'}
+        fake_dict = {'device': 'fake_device', 'path': 'fake_path'}
 
         default_experiment.prepare_output_dir(fake_dict)
 
         assert os.path.isdir(paths.OUTPUT_DIR)
-        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake-path')
+        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path')
 
     @patch('ExperimentRunner.Experiment.Experiment.after_run')
     @patch('ExperimentRunner.Experiment.Experiment.stop_profiling')
@@ -823,7 +823,7 @@ class TestWebExperiment(object):
     def web_experiment(self, device, check_dependencies):
         check_dependencies.return_value = None
         device.return_value = None
-        device_config = {'devices': 'fake-device'}
+        device_config = {'devices': 'fake_device'}
         return WebExperiment(device_config, None, False)
 
     @patch('ExperimentRunner.BrowserFactory.BrowserFactory.get_browser')
@@ -933,13 +933,13 @@ class TestWebExperiment(object):
 
     def test_prepare_output_dir(self, tmpdir, web_experiment):
         paths.BASE_OUTPUT_DIR = str(tmpdir)
-        fake_dict = {'device': 'fake_device', 'path': 'fake-path', 'browser': 'fake_browser'}
+        fake_dict = {'device': 'fake_device', 'path': 'fake_path', 'browser': 'fake_browser'}
 
         web_experiment.prepare_output_dir(fake_dict)
 
         assert os.path.isdir(paths.OUTPUT_DIR)
-        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake-device', 'fake-path',
-                                                'fake-browser')
+        assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path',
+                                                'fake_browser')
 
     @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject(self, before_run_subject, web_experiment):
