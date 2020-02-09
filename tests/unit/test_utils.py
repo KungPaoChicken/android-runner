@@ -118,7 +118,7 @@ class TestTestsClass(object):
     def test_is_string_fail(self):
         with pytest.raises(util.ConfigError) as except_result:
             Tests.is_string(list())
-        assert "String expected, got <type 'list'>" in str(except_result.value)
+        assert "String expected, got <class 'list'>" in str(except_result.value)
 
     def test_is_string_succes(self):
         test_string = 'This is a string'
