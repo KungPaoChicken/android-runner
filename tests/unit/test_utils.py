@@ -70,7 +70,7 @@ class TestUtilClass(object):
 
     def test_slugify(self):
         string1 = "asdfghjkl.test"
-        assert util.slugify_dir(string1) == string1.replace(".", "")
+        assert util.slugify_dir(string1) == string1.replace(".", "-")
 
         string2 = "ASDFGHJKL"
         assert util.slugify_dir(string2) == string2.lower()
