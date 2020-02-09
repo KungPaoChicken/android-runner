@@ -48,7 +48,10 @@ def makedirs(path):
 def slugify_dir(value):
     """
     Normalizes string, converts to lowercase, removes non-alpha characters,
-    and converts spaces to hyphens.
+    and converts spaces to hyphens.  Separator prevents slugify from removing an
+    underscore and replacing it with a hyphen if the underscore exists to
+    separate a file path name.
     """
-
-    return slugify(value)
+    separator = '_'
+    slug = slugify(value, separator=separator)
+    return slug
