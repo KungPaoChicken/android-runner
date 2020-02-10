@@ -4,6 +4,7 @@ from os import chmod, listdir
 
 import pytest
 from mock import Mock, call, patch
+import pdb
 
 import paths
 from ExperimentRunner.Plugins.Android import Android, ConfigError as AndroidConfigError
@@ -358,7 +359,7 @@ class TestAndroidPlugin(object):
 
         assert op.isfile(tmp_file)
         assert self.csv_reader_to_table(tmp_file) == list(
-            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
 
     def test_is_integer_not_int(self, android_plugin):
         with pytest.raises(AndroidConfigError) as except_result:
@@ -773,7 +774,7 @@ class TestBatterystatsPlugin(object):
 
         assert op.isfile(tmp_file)
         assert self.csv_reader_to_table(tmp_file) == list(
-            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
 
     def test_is_integer_not_int(self, batterystats_plugin):
         with pytest.raises(BsConfigError) as except_result:
@@ -1071,7 +1072,7 @@ class TestTrepnPlugin(object):
 
         assert op.isfile(tmp_file)
         assert self.csv_reader_to_table(tmp_file) == list(
-            [['key2', 'key1'], ['value2', 'value1'], ['value4', 'value3']])
+            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
 
     def test_aggregate_trepn_subject(self, trepn_plugin, fixture_dir):
         test_subject_log_dir = op.join(fixture_dir, 'trepn_subject_result')
