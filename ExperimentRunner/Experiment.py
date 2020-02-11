@@ -67,7 +67,7 @@ class Experiment(object):
         except Exception as e:
             import traceback
             print((traceback.format_exc()))
-            self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
+            self.logger.error('%s: %s' % (e.__class__.__name__, str(e)))
             self.finish_experiment(True, False)
             raise e
         except KeyboardInterrupt:

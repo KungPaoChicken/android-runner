@@ -715,12 +715,13 @@ class TestExperiment(object):
     def test_start_error(self, finish_experiment_mock, capsys, default_experiment):
         mock_logger = Mock()
         default_experiment.logger = mock_logger
-        paths.BASE_OUTPUT_DIR = None  # raises AttributeError
+        paths.BASE_OUTPUT_DIR = None  # raises TypeError
+
         with pytest.raises(Exception):
             default_experiment.start()
         captured = capsys.readouterr()  # Catch std out
         finish_experiment_mock.assert_called_once_with(True, False)
-        mock_logger.error.assert_called_once_with("AttributeError: 'NoneType' object has no attribute 'endswith'")
+        mock_logger.error.assert_called_once_with("TypeError: expected str, bytes or os.PathLike object, not NoneType")
 
     @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
