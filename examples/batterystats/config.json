@@ -5,9 +5,9 @@
   },
   "replications": 3,
   "duration": 60000,
-  "monkeyrunner_path": "/home/thijmen/Library/Android/sdk/tools/bin/monkeyrunner",
-  "systrace_path": "python2 /Users/thijmen/Library/Android/sdk/platform-tools/systrace/systrace.py",
-  "powerprofile_path": "/Users/thijmen/school/isp/project/android-runner-py3/examples/batterystats/Scripts/power_profile.xml",
+  "monkeyrunner_path": "/home/user/Library/Android/sdk/tools/bin/monkeyrunner",
+  "systrace_path": "python2 /home/user/Library/Android/sdk/platform-tools/systrace/systrace.py",
+  "powerprofile_path": "/home/user/school/isp/project/android-runner-py3/examples/batterystats/Scripts/power_profile.xml",
   "paths": [
     "android-runner/example/batterystats/test.androidrunner.apk",
     "android-runner/example/batterystats/test.blackscreen.apk"
