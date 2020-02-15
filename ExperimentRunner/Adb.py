@@ -41,6 +41,7 @@ def connect(device_id):
 def shell_su(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command("su -c \'%s\'" % cmd)
+    result.decode('utf-8') if (isinstance(result, bytes) == True) else result
     logger.debug('%s: "su -c \'%s\'" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
         raise AdbError(result)
@@ -50,6 +51,7 @@ def shell_su(device_id, cmd):
 def shell(device_id, cmd):
     adb.set_target_by_name(device_id)
     result = adb.shell_command(cmd)
+    result = result.decode('utf-8') if (isinstance(result, bytes) == True) else result
     logger.debug('%s: "%s" returned: \n%s' % (device_id, cmd, result))
     if 'error' in result:
         raise AdbError(result)
@@ -98,6 +100,7 @@ def clear_app_data(device_id, name):
 
 
 def success_or_exception(result, success_msg, fail_msg):
+    result = result.decode('utf-8') if (isinstance(result, bytes) == True) else result
     if 'Success' in result:
         logger.info(success_msg)
     else:
