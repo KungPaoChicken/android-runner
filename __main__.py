@@ -88,5 +88,5 @@ def set_stdout_logger():
     return stdout_logger
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": \
     main()
