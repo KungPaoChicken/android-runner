@@ -23,6 +23,7 @@ class Batterystats(Profiler):
         self.profile = False
         self.cleanup = config.get('cleanup')
         self.enable_systrace_parsing = config.get('enable_systrace_parsing', True)
+        self.python2_path = config.get('python2_path', 'python2')
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
         # FIX
@@ -33,6 +34,12 @@ class Batterystats(Profiler):
         self.duration = Tests.is_integer(config_f.get('duration', 0)) / 1000
         if self.type == 'web':
             self.browsers = [BrowserFactory.get_browser(b)(config_f) for b in config_f.get('browsers', ['chrome'])]
+
+        if os.path.exists(self.systrace): # If it does not exist, then there might be a prefix already added to the path
+            self.systrace  = ' '.join([self.python2_path, self.systrace])
+        else:
+            print("Did not prefix python2 path to systrace path due to the systrace path not existing. " + \
+                  "This is fine if you added a prefix path yourself, if not, double check the systrace_path inside of your config and make sure it exists.")
 
     # noinspection PyGlobalUndefined
     def start_profiling(self, device, **kwargs):
@@ -72,6 +79,7 @@ class Batterystats(Profiler):
         """Runs the systrace method for self.duration seconds in a separate thread"""
         # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
+
         sysproc = subprocess.Popen(
             '{} freq idle -e {} -a {} -t {} -o {}'.format(self.systrace, device.id, application, int(self.duration + 5),
                                                           systrace_file), shell=True)

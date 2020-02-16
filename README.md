@@ -161,7 +161,8 @@ A JSON object to describe the profilers to be used and their arguments. Below ar
       "cleanup": true,
       "subject_aggregation": "default",
       "experiment_aggregation": "default",
-      "enable_systrace_parsing": true
+      "enable_systrace_parsing": true,
+      "python2_path": "python2"
     }
   }
 ```
@@ -176,6 +177,9 @@ Delete log files required by Batterystats after completion of the experiment. Th
 
 **enable_systrace_parsing** *boolean*
 The Batterystats profiler uses the profiling tool Systrace internally to measure CPU specific activity and energy consumption on the mobile device. For some devices the parsing of the output of Systrace fails, causing the experiment run to fail. You can safely disable the Systrace parsing when you encounter Systrace parsing errors given that your experiment does not need rely on CPU specific information, but rather on the overall energy consumption of the mobile device. The overall energy consumption is not affected by the Systrace logs since it is tracked using another tool. The default is *true*.
+
+**python2_path** *string*
+The path to python 2 that is used to launch Systrace. The default is *python2*.
 
 **scripts** *JSON*
 A JSON list of types and paths of scripts to run. Below is an example:

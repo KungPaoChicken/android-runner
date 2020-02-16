@@ -394,6 +394,7 @@ class TestBatterystatsPlugin(object):
         is_integer_mock.return_value = 0
         return Batterystats(config, paths.paths_dict())
 
+
     @patch('ExperimentRunner.Tests.is_integer')
     @patch('ExperimentRunner.util.load_json')
     @patch('ExperimentRunner.Plugins.Profiler.__init__')
@@ -415,6 +416,32 @@ class TestBatterystatsPlugin(object):
         assert test_batterystats.cleanup is True
         assert test_batterystats.type == 'web'
         assert test_batterystats.systrace == 'sys/trace/path'
+        assert test_batterystats.powerprofile == 'power/profile/path'
+        assert test_batterystats.duration == 2
+
+    @patch('os.path.exists')
+    @patch('ExperimentRunner.Tests.is_integer')
+    @patch('ExperimentRunner.util.load_json')
+    @patch('ExperimentRunner.Plugins.Profiler.__init__')
+    def test_init_with_python2_path(self, super_mock, load_json_mock, is_integer_mock, exists_mock):
+        config = {'cleanup': True, 'python2_path': 'test_prefix'}
+        paths.CONFIG_DIR = 'test/path'
+        paths.ORIGINAL_CONFIG_DIR = 'original/path'
+        load_json_return_value = {'type': 'web', 'systrace_path': 'sys/trace/path',
+                                  'powerprofile_path': 'power/profile/path', 'duration': 2000}
+        load_json_mock.return_value = load_json_return_value
+        is_integer_mock.return_value = 2000
+        test_batterystats = Batterystats(config, paths.paths_dict())
+        exists_mock.return_value = True
+
+        super_mock.assert_called_once_with(config, paths.paths_dict())
+        load_json_mock.assert_called_once_with(op.join(paths.CONFIG_DIR, 'original/path'))
+        assert test_batterystats.output_dir == ''
+        assert test_batterystats.paths == paths.paths_dict()
+        assert test_batterystats.profile is False
+        assert test_batterystats.cleanup is True
+        assert test_batterystats.type == 'web'
+        assert test_batterystats.systrace == 'test_prefix sys/trace/path'
         assert test_batterystats.powerprofile == 'power/profile/path'
         assert test_batterystats.duration == 2
 

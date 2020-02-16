@@ -7,7 +7,7 @@
   "duration": 60000,
   "browsers": ["chrome"],
   "monkeyrunner_path": "/home/user/Android/Sdk/tools/bin/monkeyrunner",
-  "systrace_path": "python2 /home/user/Android/Sdk/platform-tools/systrace/systrace.py",
+  "systrace_path": "/home/user/Android/Sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml", 
   "paths": [
     "https://www.google.com"
