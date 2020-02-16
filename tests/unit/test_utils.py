@@ -7,6 +7,7 @@ from mock import Mock, patch
 import ExperimentRunner.Tests as Tests
 import ExperimentRunner.util as util
 import paths
+import csv
 
 
 class TestUtilClass(object):
@@ -15,6 +16,9 @@ class TestUtilClass(object):
         tmp_file = tmpdir.join('tmp.txt')
         tmp_file.write("test content")
         return str(tmp_file)
+    @pytest.fixture()
+    def fixture_dir(self):
+        return op.join(op.dirname(op.abspath(__file__)), 'fixtures')
 
     def test_load_json_succes(self, tmp_file):
         fixtures = op.join(op.dirname(op.realpath(__file__)), "fixtures")
@@ -81,6 +85,32 @@ class TestUtilClass(object):
         string4 = "a b c d e f"
         assert util.slugify_dir(string4) == string4.replace(" ", "-")
 
+    def test_write_to_file(self, tmpdir):
+        tmp_file = op.join(str(tmpdir), 'test_output.csv')
+        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
+        util.write_to_file(tmp_file, test_rows)
+
+        assert op.isfile(tmp_file)
+        assert self.csv_reader_to_table(tmp_file) == list(
+            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
+
+    def test_list_subdir(self, fixture_dir):
+        test_dir = op.join(fixture_dir, 'test_dir_struct')
+
+        result_subdirs = util.list_subdir(test_dir)
+
+        assert len(result_subdirs) == 2
+        assert 'data_native' in result_subdirs
+        assert 'data_web' in result_subdirs
+
+    @staticmethod
+    def csv_reader_to_table(filename):
+        result = []
+        with open(filename, mode='r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row in csv_reader:
+                result.append(row)
+        return result
 
 class TestPathsClass(object):
     def test_paths_dict(self):
@@ -99,6 +129,7 @@ class TestPathsClass(object):
         assert paths_dict['OUTPUT_DIR'] == string_output
         assert paths_dict['BASE_OUTPUT_DIR'] == string_base
         assert paths_dict['ORIGINAL_CONFIG_DIR'] == string_original
+
 
 
 class TestTestsClass(object):

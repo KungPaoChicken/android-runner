@@ -11,7 +11,8 @@ from . import BatterystatsParser
 from ExperimentRunner.BrowserFactory import BrowserFactory
 from .Profiler import Profiler
 from functools import reduce
-
+from ExperimentRunner import Tests
+from ExperimentRunner import util
 
 class Batterystats(Profiler):
 
@@ -24,11 +25,11 @@ class Batterystats(Profiler):
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
         # FIX
-        config_f = self.load_json(op.join(self.paths["CONFIG_DIR"], self.paths['ORIGINAL_CONFIG_DIR']))
+        config_f = util.load_json(op.join(self.paths["CONFIG_DIR"], self.paths['ORIGINAL_CONFIG_DIR']))
         self.type = config_f['type']
         self.systrace = config_f.get('systrace_path', 'systrace')
         self.powerprofile = config_f['powerprofile_path']
-        self.duration = self.is_integer(config_f.get('duration', 0)) / 1000
+        self.duration = Tests.is_integer(config_f.get('duration', 0)) / 1000
         if self.type == 'web':
             self.browsers = [BrowserFactory.get_browser(b)(config_f) for b in config_f.get('browsers', ['chrome'])]
 
@@ -155,19 +156,14 @@ class Batterystats(Profiler):
         current_row.update(self.aggregate_battery_subject(self.output_dir, True))
         subject_rows = list()
         subject_rows.append(current_row)
-        self.write_to_file(filename, subject_rows)
+
+        util.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
         # FIX
         rows = self.aggregate_final(data_dir)
-        self.write_to_file(output_file, rows)
 
-    @staticmethod
-    def write_to_file(filename, rows):
-        with open(filename, 'w', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
+        util.write_to_file(output_file, rows)
 
     @staticmethod
     def aggregate_battery_subject(logs_dir, joules):
@@ -192,17 +188,17 @@ class Batterystats(Profiler):
 
     def aggregate_final(self, data_dir):
         rows = []
-        for device in self.list_subdir(data_dir):
+        for device in util.list_subdir(data_dir):
             row = OrderedDict({'device': device})
             device_dir = os.path.join(data_dir, device)
-            for subject in self.list_subdir(device_dir):
+            for subject in util.list_subdir(device_dir):
                 row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
                 if os.path.isdir(os.path.join(subject_dir, 'batterystats')):
                     row.update(self.aggregate_battery_final(os.path.join(subject_dir, 'batterystats')))
                     rows.append(row.copy())
                 else:
-                    for browser in self.list_subdir(subject_dir):
+                    for browser in util.list_subdir(subject_dir):
                         row.update({'browser': browser})
                         browser_dir = os.path.join(subject_dir, browser)
                         if os.path.isdir(os.path.join(browser_dir, 'batterystats')):
@@ -221,46 +217,3 @@ class Batterystats(Profiler):
                         for f in reader.fieldnames:
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
-
-    @staticmethod
-    def list_subdir(a_dir):
-        """List immediate subdirectories of a_dir"""
-        # https://stackoverflow.com/a/800201
-        return [name for name in os.listdir(a_dir)
-                if os.path.isdir(os.path.join(a_dir, name))]
-
-    @staticmethod
-    def is_integer(number, minimum=0):
-        if not isinstance(number, int):
-            raise ConfigError('%s is not an integer' % number)
-        if number < minimum:
-            raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
-        return number
-
-    @staticmethod
-    def load_json(path):
-        """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
-        try:
-            with open(path, 'r') as f:
-                try:
-                    return json.loads(f.read(), object_pairs_hook=OrderedDict)
-                except ValueError:
-                    raise FileFormatError(path)
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                raise FileNotFoundError(path)
-            else:
-                raise e
-
-
-class FileNotFoundError(Exception):
-    def __init__(self, filename):
-        Exception.__init__(self, '[Errno %s] %s: \'%s\'' % (errno.ENOENT, os.strerror(errno.ENOENT), filename))
-
-
-class FileFormatError(Exception):
-    pass
-
-
-class ConfigError(Exception):
-    pass

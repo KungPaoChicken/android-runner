@@ -7,12 +7,13 @@ from mock import Mock, call, patch
 import pdb
 
 import paths
-from ExperimentRunner.Plugins.Android import Android, ConfigError as AndroidConfigError
-from ExperimentRunner.Plugins.Batterystats import Batterystats, ConfigError as BsConfigError, \
-    FileFormatError as BsFileFormatError, FileNotFoundError as BsFileNotFounError
+from ExperimentRunner import util
+from ExperimentRunner.Plugins.Android import Android
+from ExperimentRunner.Plugins.Batterystats import Batterystats
 from ExperimentRunner.Plugins.Profiler import Profiler
-from ExperimentRunner.Plugins.Trepn import FileFormatError as TrFileFormatError, \
-    FileNotFoundError as TrFileNotFoundError, Trepn
+from ExperimentRunner.Plugins.Trepn import Trepn
+
+from ExperimentRunner.util import ConfigError, FileNotFoundError, FileFormatError
 
 
 class TestPluginTemplate(object):
@@ -279,7 +280,7 @@ class TestAndroidPlugin(object):
     def test_unload(self, android_plugin, mock_device):
         assert android_plugin.unload(mock_device) is None
 
-    @patch('ExperimentRunner.Plugins.Android.Android.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Android.Android.aggregate_android_subject')
     def test_aggregate_subject(self, aggregate_mock, write_to_file_mock, android_plugin):
         test_output_dir = 'test/output/dir'
@@ -294,7 +295,7 @@ class TestAndroidPlugin(object):
         expected_list.append(mock_rows)
         write_to_file_mock.assert_called_once_with(op.join(test_output_dir, 'Aggregated.csv'), expected_list)
 
-    @patch('ExperimentRunner.Plugins.Android.Android.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Android.Android.aggregate_final')
     def test_aggregate_end(self, aggregate_mock, write_to_file_mock, android_plugin):
         test_data_dir = 'test/output/dir'
@@ -343,38 +344,7 @@ class TestAndroidPlugin(object):
         assert aggregated_final_rows['android_cpu'] == '19.017852474323064'
         assert aggregated_final_rows['android_mem'] == '1280213.4222222222'
 
-    def test_list_subdir(self, android_plugin, fixture_dir):
-        test_dir = op.join(fixture_dir, 'test_dir_struct')
-
-        result_subdirs = android_plugin.list_subdir(test_dir)
-
-        assert len(result_subdirs) == 2
-        assert 'data_native' in result_subdirs
-        assert 'data_web' in result_subdirs
-
-    def test_write_to_file(self, android_plugin, tmpdir):
-        tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
-        android_plugin.write_to_file(tmp_file, test_rows)
-
-        assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list(
-            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
-
-    def test_is_integer_not_int(self, android_plugin):
-        with pytest.raises(AndroidConfigError) as except_result:
-            android_plugin.is_integer("error")
-        assert 'error is not an integer' in str(except_result.value)
-
-    def test_is_integer_too_small(self, android_plugin):
-        with pytest.raises(AndroidConfigError) as except_result:
-            android_plugin.is_integer(-1)
-        assert '-1 should be equal or larger than 0' in str(except_result.value)
-
-    def test_is_integer_succes(self, android_plugin):
-        assert android_plugin.is_integer(10) == 10
-
-
+    
 class TestBatterystatsPlugin(object):
 
     @staticmethod
@@ -401,8 +371,8 @@ class TestBatterystatsPlugin(object):
         return Mock()
 
     @pytest.fixture()
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.is_integer')
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.load_json')
+    @patch('ExperimentRunner.Tests.is_integer')
+    @patch('ExperimentRunner.util.load_json')
     def batterystats_plugin(self, load_json_mock, is_integer_mock):
         config = {'cleanup': True}
         paths.CONFIG_DIR = 'test/path'
@@ -412,8 +382,8 @@ class TestBatterystatsPlugin(object):
         is_integer_mock.return_value = 0
         return Batterystats(config, paths.paths_dict())
 
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.is_integer')
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.load_json')
+    @patch('ExperimentRunner.Tests.is_integer')
+    @patch('ExperimentRunner.util.load_json')
     @patch('ExperimentRunner.Plugins.Profiler.__init__')
     def test_init(self, super_mock, load_json_mock, is_integer_mock):
         config = {'cleanup': True}
@@ -689,7 +659,7 @@ class TestBatterystatsPlugin(object):
     def test_unload(self, batterystats_plugin, mock_device):
         assert batterystats_plugin.unload(mock_device) is None
 
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.aggregate_battery_subject')
     def test_aggregate_subject(self, aggregate_mock, write_to_file_mock, batterystats_plugin):
         test_output_dir = 'test/output/dir'
@@ -703,7 +673,7 @@ class TestBatterystatsPlugin(object):
         expected_list.append(mock_rows)
         write_to_file_mock.assert_called_once_with(op.join(test_output_dir, 'Aggregated.csv'), expected_list)
 
-    @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.aggregate_final')
     def test_aggregate_end(self, aggregate_mock, write_to_file_mock, batterystats_plugin):
         test_data_dir = 'test/output/dir'
@@ -757,63 +727,6 @@ class TestBatterystatsPlugin(object):
 
         assert len(aggregated_final_rows) == 1
         assert aggregated_final_rows['batterystats_Joule_calculated'] == '101.227896'
-
-    def test_list_subdir(self, batterystats_plugin, fixture_dir):
-        test_dir = op.join(fixture_dir, 'test_dir_struct')
-
-        result_subdirs = batterystats_plugin.list_subdir(test_dir)
-
-        assert len(result_subdirs) == 2
-        assert 'data_native' in result_subdirs
-        assert 'data_web' in result_subdirs
-
-    def test_write_to_file(self, batterystats_plugin, tmpdir):
-        tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
-        batterystats_plugin.write_to_file(tmp_file, test_rows)
-
-        assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list(
-            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
-
-    def test_is_integer_not_int(self, batterystats_plugin):
-        with pytest.raises(BsConfigError) as except_result:
-            batterystats_plugin.is_integer("error")
-        assert 'error is not an integer' in str(except_result.value)
-
-    def test_is_integer_too_small(self, batterystats_plugin):
-        with pytest.raises(BsConfigError) as except_result:
-            batterystats_plugin.is_integer(-1)
-        assert '-1 should be equal or larger than 0' in str(except_result.value)
-
-    def test_is_integer_succes(self, batterystats_plugin):
-        assert batterystats_plugin.is_integer(10) == 10
-
-    def test_load_json_succes(self, batterystats_plugin, fixture_dir):
-        config = batterystats_plugin.load_json(op.join(fixture_dir, 'test_config.json'))
-        assert config['type'] == 'web'
-        assert config['devices'] == ['nexus6p']
-        assert config['randomization'] == 'False'
-        assert config['replications'] == 3
-
-    def test_load_json_file_format_error(self, batterystats_plugin, fixture_dir):
-        with pytest.raises(BsFileFormatError) as except_result:
-            batterystats_plugin.load_json(op.join(fixture_dir, 'test_progress.xml'))
-        assert op.join(fixture_dir, 'test_progress.xml') in str(except_result.value)
-
-    def test_load_json_file_file_not_found(self, batterystats_plugin, fixture_dir):
-        with pytest.raises(BsFileNotFounError) as except_result:
-            batterystats_plugin.load_json(op.join(fixture_dir, 'fake_file.json'))
-        assert "FileNotFoundError" in str(except_result.typename)
-
-    def test_load_json_file_permission_denied(self, tmpdir, batterystats_plugin):
-        tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
-        open(tmp_file, "w+")
-        chmod(tmp_file, 0o222)
-        with pytest.raises(IOError) as except_result:
-            batterystats_plugin.load_json(tmp_file)
-        assert "Permission denied" in str(except_result.value)
-
 
 class TestTrepnPlugin(object):
 
@@ -1037,7 +950,7 @@ class TestTrepnPlugin(object):
 
         assert trepn_plugin.output_dir == test_output_dir
 
-    @patch('ExperimentRunner.Plugins.Trepn.Trepn.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Trepn.Trepn.aggregate_trepn_subject')
     def test_aggregate_subject(self, aggregate_mock, write_to_file_mock, trepn_plugin):
         test_output_dir = 'test/output/dir'
@@ -1052,7 +965,7 @@ class TestTrepnPlugin(object):
         expected_list.append(mock_rows)
         write_to_file_mock.assert_called_once_with(op.join(test_output_dir, 'Aggregated.csv'), expected_list)
 
-    @patch('ExperimentRunner.Plugins.Trepn.Trepn.write_to_file')
+    @patch('ExperimentRunner.util.write_to_file')
     @patch('ExperimentRunner.Plugins.Trepn.Trepn.aggregate_final')
     def test_aggregate_end(self, aggregate_mock, write_to_file_mock, trepn_plugin):
         test_data_dir = 'test/output/dir'
@@ -1064,15 +977,6 @@ class TestTrepnPlugin(object):
 
         aggregate_mock.assert_called_once_with(test_data_dir)
         write_to_file_mock.assert_called_once_with(test_output_file, mock_rows)
-
-    def test_write_to_file(self, trepn_plugin, tmpdir):
-        tmp_file = op.join(str(tmpdir), 'test_output.csv')
-        test_rows = [{'key1': 'value1', 'key2': 'value2'}, {'key1': 'value3', 'key2': 'value4'}]
-        trepn_plugin.write_to_file(tmp_file, test_rows)
-
-        assert op.isfile(tmp_file)
-        assert self.csv_reader_to_table(tmp_file) == list(
-            [['key1', 'key2'], ['value1', 'value2'], ['value3', 'value4']])
 
     def test_aggregate_trepn_subject(self, trepn_plugin, fixture_dir):
         test_subject_log_dir = op.join(fixture_dir, 'trepn_subject_result')
@@ -1114,62 +1018,3 @@ class TestTrepnPlugin(object):
         assert aggregated_final_rows['Battery Power* [uW] (Raw)'] == '2301245.088235294'
         assert aggregated_final_rows['Battery Temperature [1/10 C]'] == '300.0'
         assert aggregated_final_rows['Memory Usage [KB]'] == '2650836.2352941176'
-
-    def test_list_subdir(self, trepn_plugin, fixture_dir):
-        test_dir = op.join(fixture_dir, 'test_dir_struct')
-
-        result_subdirs = trepn_plugin.list_subdir(test_dir)
-
-        assert len(result_subdirs) == 2
-        assert 'data_native' in result_subdirs
-        assert 'data_web' in result_subdirs
-
-    def test_makedirs_success(self, tmpdir, trepn_plugin):
-        dir_path = op.join(str(tmpdir), 'test1')
-        assert op.isdir(dir_path) is False
-        trepn_plugin.makedirs(dir_path)
-        assert op.isdir(dir_path) is True
-
-    def test_makedirs_fail_already_exist(self, tmpdir, trepn_plugin):
-        dir_path = op.join(str(tmpdir), 'test1')
-        assert op.isdir(dir_path) is False
-        trepn_plugin.makedirs(dir_path)
-        trepn_plugin.makedirs(dir_path)
-        assert op.isdir(dir_path) is True
-        files_in_path = [f for f in listdir(str(tmpdir)) if op.isdir(op.join(str(tmpdir), f))]
-
-        assert len(files_in_path) == 1
-
-    def test_makedirs_fail(self, tmpdir, trepn_plugin):
-        chmod(str(tmpdir), 0o444)
-        dir_path = op.join(str(tmpdir), 'test2')
-        assert op.isdir(dir_path) is False
-        with pytest.raises(OSError) as except_result:
-            trepn_plugin.makedirs(dir_path)
-        assert "Permission denied" in str(except_result.value)
-        assert op.isdir(dir_path) is False
-
-    def test_load_json_succes(self, trepn_plugin, fixture_dir):
-        config = trepn_plugin.load_json(op.join(fixture_dir, 'test_config.json'))
-        assert config['type'] == 'web'
-        assert config['devices'] == ['nexus6p']
-        assert config['randomization'] == 'False'
-        assert config['replications'] == 3
-
-    def test_load_json_file_format_error(self, trepn_plugin, fixture_dir):
-        with pytest.raises(TrFileFormatError) as except_result:
-            trepn_plugin.load_json(op.join(fixture_dir, 'test_progress.xml'))
-        assert op.join(fixture_dir, 'test_progress.xml') in str(except_result.value)
-
-    def test_load_json_file_file_not_found(self, trepn_plugin, fixture_dir):
-        with pytest.raises(TrFileNotFoundError) as except_result:
-            trepn_plugin.load_json(op.join(fixture_dir, 'fake_file.json'))
-        assert "FileNotFoundError" in str(except_result.typename)
-
-    def test_load_json_file_permission_denied(self, tmpdir, trepn_plugin):
-        tmp_file = op.join(str(tmpdir), 'tmp_file.txt')
-        open(tmp_file, "w+")
-        chmod(tmp_file, 0o222)
-        with pytest.raises(IOError) as except_result:
-            trepn_plugin.load_json(tmp_file)
-        assert "Permission denied" in str(except_result.value)

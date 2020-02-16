@@ -200,9 +200,17 @@ class TestExperiment(object):
         open(os.path.join(folder_path2, "test.txt"), "w+")
 
         walk_list = default_experiment.walk_to_list(os.walk(paths.BASE_OUTPUT_DIR))
+        print(walk_list)
         assert len(walk_list) == 7
-        assert 'data/1/1/test.txt' in walk_list[0]
-        assert 'data/2/1/test.txt' in walk_list[2]
+
+        files = ['data/1/1/test.txt', 'data/2/1/test.txt']
+        flags = [False]*2
+
+        for item in walk_list:
+            for i, file in enumerate(files):
+                flags[i] |= file in item
+        
+        assert(all(flags))
 
     def test_check_result_files_correct(self, default_experiment, tmpdir):
         paths.BASE_OUTPUT_DIR = str(tmpdir)

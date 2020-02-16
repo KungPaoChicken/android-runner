@@ -5,14 +5,11 @@ import threading
 import time
 import timeit
 from collections import OrderedDict
-
-from .Profiler import Profiler
 from functools import reduce
 
-
-class ConfigError(Exception):
-    pass
-
+from ExperimentRunner import util
+from ExperimentRunner import Tests
+from .Profiler import Profiler
 
 class Android(Profiler):
     def __init__(self, config, paths):
@@ -21,12 +18,17 @@ class Android(Profiler):
         self.paths = paths
         self.profile = False
         available_data_points = ['cpu', 'mem']
-        self.interval = float(self.is_integer(config.get('sample_interval', 0))) / 1000
+        self.interval = float(Tests.is_integer(
+            config.get('sample_interval', 0))
+        ) / 1000
         self.data_points = config['data_points']
-        invalid_data_points = [dp for dp in config['data_points'] if dp not in set(available_data_points)]
+        invalid_data_points = [
+            dp for dp in config['data_points'] if dp not in set(available_data_points)]
         if invalid_data_points:
-            self.logger.warning('Invalid data points in config: {}'.format(invalid_data_points))
-        self.data_points = [dp for dp in config['data_points'] if dp in set(available_data_points)]
+            self.logger.warning(
+                'Invalid data points in config: {}'.format(invalid_data_points))
+        self.data_points = [dp for dp in config['data_points']
+                            if dp in set(available_data_points)]
         self.data = [['datetime'] + self.data_points]
 
     @staticmethod
@@ -47,9 +49,10 @@ class Android(Profiler):
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
             # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
             # https://stackoverflow.com/questions/23175809/str-translate-gives-typeerror-translate-takes-one-argument-2-given-worked-i
-            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('','', '(kB,K')).split()[2]
+            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('', '', '(kB,K')).split()[2]
         else:
-            result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
+            result = device.shell(
+                'dumpsys meminfo {} | grep TOTAL'.format(app))
             if result == '':
                 result = device.shell('dumpsys meminfo {}'.format(app))
                 if 'No process found' in result:
@@ -75,13 +78,15 @@ class Android(Profiler):
         # timer results could be negative
         interval = max(float(0), self.interval - max(0, int(end - start)))
         if self.profile:
-            threading.Timer(interval, self.get_data, args=(device, app)).start()
+            threading.Timer(interval, self.get_data,
+                            args=(device, app)).start()
 
     def stop_profiling(self, device, **kwargs):
         self.profile = False
 
     def collect_results(self, device):
-        filename = '{}_{}.csv'.format(device.id, time.strftime('%Y.%m.%d_%H%M%S'))
+        filename = '{}_{}.csv'.format(
+            device.id, time.strftime('%Y.%m.%d_%H%M%S'))
         with open(op.join(self.output_dir, filename), 'w+') as f:
             writer = csv.writer(f)
             for row in self.data:
@@ -103,16 +108,19 @@ class Android(Profiler):
         filename = os.path.join(self.output_dir, 'Aggregated.csv')
         subject_rows = list()
         subject_rows.append(self.aggregate_android_subject(self.output_dir))
-        self.write_to_file(filename, subject_rows)
+
+        util.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
         rows = self.aggregate_final(data_dir)
-        self.write_to_file(output_file, rows)
+
+        util.write_to_file(output_file, rows)
 
     @staticmethod
     def aggregate_android_subject(logs_dir):
         def add_row(accum, new):
-            row = {k: v + float(new[k]) for k, v in list(accum.items()) if k not in ['Component', 'count']}
+            row = {k: v + float(new[k]) for k, v in list(accum.items())
+                   if k not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
@@ -120,30 +128,35 @@ class Android(Profiler):
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             with open(os.path.join(logs_dir, run_file), 'r') as run:
                 reader = csv.DictReader(run)
-                init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
+                init = dict(
+                    {fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                 run_total = reduce(add_row, reader, init)
-                runs.append({k: v / run_total['count'] for k, v in list(run_total.items()) if k != 'count'})
-        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in list(x.items())}, runs)
+                runs.append(
+                    {k: v / run_total['count'] for k, v in list(run_total.items()) if k != 'count'})
+        runs_total = reduce(
+            lambda x, y: {k: v + y[k] for k, v in list(x.items())}, runs)
         return OrderedDict(
             sorted(list({'android_' + k: v / len(runs) for k, v in list(runs_total.items())}.items()), key=lambda x: x[0]))
 
     def aggregate_final(self, data_dir):
         rows = []
-        for device in self.list_subdir(data_dir):
+        for device in util.list_subdir(data_dir):
             row = OrderedDict({'device': device})
             device_dir = os.path.join(data_dir, device)
-            for subject in self.list_subdir(device_dir):
+            for subject in util.list_subdir(device_dir):
                 row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
                 if os.path.isdir(os.path.join(subject_dir, 'android')):
-                    row.update(self.aggregate_android_final(os.path.join(subject_dir, 'android')))
+                    row.update(self.aggregate_android_final(
+                        os.path.join(subject_dir, 'android')))
                     rows.append(row.copy())
                 else:
-                    for browser in self.list_subdir(subject_dir):
+                    for browser in util.list_subdir(subject_dir):
                         row.update({'browser': browser})
                         browser_dir = os.path.join(subject_dir, browser)
                         if os.path.isdir(os.path.join(browser_dir, 'android')):
-                            row.update(self.aggregate_android_final(os.path.join(browser_dir, 'android')))
+                            row.update(self.aggregate_android_final(
+                                os.path.join(browser_dir, 'android')))
                             rows.append(row.copy())
         return rows
 
@@ -158,25 +171,3 @@ class Android(Profiler):
                         for f in reader.fieldnames:
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
-
-    @staticmethod
-    def list_subdir(a_dir):
-        """List immediate subdirectories of a_dir"""
-        # https://stackoverflow.com/a/800201
-        return [name for name in os.listdir(a_dir)
-                if os.path.isdir(os.path.join(a_dir, name))]
-
-    @staticmethod
-    def write_to_file(filename, rows):
-        with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
-
-    @staticmethod
-    def is_integer(number, minimum=0):
-        if not isinstance(number, int):
-            raise ConfigError('%s is not an integer' % number)
-        if number < minimum:
-            raise ConfigError('%s should be equal or larger than %i' % (number, minimum))
-        return number

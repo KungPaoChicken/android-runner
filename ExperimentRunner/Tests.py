@@ -2,7 +2,6 @@ import logging
 
 from .util import ConfigError
 
-
 def is_integer(number, minimum=0):
     if not isinstance(number, int):
         raise ConfigError('%s is not an integer' % number)
