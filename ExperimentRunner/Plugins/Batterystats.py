@@ -22,6 +22,7 @@ class Batterystats(Profiler):
         self.paths = paths
         self.profile = False
         self.cleanup = config.get('cleanup')
+        self.enable_systrace_parsing = config.get('enable_systrace_parsing', True)
 
         # "config" only passes the fields under "profilers", so config.json is loaded again for the fields below
         # FIX
@@ -107,9 +108,12 @@ class Batterystats(Profiler):
         # Wait for Systrace file finalisation before parsing
         sysproc.wait()
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
-        systrace_results = BatterystatsParser.parse_systrace(app, systrace_file, logcat_file, batterystats_file,
-                                                             self.powerprofile,
-                                                             cores)
+
+        systrace_results = []
+        if self.enable_systrace_parsing: 
+            systrace_results = BatterystatsParser.parse_systrace(app, systrace_file, logcat_file, batterystats_file,
+                                                                self.powerprofile,
+                                                                cores)
         return systrace_results
 
     def write_results(self, batterystats_results, systrace_results, energy_consumed_j):
@@ -135,6 +139,7 @@ class Batterystats(Profiler):
         batterystats_results = self.get_batterystats_results(device)
         energy_consumed_j = self.get_consumed_joules(device)
         systrace_results = self.get_systrace_results(device)
+
         self.write_results(batterystats_results, systrace_results, energy_consumed_j)
         self.cleanup_logs()
 

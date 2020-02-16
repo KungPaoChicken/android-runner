@@ -382,6 +382,18 @@ class TestBatterystatsPlugin(object):
         is_integer_mock.return_value = 0
         return Batterystats(config, paths.paths_dict())
 
+    @pytest.fixture()
+    @patch('ExperimentRunner.Tests.is_integer')
+    @patch('ExperimentRunner.util.load_json')
+    def batterystats_plugin_systrace_parsing_disabled(self, load_json_mock, is_integer_mock):
+        config = {'cleanup': True, 'enable_systrace_parsing': False}
+        paths.CONFIG_DIR = 'test/path'
+        paths.ORIGINAL_CONFIG_DIR = 'original/path'
+        load_json_return_value = {'type': 'web', 'powerprofile_path': 'power/profile/path'}
+        load_json_mock.return_value = load_json_return_value
+        is_integer_mock.return_value = 0
+        return Batterystats(config, paths.paths_dict())
+
     @patch('ExperimentRunner.Tests.is_integer')
     @patch('ExperimentRunner.util.load_json')
     @patch('ExperimentRunner.Plugins.Profiler.__init__')
@@ -608,6 +620,34 @@ class TestBatterystatsPlugin(object):
                                            op.join(str(tmpdir), 'logcat_123_strftime.txt'),
                                            op.join(str(tmpdir), 'batterystats_history_123_strftime.txt'),
                                            batterystats_plugin.powerprofile, 8)
+
+    @patch('ExperimentRunner.Plugins.BatterystatsParser.parse_systrace')
+    @patch('time.strftime')
+    @patch('subprocess.Popen')
+    def test_get_systrace_result_parsing_disabled(self, popen_mock, time_mock, parse_mock, batterystats_plugin_systrace_parsing_disabled, mock_device, tmpdir,
+                                 capsys):
+        # set global variables
+        popen_return_value = Mock()
+        popen_mock.return_value = popen_return_value
+        parse_return_value = Mock()
+        parse_mock.return_value = parse_return_value
+        mock_device.id = '123'
+        mock_device.shell.return_value = 8
+        batterystats_plugin_systrace_parsing_disabled.type = 'web'
+        time_mock.return_value = 'strftime'
+        batterystats_plugin_systrace_parsing_disabled.output_dir = str(tmpdir)
+        batterystats_plugin_systrace_parsing_disabled.start_profiling(mock_device)
+        capsys.readouterr()  # Catch print
+
+        parse_return_value = Mock()
+        parse_mock.return_value = parse_return_value
+
+        get_sysrace_result = batterystats_plugin_systrace_parsing_disabled.get_systrace_results(mock_device)
+
+        assert get_sysrace_result == []
+        popen_return_value.wait.assert_called_once()
+        parse_mock.assert_not_called()
+        
 
     @patch('ExperimentRunner.Plugins.Batterystats.Batterystats.get_data')
     @patch('time.strftime')
