@@ -125,7 +125,7 @@ class TestExperiment(object):
         assert experiment.time_between_run == 10
         assert experiment.output_root == paths.OUTPUT_DIR
         assert experiment.result_file_structure is None
-        mock_devices.assert_called_once_with(['dev1', 'dev2'], adb_path='test_adb')
+        mock_devices.assert_called_once_with(['dev1', 'dev2'], adb_path='test_adb', devices_spec=None)
         mock_profilers.assert_called_once_with({'fake': {'config1': 1, 'config2': 2}})
         mock_scripts.assert_called_once_with({'script1': 'path/to/1'}, monkeyrunner_path='monkey_path')
         mock_test.assert_called_once_with(experiment.devices, [])

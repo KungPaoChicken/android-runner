@@ -55,6 +55,21 @@ Path to power_profile.xml. Example path: `android-runner/example/batterystats/po
 **type** *string*
 Type of the experiment. Can be `web`, `native` or 'plugintest'
 
+**device_spec** *string*
+Specify this property inside of your config to specify a `devices.json` outside of the Android Runner repository. For example:
+
+ ``` json
+ {
+   ....
+   "type": "native",
+   "devices_spec": "/home/user/experiments/devices.json",
+   "devices": {
+     "nexus6p": {}
+   },
+   ...
+ }
+ ```
+
 **replications** *positive integer*
 Number of times an experiment is run.
 
