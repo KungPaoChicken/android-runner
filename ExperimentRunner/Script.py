@@ -3,8 +3,8 @@ import multiprocessing as mp
 import os.path as op
 import signal
 
-import Tests
-from util import FileNotFoundError
+from . import Tests
+from .util import FileNotFoundError
 
 
 class ScriptError(Exception):
@@ -32,7 +32,7 @@ class Script(object):
         try:
             output = self.execute_script(device, *args, **kwargs)
             self.logger.debug('%s returned %s' % (self.filename, output))
-        except Exception, e:
+        except Exception as e:
             import traceback
             queue.put((e, traceback.format_exc()))
         queue.put('script')

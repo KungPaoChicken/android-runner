@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 try:
@@ -6,9 +6,9 @@ try:
     import subprocess
     import re
     import platform
-    from os import popen3 as pipe
+    from os import popen as pipe
 except ImportError as e:
-    print "[!] Required module missing. %s" % e.args[0]
+    print("[!] Required module missing. %s" % e.args[0])
     sys.exit(-1)
 
 
@@ -94,11 +94,11 @@ class ADB(object):
             cmdp = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.__output, self.__error = cmdp.communicate()
             retcode = cmdp.wait()
-            if "device unauthorized" in self.__output:
+            if "device unauthorized" in self.__output.decode('utf-8'):
                 self.__error = "[-] Device unauthorized"
                 return False
-            return self.__output.rstrip('\n')
-        except OSError, error:
+            return self.__output.decode('utf-8').rstrip('\n')
+        except OSError as error:
             self.__error = str(error)
 
         return
@@ -122,7 +122,7 @@ class ADB(object):
         """
 
         if self.get_version() is None:
-            print "[-] adb executable not found"
+            print("[-] adb executable not found")
             return False
         return True
 
@@ -199,10 +199,10 @@ class ADB(object):
             return None
         try:
             n = 0
-            output_list = self.__output.split("\n")
+            output_list = self.__output.decode('utf-8').split("\n")
             # Split on \r if we are on Windows
             if platform.system().lower == "windows":
-                output_list = self.__output.split("\r")
+                output_list = self.__output.decode('utf-8').split("\r")
 
             for line in output_list:
                 pattern = re.compile(r"([^\s]+)\t+.+$")
@@ -221,9 +221,9 @@ class ADB(object):
         Specify the device name to target
         example: set_target_device('emulator-5554')
         """
-        if device is None or self.__devices is None or device not in self.__devices.values():
+        if device is None or self.__devices is None or device not in list(self.__devices.values()):
             self.__error = 'Must get device list first'
-            print "[!] Device not found in device list"
+            print("[!] Device not found in device list")
             return False
         self.__target = device
         return "[+] Target device set: %s" % self.get_target_device()
@@ -235,7 +235,7 @@ class ADB(object):
         """
         if device is None or self.__devices is None or device not in self.__devices:
             self.__error = 'Must get device list first'
-            print "[!] Device not found in device list"
+            print("[!] Device not found in device list")
             return False
         self.__target = self.__devices[device]
         return "[+] Target device set: %s" % self.get_target_device()
@@ -245,7 +245,7 @@ class ADB(object):
         Returns the selected device to work with
         """
         if self.__target is None:
-            print "[*] No device target set"
+            print("[*] No device target set")
 
         return self.__target
 
@@ -265,7 +265,7 @@ class ADB(object):
         if self.__error is not None:
             return self.__error
         try:
-            for line in self.__output.split("\n"):
+            for line in self.__output.decode('utf-8').split("\n"):
                 if line.startswith(self.__target):
                     pattern = r"model:(.+)\sdevice"
                     pat = re.compile(pattern)

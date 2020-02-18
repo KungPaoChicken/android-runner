@@ -26,8 +26,8 @@ def main():
         experiment = ExperimentFactory.from_json(config_file, progress)
         progress_file = experiment.get_progress_xml_file()
         experiment.start()
-    except Exception, e:
-        logger.error('%s: %s' % (e.__class__.__name__, e.message))
+    except Exception as e:
+        logger.error('%s: %s' % (e.__class__.__name__, str(e)))
         logger.error('An error occurred, the experiment has been stopped. '
                      'To continue, add progress file argument to experiment startup: '
                      '--progress {}'.format(progress_file))
@@ -88,5 +88,5 @@ def set_stdout_logger():
     return stdout_logger
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": \
     main()

@@ -1,4 +1,4 @@
-from Browsers import Chrome, Firefox, Opera
+from .Browsers import Chrome, Firefox, Opera
 
 
 class BrowserFactory(object):

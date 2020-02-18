@@ -37,7 +37,7 @@ class PluginTests(object):
 
     def check_init_profilers(self):
         self.profilers = []
-        for name, params in self.config.get('profilers', {}).items():
+        for name, params in list(self.config.get('profilers', {}).items()):
             try:
                 self.profilers.append(PluginHandler(name, params))
             except Exception:
@@ -110,7 +110,7 @@ class PluginTests(object):
         try:
             for current_device in self.devices:
                 installed_apps = current_device.is_installed(profiler.dependencies())
-                not_installed_apps = [name for name, installed in installed_apps.items() if not installed]
+                not_installed_apps = [name for name, installed in list(installed_apps.items()) if not installed]
                 if len(not_installed_apps) == 0:
                     device = current_device
                     break
@@ -124,7 +124,7 @@ class PluginTests(object):
     def check_dependencies(self, dependencies, profiler_name):
         if isinstance(dependencies, list):
             for dependency in dependencies:
-                if isinstance(dependency, basestring):
+                if isinstance(dependency, str):
                     if len(dependency.split(".")) == 3:
                         continue
                     else:
@@ -154,5 +154,5 @@ class PluginTests(object):
         self.check_profilers()
         formated_errors = self.format_errors()
         self.write_to_file(formated_errors)
-        print '\n{}'.format(formated_errors)
-        print '\nTest results saved to file: {}'.format(self.result_file)
+        print('\n{}'.format(formated_errors))
+        print('\nTest results saved to file: {}'.format(self.result_file))

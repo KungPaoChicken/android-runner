@@ -24,7 +24,7 @@
     "after_launch": "Scripts/after_launch.py",
     "interaction": [
       {
-        "type": "python2",
+        "type": "python3",
         "path": "Scripts/interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"

@@ -6,7 +6,8 @@ import time
 import timeit
 from collections import OrderedDict
 
-from Profiler import Profiler
+from .Profiler import Profiler
+from functools import reduce
 
 
 class ConfigError(Exception):
@@ -45,7 +46,7 @@ class AndroidPlugin(Profiler):
         if not app:
             # return device.shell('dumpsys meminfo | grep Used | cut -d" " -f5').strip()[1:-1]
             # return device.shell('dumpsys meminfo | grep Used').split()[2].strip()[1:-1].replace(",", ".")
-            return device.shell('dumpsys meminfo | grep Used').translate(None, '(kB,K').split()[2]
+            return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('','', '(kB,K')).split()[2]
         else:
             result = device.shell('dumpsys meminfo {} | grep TOTAL'.format(app))
             if result == '':
@@ -110,20 +111,20 @@ class AndroidPlugin(Profiler):
     @staticmethod
     def aggregate_android_subject(logs_dir):
         def add_row(accum, new):
-            row = {k: v + float(new[k]) for k, v in accum.items() if k not in ['Component', 'count']}
+            row = {k: v + float(new[k]) for k, v in list(accum.items()) if k not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+            with open(os.path.join(logs_dir, run_file), 'r') as run:
                 reader = csv.DictReader(run)
                 init = dict({fn: 0 for fn in reader.fieldnames if fn != 'datetime'}, **{'count': 0})
                 run_total = reduce(add_row, reader, init)
-                runs.append({k: v / run_total['count'] for k, v in run_total.items() if k != 'count'})
-        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in x.items()}, runs)
+                runs.append({k: v / run_total['count'] for k, v in list(run_total.items()) if k != 'count'})
+        runs_total = reduce(lambda x, y: {k: v + y[k] for k, v in list(x.items())}, runs)
         return OrderedDict(
-            sorted({'android_' + k: v / len(runs) for k, v in runs_total.items()}.items(), key=lambda x: x[0]))
+            sorted(list({'android_' + k: v / len(runs) for k, v in list(runs_total.items())}.items()), key=lambda x: x[0]))
 
     def aggregate_final(self, data_dir):
         rows = []
@@ -149,7 +150,7 @@ class AndroidPlugin(Profiler):
     def aggregate_android_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
-                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                with open(os.path.join(logs_dir, aggregated_file), 'r') as aggregated:
                     reader = csv.DictReader(aggregated)
                     row_dict = OrderedDict()
                     for row in reader:
@@ -167,13 +168,13 @@ class AndroidPlugin(Profiler):
     @staticmethod
     def write_to_file(filename, rows):
         with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, rows[0].keys())
+            writer = csv.DictWriter(f, list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
 
     @staticmethod
     def is_integer(number, minimum=0):
-        if not isinstance(number, (int, long)):
+        if not isinstance(number, int):
             raise ConfigError('%s is not an integer' % number)
         if number < minimum:
             raise ConfigError('%s should be equal or larger than %i' % (number, minimum))

@@ -3,11 +3,11 @@ import os.path as op
 import shutil
 
 import paths
-import util
-from Experiment import Experiment
-from NativeExperiment import NativeExperiment
-from Progress import Progress
-from WebExperiment import WebExperiment
+from . import util
+from .Experiment import Experiment
+from .NativeExperiment import NativeExperiment
+from .Progress import Progress
+from .WebExperiment import WebExperiment
 from tests.PluginTests import PluginTests
 
 logger = logging.getLogger('ExperimentFactory')

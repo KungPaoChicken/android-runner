@@ -3,9 +3,9 @@ import os.path as op
 import re
 import time
 
-import Adb
-from Adb import AdbError
-from util import ConfigError, makedirs
+from . import Adb
+from .Adb import AdbError
+from .util import ConfigError, makedirs
 
 
 class Device:
@@ -58,7 +58,7 @@ class Device:
 
     def check_plug_value(self):
         """Checks the root plug value for validity, if it's not valid it tries to make it valid"""
-        if isinstance(self.root_unplug_value, (int, long)):
+        if isinstance(self.root_unplug_value, (int, int)):
             try:
                 self.root_plug_value = int(self.root_plug_value)
             except ValueError:
@@ -79,7 +79,7 @@ class Device:
             self.logger.info('Root unpluged')
         else:
             self.logger.info('Default unplug')
-            if self.get_api_level() < 23:
+            if int(self.get_api_level()) < 23:
                 # API level < 23, 4.4.3+ tested, WARNING: hardcoding
                 Adb.shell(self.id, 'dumpsys battery set usb 0')
                 # Adb.shell(self.id, 'dumpsys battery set ac 0')

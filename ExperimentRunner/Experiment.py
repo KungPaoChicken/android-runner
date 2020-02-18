@@ -4,12 +4,12 @@ import time
 from os import remove, rmdir, walk
 from threading import Thread
 
-import Tests
+from . import Tests
 import paths
-from Devices import Devices
-from Profilers import Profilers
-from Scripts import Scripts
-from util import ConfigError, makedirs, slugify_dir
+from .Devices import Devices
+from .Profilers import Profilers
+from .Scripts import Scripts
+from .util import ConfigError, makedirs, slugify_dir
 
 
 # noinspection PyUnusedLocal
@@ -22,7 +22,7 @@ class Experiment(object):
         if 'devices' not in config:
             raise ConfigError('"device" is required in the configuration')
         adb_path = config.get('adb_path', 'adb')
-        self.devices = Devices(config['devices'], adb_path=adb_path)
+        self.devices = Devices(config['devices'], adb_path=adb_path, devices_spec=config.get('devices_spec'))
         self.replications = Tests.is_integer(config.get('replications', 1))
         self.paths = config.get('paths', [])
         self.profilers = Profilers(config.get('profilers', {}))
@@ -64,10 +64,10 @@ class Experiment(object):
                 current_run = self.get_experiment()
                 self.run_experiment(current_run)
                 self.save_progress()
-        except Exception, e:
+        except Exception as e:
             import traceback
-            print(traceback.format_exc())
-            self.logger.error('%s: %s' % (e.__class__.__name__, e.message))
+            print((traceback.format_exc()))
+            self.logger.error('%s: %s' % (e.__class__.__name__, str(e)))
             self.finish_experiment(True, False)
             raise e
         except KeyboardInterrupt:

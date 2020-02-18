@@ -1,6 +1,8 @@
 {
   "type": "web",
-  "devices": {"nexus6p": {}},
+  "devices": {
+    "j7duo2": {}
+  },
   "replications": 1,
   "randomization": "False",
   "browsers": ["firefox"],
@@ -12,7 +14,7 @@
   "profilers":{
  "trepn": {
       "sample_interval": 200,
-      "data_points": ["battery_power", "mem_usage", "battery_temp"]
+      "data_points": ["battery_remaining", "mem_usage", "battery_power"]
      },
     "android": {
       "subject_aggregation": "none",
@@ -27,7 +29,7 @@
     "after_launch": "Scripts/after_launch.py",
     "interaction": [
       {
-        "type": "python2",
+        "type": "python3",
         "path": "Scripts/interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"

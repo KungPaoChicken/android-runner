@@ -10,4 +10,4 @@ class FakeDevice(object):
         return regex
 
     def launch_activity(self, package, activity, action='', data_uri='', from_scratch=False, force_stop=False):
-        print ("{},{},{},{},{}".format(package, activity, action, data_uri, from_scratch, force_stop))
+        print(("{},{},{},{},{}".format(package, activity, action, data_uri, from_scratch, force_stop)))

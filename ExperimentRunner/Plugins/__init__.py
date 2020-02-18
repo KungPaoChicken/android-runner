@@ -1,1 +1,1 @@
-from Profiler import Profiler
+from .Profiler import Profiler

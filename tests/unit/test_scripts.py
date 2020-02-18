@@ -7,7 +7,7 @@ from mock import Mock, call, patch
 import paths
 from ExperimentRunner.MonkeyReplay import MonkeyReplay, MonkeyReplayError
 from ExperimentRunner.MonkeyRunner import MonkeyRunner
-from ExperimentRunner.Python2 import Python2
+from ExperimentRunner.Python3 import Python3
 from ExperimentRunner.Script import Script, ScriptError
 from ExperimentRunner.Scripts import Scripts
 from ExperimentRunner.util import ConfigError, FileNotFoundError
@@ -20,13 +20,13 @@ class TestScripts(object):
 
     @pytest.fixture()
     def scripts(self, paths_dict):
-        with patch('ExperimentRunner.Python2.Python2.__init__', return_value=None):
+        with patch('ExperimentRunner.Python3.Python3.__init__', return_value=None):
             test_path = 'test/path/to/script.py'
             test_config = collections.OrderedDict()
             test_config['testscript'] = test_path
             return Scripts(test_config)
 
-    @patch('ExperimentRunner.Python2.Python2.__init__')
+    @patch('ExperimentRunner.Python3.Python3.__init__')
     def test_experiment_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
@@ -36,14 +36,14 @@ class TestScripts(object):
         scripts = Scripts(test_config)
         mock.assert_called_once_with(op.join(paths.CONFIG_DIR, test_path))
         for script in scripts.scripts['testscript']:
-            assert type(script) == Python2
+            assert type(script) == Python3
 
-    @patch('ExperimentRunner.Python2.Python2.__init__')
-    def test_python2_interaction_script_init(self, mock, paths_dict):
+    @patch('ExperimentRunner.Python3.Python3.__init__')
+    def test_python3_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
         test_config = collections.OrderedDict()
-        test_config['type'] = 'python2'
+        test_config['type'] = 'python3'
         test_config['path'] = test_path
         test_config_list = list()
         test_config_list.append(test_config)
@@ -53,7 +53,7 @@ class TestScripts(object):
 
         mock.assert_called_once_with(op.join(paths.CONFIG_DIR, test_path), 0, None)
         for script in scripts.scripts['interaction']:
-            assert type(script) == Python2
+            assert type(script) == Python3
 
     @patch('ExperimentRunner.MonkeyReplay.MonkeyReplay.__init__')
     def test_monkeyreplay_interaction_script_init(self, mock, paths_dict):
@@ -116,7 +116,7 @@ class TestScripts(object):
         assert mock.call_count == 0
 
 
-class TestPython2(object):
+class TestPython3(object):
     @pytest.fixture()
     def script_path(self, tmpdir):
         temp_file = tmpdir.join("script.py")
@@ -135,13 +135,13 @@ class TestPython2(object):
                                    '    raise NotImplementedError\n']))
         return str(temp_file)
 
-    def test_python2_error_init(self, init_error_script_path):
+    def test_python3_error_init(self, init_error_script_path):
         with pytest.raises(ImportError):
-            Python2(init_error_script_path)
+            Python3(init_error_script_path)
 
-    def test_python2_execute_script(self, script_path):
+    def test_python3_execute_script(self, script_path):
         fake_device = Mock()
-        assert Python2(script_path).execute_script(fake_device) == 'succes'
+        assert Python3(script_path).execute_script(fake_device) == 'succes'
 
 
 class TestMonkeyReplay(object):
@@ -255,26 +255,26 @@ class TestScript(object):
 
     def test_script_run_normal(self, script_path):
         fake_device = Mock()
-        assert Python2(script_path).run(fake_device) == 'script'
+        assert Python3(script_path).run(fake_device) == 'script'
 
     def test_script_run_timeout(self, script_path):
         fake_device = Mock()
-        assert Python2(script_path, timeout=10).run(fake_device) == 'timeout'
+        assert Python3(script_path, timeout=10).run(fake_device) == 'timeout'
 
     def test_script_run_logcat(self, script_path):
         fake_device = Mock()
-        assert Python2(script_path, logcat_regex='').run(fake_device) == 'logcat'
+        assert Python3(script_path, logcat_regex='').run(fake_device) == 'logcat'
 
     def test_script_error(self, error_script_path):
         fake_device = Mock()
         with pytest.raises(ScriptError) as expect_ex:
-            Python2(error_script_path).run(fake_device)
+            Python3(error_script_path).run(fake_device)
         assert 'NotImplementedError' in str(expect_ex.value)
 
     def test_script_mp_run(self, script_path):
         fake_device = Mock()
         test_queue = Mock()
-        test_script = Python2(script_path)
+        test_script = Python3(script_path)
         test_script.mp_run(test_queue, fake_device)
 
         test_queue.put.assert_called_once_with('script')
@@ -282,7 +282,7 @@ class TestScript(object):
     def test_script_mp_run_error(self, error_script_path):
         fake_device = Mock()
         test_queue = Mock()
-        test_script = Python2(error_script_path)
+        test_script = Python3(error_script_path)
         test_script.mp_run(test_queue, fake_device)
         assert test_queue.put.call_count == 2
         assert 'NotImplementedError' in str(test_queue.put.call_args_list)

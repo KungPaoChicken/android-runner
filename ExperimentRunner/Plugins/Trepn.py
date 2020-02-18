@@ -8,7 +8,9 @@ from collections import OrderedDict
 
 import lxml.etree as et
 
-from Profiler import Profiler
+from .Profiler import Profiler
+from functools import reduce
+from ExperimentRunner import util
 
 
 class Trepn(Profiler):
@@ -32,7 +34,7 @@ class Trepn(Profiler):
         # lxml is not the most secure parser, it is up to the user for valid configurations
         # https://docs.python.org/2/library/xml.html#xml-vulnerabilities
         self.pref_dir = op.join(self.paths['OUTPUT_DIR'], 'trepn.pref/')
-        self.makedirs(self.pref_dir)
+        util.makedirs(self.pref_dir)
 
         preferences_file = et.parse(op.join(current_dir, 'trepn/preferences.xml'))
         if 'sample_interval' in params:
@@ -41,10 +43,9 @@ class Trepn(Profiler):
                     i.set('value', str(params['sample_interval']))
         preferences_file.write(op.join(self.pref_dir, 'com.quicinc.trepn_preferences.xml'), encoding='utf-8',
                                xml_declaration=True, standalone=True)
-
         datapoints_file = et.parse(op.join(current_dir, 'trepn/data_points.xml'))
         dp_root = datapoints_file.getroot()
-        data_points_dict = self.load_json(op.join(current_dir, 'trepn/data_points.json'))
+        data_points_dict = util.load_json(op.join(current_dir, 'trepn/data_points.json'))
         for dp in params['data_points']:
             dp = str(data_points_dict[dp])
             self.data_points.append(dp)
@@ -157,64 +158,57 @@ class Trepn(Profiler):
         filename = os.path.join(self.output_dir, 'Aggregated.csv')
         subject_rows = list()
         subject_rows.append(self.aggregate_trepn_subject(self.output_dir))
-        self.write_to_file(filename, subject_rows)
+        util.write_to_file(filename, subject_rows)
 
     def aggregate_end(self, data_dir, output_file):
         rows = self.aggregate_final(data_dir)
-        self.write_to_file(output_file, rows)
-
-    @staticmethod
-    def write_to_file(filename, rows):
-        with open(filename, 'w') as f:
-            writer = csv.DictWriter(f, rows[0].keys())
-            writer.writeheader()
-            writer.writerows(rows)
+        util.write_to_file(output_file, rows)
 
     def aggregate_trepn_subject(self, logs_dir):
         def add_row(accum, new):
-            row = {key: value + float(new[key]) for key, value in accum.items() if key not in ['Component', 'count']}
+            row = {key: value + float(new[key]) for key, value in list(accum.items()) if key not in ['Component', 'count']}
             count = accum['count'] + 1
             return dict(row, **{'count': count})
 
         runs = []
         for run_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
-            with open(os.path.join(logs_dir, run_file), 'rb') as run:
+            with open(os.path.join(logs_dir, run_file), 'r') as run:
                 run_dict = {}
                 reader = csv.DictReader(run)
                 column_readers = self.split_reader(reader)
-                for k, v in column_readers.items():
+                for k, v in list(column_readers.items()):
                     init = dict({k: 0}, **{'count': 0})
                     run_total = reduce(add_row, v, init)
                     if not run_total['count'] == 0:
                         run_dict[k] = run_total[k] / run_total['count']
                 runs.append(run_dict)
-        init = dict({fn: 0 for fn in runs[0].keys()}, **{'count': 0})
+        init = dict({fn: 0 for fn in list(runs[0].keys())}, **{'count': 0})
         runs_total = reduce(add_row, runs, init)
         return OrderedDict(
-            sorted({k: v / len(runs) for k, v in runs_total.items() if not k == 'count'}.items(), key=lambda x: x[0]))
+            sorted(list({k: v / len(runs) for k, v in list(runs_total.items()) if not k == 'count'}.items()), key=lambda x: x[0]))
 
     @staticmethod
     def split_reader(reader):
         column_dicts = {fn: [] for fn in reader.fieldnames if not fn.split('[')[0].strip() == 'Time'}
         for row in reader:
-            for k, v in row.items():
+            for k, v in list(row.items()):
                 if not k.split('[')[0].strip() == 'Time' and not v == '':
                     column_dicts[k].append({k: v})
         return column_dicts
 
     def aggregate_final(self, data_dir):
         rows = []
-        for device in self.list_subdir(data_dir):
+        for device in util.list_subdir(data_dir):
             row = OrderedDict({'device': device})
             device_dir = os.path.join(data_dir, device)
-            for subject in self.list_subdir(device_dir):
+            for subject in util.list_subdir(device_dir):
                 row.update({'subject': subject})
                 subject_dir = os.path.join(device_dir, subject)
                 if os.path.isdir(os.path.join(subject_dir, 'trepn')):
                     row.update(self.aggregate_trepn_final(os.path.join(subject_dir, 'trepn')))
                     rows.append(row.copy())
                 else:
-                    for browser in self.list_subdir(subject_dir):
+                    for browser in util.list_subdir(subject_dir):
                         row.update({'browser': browser})
                         browser_dir = os.path.join(subject_dir, browser)
                         if os.path.isdir(os.path.join(browser_dir, 'trepn')):
@@ -226,51 +220,10 @@ class Trepn(Profiler):
     def aggregate_trepn_final(logs_dir):
         for aggregated_file in [f for f in os.listdir(logs_dir) if os.path.isfile(os.path.join(logs_dir, f))]:
             if aggregated_file == "Aggregated.csv":
-                with open(os.path.join(logs_dir, aggregated_file), 'rb') as aggregated:
+                with open(os.path.join(logs_dir, aggregated_file), 'r') as aggregated:
                     reader = csv.DictReader(aggregated)
                     row_dict = OrderedDict()
                     for row in reader:
                         for f in reader.fieldnames:
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
-
-    @staticmethod
-    def list_subdir(a_dir):
-        """List immediate subdirectories of a_dir"""
-        # https://stackoverflow.com/a/800201
-        return [name for name in os.listdir(a_dir)
-                if os.path.isdir(os.path.join(a_dir, name))]
-
-    @staticmethod
-    def makedirs(path):
-        """Create a directory on path if it does not exist"""
-        # https://stackoverflow.com/a/5032238
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-    @staticmethod
-    def load_json(path):
-        """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
-        try:
-            with open(path, 'r') as f:
-                try:
-                    return json.loads(f.read(), object_pairs_hook=OrderedDict)
-                except ValueError:
-                    raise FileFormatError(path)
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                raise FileNotFoundError(path)
-            else:
-                raise e
-
-
-class FileNotFoundError(Exception):
-    def __init__(self, filename):
-        Exception.__init__(self, '[Errno %s] %s: \'%s\'' % (errno.ENOENT, os.strerror(errno.ENOENT), filename))
-
-
-class FileFormatError(Exception):
-    pass

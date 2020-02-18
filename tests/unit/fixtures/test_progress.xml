@@ -1,5 +1,5 @@
 <experiment>
-  <configHash>7d490f79d238b64084ca72959cae6738</configHash>
+  <configHash>c563cc8583486714e40cf74b1fb98577</configHash>
   <outputDir>test/output/dir</outputDir>
   <runsToRun>
     <run runId="0">

@@ -1,7 +1,7 @@
 {
   "type": "web",
   "devices": {
-	"nexus6p": {
+	"nexus5x": {
         "root_disable_charging": "True",
         "charging_disabled_value": 0,
         "usb_charging_disabled_file": "sys/class/power_supply/battery/charging_enabled"
@@ -18,7 +18,7 @@
   "profilers":{
  "trepn": {
       "sample_interval": 200,
-      "data_points": ["battery_power", "mem_usage", "battery_temp"]
+      "data_points": ["battery_temp", "mem_usage", "battery_power"]
      },
     "android": {
       "subject_aggregation": "none",
@@ -33,7 +33,7 @@
     "after_launch": "Scripts/after_launch.py",
     "interaction": [
       {
-        "type": "python2",
+        "type": "python3",
         "path": "Scripts/interaction.py",
         "timeout": 500,
         "logcat_regex": "some keyword"

@@ -3,11 +3,12 @@ import json
 import os
 import re
 from collections import OrderedDict
+from slugify import slugify
+import csv
 
 
 class ConfigError(Exception):
     pass
-
 
 class FileNotFoundError(Exception):
     def __init__(self, filename):
@@ -17,6 +18,12 @@ class FileNotFoundError(Exception):
 class FileFormatError(Exception):
     pass
 
+
+def write_to_file(filename, rows):
+    with open(filename, 'w', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
 
 def load_json(path):
     """Load a JSON file from path, and returns an ordered dictionary or throws exceptions on formatting errors"""
@@ -32,6 +39,11 @@ def load_json(path):
         else:
             raise e
 
+def list_subdir(a_dir):
+    """List immediate subdirectories of a_dir"""
+    # https://stackoverflow.com/a/800201
+    return [name for name in os.listdir(a_dir)
+            if os.path.isdir(os.path.join(a_dir, name))]
 
 def makedirs(path):
     """Create a directory on path if it does not exist"""
@@ -43,15 +55,13 @@ def makedirs(path):
             raise
 
 
-# https://stackoverflow.com/a/295466
 # noinspection PyTypeChecker
 def slugify_dir(value):
     """
     Normalizes string, converts to lowercase, removes non-alpha characters,
-    and converts spaces to hyphens.
+    and converts spaces to hyphens.  Regex_pattern prevents slugify from removing
+    an underscore and replacing it with a hyphen.
     """
-    import unicodedata
-    value = value.decode('unicode-escape')
-    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(re.sub(r'[^\w\s-]', '', value).strip().lower())
-    return unicode(re.sub(r'[-\s]+', '-', value))
+    regex_pattern = r'[^\w]'
+    slug = slugify(value, regex_pattern=regex_pattern)
+    return slug

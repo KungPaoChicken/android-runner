@@ -104,3 +104,5 @@ ENV/
 examples/trepn.pref
 examples/output
 examples/logs
+
+.vscode

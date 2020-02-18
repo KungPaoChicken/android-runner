@@ -125,7 +125,7 @@ class TestExperiment(object):
         assert experiment.time_between_run == 10
         assert experiment.output_root == paths.OUTPUT_DIR
         assert experiment.result_file_structure is None
-        mock_devices.assert_called_once_with(['dev1', 'dev2'], adb_path='test_adb')
+        mock_devices.assert_called_once_with(['dev1', 'dev2'], adb_path='test_adb', devices_spec=None)
         mock_profilers.assert_called_once_with({'fake': {'config1': 1, 'config2': 2}})
         mock_scripts.assert_called_once_with({'script1': 'path/to/1'}, monkeyrunner_path='monkey_path')
         mock_test.assert_called_once_with(experiment.devices, [])
@@ -200,9 +200,17 @@ class TestExperiment(object):
         open(os.path.join(folder_path2, "test.txt"), "w+")
 
         walk_list = default_experiment.walk_to_list(os.walk(paths.BASE_OUTPUT_DIR))
+        print(walk_list)
         assert len(walk_list) == 7
-        assert 'data/1/1/test.txt' in walk_list[0]
-        assert 'data/2/1/test.txt' in walk_list[2]
+
+        files = ['data/1/1/test.txt', 'data/2/1/test.txt']
+        flags = [False]*2
+
+        for item in walk_list:
+            for i, file in enumerate(files):
+                flags[i] |= file in item
+        
+        assert(all(flags))
 
     def test_check_result_files_correct(self, default_experiment, tmpdir):
         paths.BASE_OUTPUT_DIR = str(tmpdir)
@@ -715,12 +723,13 @@ class TestExperiment(object):
     def test_start_error(self, finish_experiment_mock, capsys, default_experiment):
         mock_logger = Mock()
         default_experiment.logger = mock_logger
-        paths.BASE_OUTPUT_DIR = None  # raises AttributeError
+        paths.BASE_OUTPUT_DIR = None  # raises TypeError
+
         with pytest.raises(Exception):
             default_experiment.start()
         captured = capsys.readouterr()  # Catch std out
         finish_experiment_mock.assert_called_once_with(True, False)
-        mock_logger.error.assert_called_once_with("AttributeError: 'NoneType' object has no attribute 'endswith'")
+        mock_logger.error.assert_called_once_with("TypeError: expected str, bytes or os.PathLike object, not NoneType")
 
     @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
     @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
@@ -1404,7 +1413,7 @@ class TestExperimentFactory(object):
         makedirs(paths.OUTPUT_DIR)
         tmp_file = tmpdir.join('tmp.txt')
         tmp_file.write('{"type":"plugintest", "devices": {"nexus6p": {}}}')
-        config = OrderedDict([(u'type', u'plugintest'), (u'devices', OrderedDict([(u'nexus6p', OrderedDict())]))])
+        config = OrderedDict([('type', 'plugintest'), ('devices', OrderedDict([('nexus6p', OrderedDict())]))])
         experiment = ExperimentFactory.from_json(str(tmp_file), None)
 
         assert mock_progress.call_count == 0
