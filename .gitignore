@@ -106,3 +106,5 @@ examples/output
 examples/logs
 
 .vscode
+
+!com.quicinc.trepn.apk
