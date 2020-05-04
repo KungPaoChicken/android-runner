@@ -4,8 +4,8 @@ import os.path as op
 import pytest
 from mock import Mock, patch
 
-import ExperimentRunner.Tests as Tests
-import ExperimentRunner.util as util
+import AndroidRunner.Tests as Tests
+import AndroidRunner.util as util
 import paths
 import csv
 

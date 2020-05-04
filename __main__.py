@@ -5,9 +5,9 @@ import sys
 import time
 
 import paths
-from ExperimentRunner.ExperimentFactory import ExperimentFactory
-from ExperimentRunner.Progress import Progress
-from ExperimentRunner.util import makedirs
+from AndroidRunner.ExperimentFactory import ExperimentFactory
+from AndroidRunner.Progress import Progress
+from AndroidRunner.util import makedirs
 
 
 def main():
@@ -62,7 +62,7 @@ def setup_paths(config_file, log_dir):
     makedirs(log_dir)
     paths.OUTPUT_DIR = log_dir
     paths.BASE_OUTPUT_DIR = log_dir
-    sys.path.append(op.join(paths.ROOT_DIR, 'ExperimentRunner'))
+    sys.path.append(op.join(paths.ROOT_DIR, 'AndroidRunner'))
 
 
 def setup_logger(log_dir):

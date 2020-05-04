@@ -20,7 +20,7 @@ class PluginHandler(object):
         self.subject_aggregated_default = False
         self.paths = paths.paths_dict()
 
-        self.plugin_base = PluginBase(package='ExperimentRunner.plugins')
+        self.plugin_base = PluginBase(package='AndroidRunner.plugins')
         if self.name_lower == 'android' or self.name_lower == 'trepn' or self.name_lower == 'batterystats':
             plugin_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Plugins')
             self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[plugin_path])
@@ -30,7 +30,7 @@ class PluginHandler(object):
         else:
             plugin_path = os.path.join(paths.CONFIG_DIR, 'Plugins')
             if os.path.isdir(plugin_path):
-                copyfile(os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins', 'Profiler.py'), os.path.join(
+                copyfile(os.path.join(paths.ROOT_DIR, 'AndroidRunner', 'Plugins', 'Profiler.py'), os.path.join(
                     plugin_path, 'Profiler.py'))
                 self.plugin_source = self.plugin_base.make_plugin_source(searchpath=[plugin_path])
                 self.pluginModule = self.plugin_source.load_plugin(self.name)

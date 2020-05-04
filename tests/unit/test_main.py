@@ -7,7 +7,7 @@ import pytest
 
 import paths
 from mock import patch, Mock, call
-from ExperimentRunner.util import makedirs
+from AndroidRunner.util import makedirs
 main = imp.load_source('runner_main', op.join(op.dirname(paths.__file__), '__main__.py'))
 
 
@@ -78,7 +78,7 @@ class TestRunnerMain(object):
         assert op.isdir(temp_log_dir)
         assert paths.OUTPUT_DIR == temp_log_dir
         assert paths.BASE_OUTPUT_DIR == temp_log_dir
-        assert op.join(paths.ROOT_DIR, 'ExperimentRunner') in sys.path
+        assert op.join(paths.ROOT_DIR, 'AndroidRunner') in sys.path
 
     def test_parse_arguments_empty_args(self, capsys):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
@@ -111,8 +111,8 @@ class TestRunnerMain(object):
         assert result_progress is None
         assert result_log_dir.startswith(op.join(op.dirname(temp_config_file), 'output'))
 
-    @patch('ExperimentRunner.Progress.Progress.get_output_dir')
-    @patch('ExperimentRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.Progress.Progress.get_output_dir')
+    @patch('AndroidRunner.Progress.Progress.__init__')
     def test_set_progress_restart(self, mock_progress_init, mock_progress_get_output, tmpdir):
         temp_config_file = op.join(str(tmpdir), 'fake_config.json')
         temp_progress_file = op.join(str(tmpdir), 'fake_progress.xml')
@@ -133,7 +133,7 @@ class TestRunnerMain(object):
     @patch('runner_main.set_progress')
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
-    @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
+    @patch('AndroidRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_exception(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
         setup_paths_mock.return_value = None
@@ -157,7 +157,7 @@ class TestRunnerMain(object):
     @patch('runner_main.set_progress')
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
-    @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
+    @patch('AndroidRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_interrupt(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                             parse_arguments_mock, tmpdir):
         setup_paths_mock.return_value = None
@@ -183,7 +183,7 @@ class TestRunnerMain(object):
     @patch('runner_main.set_progress')
     @patch('runner_main.setup_paths')
     @patch('runner_main.setup_logger')
-    @patch('ExperimentRunner.ExperimentFactory.ExperimentFactory.from_json')
+    @patch('AndroidRunner.ExperimentFactory.ExperimentFactory.from_json')
     def test_main_succes(self, from_json_mock, setup_logger_mock, setup_paths_mock, set_progress_mock,
                          parse_arguments_mock, tmpdir):
         setup_paths_mock.return_value = None

@@ -5,22 +5,22 @@ import pytest
 from mock import MagicMock, Mock, patch
 
 import paths
-from ExperimentRunner.PluginHandler import PluginHandler
-from ExperimentRunner.Profilers import Profilers
-from ExperimentRunner.util import load_json, makedirs
+from AndroidRunner.PluginHandler import PluginHandler
+from AndroidRunner.Profilers import Profilers
+from AndroidRunner.util import load_json, makedirs
 
 
 class TestProfilers(object):
 
     @pytest.fixture()
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.__init__')
     def profilers(self, mock):
         mock.return_value = None
         params = {"test1": "waarde1", "test2": "waarde2"}
         config = {"testPlugin": params}
         return Profilers(config)
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.__init__')
     def test_init(self, mock):
         mock.return_value = None
         params = {"test1": "waarde1", "test2": "waarde2"}
@@ -30,7 +30,7 @@ class TestProfilers(object):
         assert len(current_profiler.profilers) == 1
         assert type(current_profiler.profilers[0]) == PluginHandler
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.__init__')
     def test_init_error(self, mock):
         mock.side_effect = ImportError
         params = {"test1": "waarde1", "test2": "waarde2"}
@@ -187,7 +187,7 @@ class TestPluginHandler(object):
         PluginHandler('Android', android_config)
         plugin_base_init_mock.assert_called_once()
         make_plugin_source_mock.assert_called_once_with(
-            searchpath=[os.path.join(paths.ROOT_DIR, 'ExperimentRunner', 'Plugins')])
+            searchpath=[os.path.join(paths.ROOT_DIR, 'AndroidRunner', 'Plugins')])
         mock_plugin_source.load_plugin.assert_called_once_with('Android')
 
     def test_handler_init_plugin(self, tmpdir, fixture_dir):
@@ -288,7 +288,7 @@ class TestPluginHandler(object):
 
         mock_profiler.collect_results.assert_called_once_with(fake_device)
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_subject_no_selection(self, python, android_test_plugin_handler):
         mock_profiler = Mock()
         android_test_plugin_handler.currentProfiler = mock_profiler
@@ -301,7 +301,7 @@ class TestPluginHandler(object):
         assert android_test_plugin_handler.subject_aggregated
         assert android_test_plugin_handler.subject_aggregated_default
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_subject_default(self, python, android_test_plugin_handler):
         mock_profiler = Mock()
         android_test_plugin_handler.currentProfiler = mock_profiler
@@ -313,7 +313,7 @@ class TestPluginHandler(object):
         assert android_test_plugin_handler.subject_aggregated
         assert android_test_plugin_handler.subject_aggregated_default
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_subject_none(self, python, android_test_plugin_handler):
         mock_profiler = Mock()
         android_test_plugin_handler.currentProfiler = mock_profiler
@@ -326,8 +326,8 @@ class TestPluginHandler(object):
         assert not android_test_plugin_handler.subject_aggregated
         assert not android_test_plugin_handler.subject_aggregated_default
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
-    @patch('ExperimentRunner.Python3.Python3.run')
+    @patch('AndroidRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.run')
     def test_aggregate_subject_user_script(self, python_run, python_init, android_test_plugin_handler):
         python_init.return_value = None
         mock_profiler = Mock()
@@ -342,8 +342,8 @@ class TestPluginHandler(object):
         assert android_test_plugin_handler.subject_aggregated
         assert not android_test_plugin_handler.subject_aggregated_default
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_data_end_none(self, python, aggregate_subjects, android_test_plugin_handler):
         android_test_plugin_handler.pluginParams = {'experiment_aggregation': 'none'}
         mock_profiler = Mock()
@@ -353,8 +353,8 @@ class TestPluginHandler(object):
         assert python.call_count == 0
         assert aggregate_subjects.call_count == 0
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_data_end_default_subject_default(self, python, aggregate_subjects, android_test_plugin_handler):
         android_test_plugin_handler.pluginParams = {'experiment_aggregation': 'default'}
         mock_profiler = Mock()
@@ -367,8 +367,8 @@ class TestPluginHandler(object):
         assert python.call_count == 0
         assert aggregate_subjects.call_count == 0
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_data_end_default_no_subject(self, python, aggregate_subjects, android_test_plugin_handler):
         android_test_plugin_handler.pluginParams = {'experiment_aggregation': 'default'}
         mock_profiler = Mock()
@@ -387,8 +387,8 @@ class TestPluginHandler(object):
         assert python.call_count == 0
         aggregate_subjects.assert_called_once()
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_data_end_default_user_aggregated(self, python, aggregate_subjects, android_test_plugin_handler):
         android_test_plugin_handler.pluginParams = {'experiment_aggregation': 'default'}
         mock_profiler = Mock()
@@ -401,9 +401,9 @@ class TestPluginHandler(object):
         assert python.call_count == 0
         assert aggregate_subjects.call_count == 0
 
-    @patch('ExperimentRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
-    @patch('ExperimentRunner.Python3.Python3.run')
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.PluginHandler.PluginHandler.aggregate_subjects_default')
+    @patch('AndroidRunner.Python3.Python3.run')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_aggregate_data_end_user_script(self, python_init, python_run, aggregate_subjects,
                                             android_test_plugin_handler):
         python_init.return_value = None

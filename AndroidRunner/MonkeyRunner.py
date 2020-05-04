@@ -1,6 +1,6 @@
 import subprocess
 
-from ExperimentRunner.Script import Script
+from AndroidRunner.Script import Script
 
 
 class MonkeyRunner(Script):
