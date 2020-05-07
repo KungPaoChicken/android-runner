@@ -5,12 +5,12 @@ import pytest
 from mock import Mock, call, patch
 
 import paths
-from ExperimentRunner.MonkeyReplay import MonkeyReplay, MonkeyReplayError
-from ExperimentRunner.MonkeyRunner import MonkeyRunner
-from ExperimentRunner.Python3 import Python3
-from ExperimentRunner.Script import Script, ScriptError
-from ExperimentRunner.Scripts import Scripts
-from ExperimentRunner.util import ConfigError, FileNotFoundError
+from AndroidRunner.MonkeyReplay import MonkeyReplay, MonkeyReplayError
+from AndroidRunner.MonkeyRunner import MonkeyRunner
+from AndroidRunner.Python3 import Python3
+from AndroidRunner.Script import Script, ScriptError
+from AndroidRunner.Scripts import Scripts
+from AndroidRunner.util import ConfigError, FileNotFoundError
 
 
 class TestScripts(object):
@@ -20,13 +20,13 @@ class TestScripts(object):
 
     @pytest.fixture()
     def scripts(self, paths_dict):
-        with patch('ExperimentRunner.Python3.Python3.__init__', return_value=None):
+        with patch('AndroidRunner.Python3.Python3.__init__', return_value=None):
             test_path = 'test/path/to/script.py'
             test_config = collections.OrderedDict()
             test_config['testscript'] = test_path
             return Scripts(test_config)
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_experiment_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
@@ -38,7 +38,7 @@ class TestScripts(object):
         for script in scripts.scripts['testscript']:
             assert type(script) == Python3
 
-    @patch('ExperimentRunner.Python3.Python3.__init__')
+    @patch('AndroidRunner.Python3.Python3.__init__')
     def test_python3_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
@@ -55,7 +55,7 @@ class TestScripts(object):
         for script in scripts.scripts['interaction']:
             assert type(script) == Python3
 
-    @patch('ExperimentRunner.MonkeyReplay.MonkeyReplay.__init__')
+    @patch('AndroidRunner.MonkeyReplay.MonkeyReplay.__init__')
     def test_monkeyreplay_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
@@ -72,7 +72,7 @@ class TestScripts(object):
         for script in scripts.scripts['interaction']:
             assert type(script) == MonkeyReplay
 
-    @patch('ExperimentRunner.MonkeyRunner.MonkeyRunner.__init__')
+    @patch('AndroidRunner.MonkeyRunner.MonkeyRunner.__init__')
     def test_monkeyrunner_interaction_script_init(self, mock, paths_dict):
         mock.return_value = None
         test_path = 'test/path/to/script.py'
@@ -103,13 +103,13 @@ class TestScripts(object):
         with pytest.raises(ConfigError) as _:
             Scripts(interaction_test_config)
 
-    @patch('ExperimentRunner.Script.Script.run')
+    @patch('AndroidRunner.Script.Script.run')
     def test_run(self, mock, scripts):
         fake_device = Mock()
         scripts.run('testscript', fake_device)
         mock.assert_called_once_with(fake_device)
 
-    @patch('ExperimentRunner.Script.Script.run')
+    @patch('AndroidRunner.Script.Script.run')
     def test_run_empty_script_set(self, mock, scripts):
         fake_device = Mock()
         scripts.run('testscript1', fake_device)

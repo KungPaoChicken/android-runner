@@ -7,8 +7,8 @@ import pytest
 from mock import Mock, call, patch
 
 import paths
-from ExperimentRunner.Progress import Progress
-from ExperimentRunner.util import load_json
+from AndroidRunner.Progress import Progress
+from AndroidRunner.util import load_json
 
 
 class TestProgressSetup(object):
@@ -22,8 +22,8 @@ class TestProgressSetup(object):
         fixture_dir = op.join(op.dirname(op.realpath(__file__)), "fixtures")
         return op.join(fixture_dir, 'test_progress.xml')
 
-    @patch('ExperimentRunner.Progress.Progress.write_progress_to_file')
-    @patch('ExperimentRunner.Progress.Progress.build_progress_xml')
+    @patch('AndroidRunner.Progress.Progress.write_progress_to_file')
+    @patch('AndroidRunner.Progress.Progress.build_progress_xml')
     def test_progress_init(self, build_progress_mock, write_to_file_mock, tmp_path, test_config, test_progress):
         with open(test_progress, 'r') as f:
             expected_xml = f.read()
@@ -42,7 +42,7 @@ class TestProgressSetup(object):
         current_lxml = progress.progress_xml_content
         assert self.elements_equal(current_lxml, expected_lxml)
 
-    @patch('ExperimentRunner.Progress.Progress.check_config_hash')
+    @patch('AndroidRunner.Progress.Progress.check_config_hash')
     def test_progress_init_resume(self, check_hash_mock, tmp_path, test_config, test_progress):
         check_hash_mock.return_value = None
         progress = Progress(config_file=test_config, progress_file=test_progress, load_progress=True)
@@ -106,7 +106,7 @@ class TestProgressMethods(object):
             return False
         return all(self.elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
-    @patch('ExperimentRunner.Progress.Progress.run_to_dict')
+    @patch('AndroidRunner.Progress.Progress.run_to_dict')
     def test_ordered_next(self, run_to_dict, current_progress):
         run_to_dict.return_value = 0
         for _ in range(50):
@@ -115,7 +115,7 @@ class TestProgressMethods(object):
                                 replace('[', '').replace(']', '').replace('\n', '').split(', ')))
         assert unique_values == 1
 
-    @patch('ExperimentRunner.Progress.Progress.run_to_dict')
+    @patch('AndroidRunner.Progress.Progress.run_to_dict')
     def test_random_next(self, run_to_dict, current_progress):
         for _ in range(50):
             current_progress.get_random_run()
@@ -158,7 +158,7 @@ class TestProgressMethods(object):
         current_hash = current_progress.file_to_hash(test_config)
         assert current_hash == expected_hash
 
-    @patch('ExperimentRunner.Progress.Progress.file_to_hash')
+    @patch('AndroidRunner.Progress.Progress.file_to_hash')
     def test_check_config_hash_fail(self, file_to_hash_mock, current_progress, capsys, test_config, test_progress):
         file_to_hash_mock.return_value = '0'
         with pytest.raises(SystemExit) as wrapper_result:
@@ -168,12 +168,12 @@ class TestProgressMethods(object):
         capsys.readouterr()
         assert wrapper_result.type == SystemExit
 
-    @patch('ExperimentRunner.Progress.Progress.file_to_hash')
+    @patch('AndroidRunner.Progress.Progress.file_to_hash')
     def test_check_config_hash_succes(self, file_to_hash_mock, current_progress):
         file_to_hash_mock.return_value = current_progress.progress_xml_content.find('configHash').text
         current_progress.check_config_hash(current_progress.get_progress_xml_file())
 
-    @patch('ExperimentRunner.Progress.Progress.get_run_count')
+    @patch('AndroidRunner.Progress.Progress.get_run_count')
     def test_run_to_dict(self, get_run_count, current_progress):
         get_run_count.return_value = 1459
         run_dict = current_progress.run_to_dict(et.fromstring('<run runId="0"><device>device</device><path>path</path>'
@@ -196,8 +196,8 @@ class TestProgressMethods(object):
         expected_xml = '<device>device1</device><path>path1</path>'
         assert subject_xml == expected_xml
 
-    @patch('ExperimentRunner.Progress.Progress.build_runs_xml')
-    @patch('ExperimentRunner.Progress.Progress.file_to_hash')
+    @patch('AndroidRunner.Progress.Progress.build_runs_xml')
+    @patch('AndroidRunner.Progress.Progress.file_to_hash')
     def test_build_progress_xml(self, file_to_hash_mock, build_runs_xml_mock, current_progress):
         mock_config = Mock()
         mock_config_file = Mock()
@@ -212,7 +212,7 @@ class TestProgressMethods(object):
         file_to_hash_mock.assert_called_once_with(mock_config_file)
         build_runs_xml_mock.assert_called_once_with(mock_config)
 
-    @patch('ExperimentRunner.Progress.Progress.build_subject_xml')
+    @patch('AndroidRunner.Progress.Progress.build_subject_xml')
     def test_build_runs_xml_web(self, build_subject_xml_mock, current_progress, config_web_dict):
         build_subject_xml_mock.return_value = "<device>device1</device><path>path1</path><browser>browser1</browser>"
         runs_xml_web = current_progress.build_runs_xml(config_web_dict)
@@ -220,7 +220,7 @@ class TestProgressMethods(object):
                             '<runCount>1</runCount></run>'
         assert runs_xml_web == expected_runs_web
 
-    @patch('ExperimentRunner.Progress.Progress.build_subject_xml')
+    @patch('AndroidRunner.Progress.Progress.build_subject_xml')
     def test_build_runs_xml_non_web(self, build_subject_xml_mock, current_progress, config_native_dict):
         build_subject_xml_mock.return_value = "<device>device1</device><path>path1</path>"
         runs_xml_native = current_progress.build_runs_xml(config_native_dict)

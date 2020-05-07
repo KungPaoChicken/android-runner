@@ -1,8 +1,8 @@
 import pytest
 from mock import Mock, patch
 
-from ExperimentRunner.BrowserFactory import BrowserFactory
-from ExperimentRunner.Browsers import Browser, Chrome, Firefox, Opera
+from AndroidRunner.BrowserFactory import BrowserFactory
+from AndroidRunner.Browsers import Browser, Chrome, Firefox, Opera
 
 
 class TestBrowsers(object):
@@ -36,7 +36,7 @@ class TestBrowsers(object):
     def test_browsers_to_string_firefox(self, browser):
         assert BrowserFactory.get_browser('firefox')(None).to_string() == 'org.mozilla.firefox'
 
-    @patch('ExperimentRunner.Browsers.Browser.Browser.__init__')
+    @patch('AndroidRunner.Browsers.Browser.Browser.__init__')
     def test_chrome_init(self, mock_browser):
         mock_config = Mock()
         chrome_browser = Chrome.Chrome(mock_config)
@@ -45,7 +45,7 @@ class TestBrowsers(object):
         chrome_browser.package_name = 'com.android.chrome'
         chrome_browser.main_activity = 'com.google.android.apps.chrome.Main'
 
-    @patch('ExperimentRunner.Browsers.Browser.Browser.__init__')
+    @patch('AndroidRunner.Browsers.Browser.Browser.__init__')
     def test_firefox_init(self, mock_browser):
         mock_config = Mock()
         firefox_browser = Firefox.Firefox(mock_config)
@@ -54,7 +54,7 @@ class TestBrowsers(object):
         firefox_browser.package_name = 'org.mozilla.firefox'
         firefox_browser.main_activity = 'org.mozilla.gecko.BrowserApp'
 
-    @patch('ExperimentRunner.Browsers.Browser.Browser.__init__')
+    @patch('AndroidRunner.Browsers.Browser.Browser.__init__')
     def test_opera_init(self, mock_browser):
         mock_config = Mock()
         opera_browser = Opera.Opera(mock_config)

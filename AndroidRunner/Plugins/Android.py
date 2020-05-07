@@ -7,8 +7,8 @@ import timeit
 from collections import OrderedDict
 from functools import reduce
 
-from ExperimentRunner import util
-from ExperimentRunner import Tests
+from AndroidRunner import util
+from AndroidRunner import Tests
 from .Profiler import Profiler
 
 class Android(Profiler):

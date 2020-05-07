@@ -4,9 +4,9 @@ import os
 import time
 import traceback
 
-from ExperimentRunner.Devices import Devices
-from ExperimentRunner.PluginHandler import PluginHandler
-from ExperimentRunner.util import makedirs
+from AndroidRunner.Devices import Devices
+from AndroidRunner.PluginHandler import PluginHandler
+from AndroidRunner.util import makedirs
 import paths
 
 

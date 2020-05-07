@@ -8,11 +8,11 @@ import time
 from collections import OrderedDict
 
 from . import BatterystatsParser
-from ExperimentRunner.BrowserFactory import BrowserFactory
+from AndroidRunner.BrowserFactory import BrowserFactory
 from .Profiler import Profiler
 from functools import reduce
-from ExperimentRunner import Tests
-from ExperimentRunner import util
+from AndroidRunner import Tests
+from AndroidRunner import util
 
 class Batterystats(Profiler):
 

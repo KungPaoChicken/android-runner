@@ -6,15 +6,15 @@ import pytest
 from mock import MagicMock, Mock, call, patch
 
 import paths
-from ExperimentRunner.Devices import Devices
-from ExperimentRunner.Experiment import Experiment
-from ExperimentRunner.ExperimentFactory import ExperimentFactory
-from ExperimentRunner.NativeExperiment import NativeExperiment
-from ExperimentRunner.Profilers import Profilers
-from ExperimentRunner.Progress import Progress
-from ExperimentRunner.Scripts import Scripts
-from ExperimentRunner.WebExperiment import WebExperiment
-from ExperimentRunner.util import ConfigError, makedirs
+from AndroidRunner.Devices import Devices
+from AndroidRunner.Experiment import Experiment
+from AndroidRunner.ExperimentFactory import ExperimentFactory
+from AndroidRunner.NativeExperiment import NativeExperiment
+from AndroidRunner.Profilers import Profilers
+from AndroidRunner.Progress import Progress
+from AndroidRunner.Scripts import Scripts
+from AndroidRunner.WebExperiment import WebExperiment
+from AndroidRunner.util import ConfigError, makedirs
 from tests.PluginTests import PluginTests
 
 
@@ -36,8 +36,8 @@ class TestExperiment(object):
         return config
 
     @pytest.fixture()
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def default_experiment(self, mock_devices, mock_test):
         paths.OUTPUT_DIR = 'fake/path/name'
         device_config = {'devices': 'fake_device'}
@@ -49,9 +49,9 @@ class TestExperiment(object):
         with pytest.raises(ConfigError):
             Experiment(empty_config, None, False)
 
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_device')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_only_device_config_no_restart(self, mock_devices, mock_test, mock_prepare):
         paths.OUTPUT_DIR = 'fake/path/name'
         device_config = {'devices': 'fake_device'}
@@ -71,10 +71,10 @@ class TestExperiment(object):
         assert experiment.result_file_structure is None
         assert mock_prepare.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__iter__')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_device')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__iter__')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_only_device_config_restart(self, mock_devices, mock_devices_itter, mock_test, mock_prepare):
         paths.OUTPUT_DIR = 'fake/path/name'
         device_config = {'devices': 'fake_device'}
@@ -98,11 +98,11 @@ class TestExperiment(object):
         assert mock_prepare.mock_calls[1] == call('dev2', restart=True)
         assert mock_prepare.mock_calls[2] == call('dev3', restart=True)
 
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
-    @patch('ExperimentRunner.Scripts.Scripts.__init__')
-    @patch('ExperimentRunner.Experiment.Profilers')
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_device')
+    @patch('AndroidRunner.Scripts.Scripts.__init__')
+    @patch('AndroidRunner.Experiment.Profilers')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_full_config_no_restart(self, mock_devices, mock_test, mock_profilers,
                                          mock_scripts, mock_prepare, test_config):
         paths.OUTPUT_DIR = 'fake/path/name'
@@ -270,8 +270,8 @@ class TestExperiment(object):
 
         assert default_experiment.get_experiment() == get_random_run_mock
 
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_device')
-    @patch('ExperimentRunner.Experiment.Experiment.before_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_device')
+    @patch('AndroidRunner.Experiment.Experiment.before_experiment')
     def test_first_run_device(self, before_experiment, prepare_device, default_experiment):
         mock_progress = Mock()
         mock_progress.device_first.return_value = True
@@ -289,7 +289,7 @@ class TestExperiment(object):
         expected_calls = [call.prepare_device_managed(mock_device), call.before_experiment_managed(mock_device)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.before_run_subject')
     def test_before_every_run_subject(self, before_run_subject, default_experiment):
         mock_devices = Mock()
         mock_device = Mock()
@@ -301,7 +301,7 @@ class TestExperiment(object):
 
         before_run_subject.assert_called_once_with(mock_device, fake_dict['path'])
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.after_experiment')
     def test_last_run_device_false(self, after_experiment, default_experiment):
         mock_progress = Mock()
         mock_progress.device_finished.return_value = False
@@ -312,7 +312,7 @@ class TestExperiment(object):
 
         assert after_experiment.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.after_experiment')
     def test_last_run_device_true(self, after_experiment, default_experiment):
         mock_progress = Mock()
         mock_progress.device_finished.return_value = True
@@ -327,8 +327,8 @@ class TestExperiment(object):
 
         after_experiment.assert_called_once_with(mock_device)
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_subject')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_subject')
     def test_last_run_false(self, aggregate_subject, after_last_run, default_experiment):
         mock_progress = Mock()
         mock_progress.subject_finished.return_value = False
@@ -340,8 +340,8 @@ class TestExperiment(object):
         assert after_last_run.call_count == 0
         assert aggregate_subject.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_subject')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_subject')
     def test_last_run_true(self, aggregate_subject, after_last_run, default_experiment):
         mock_progress = Mock()
         mock_progress.subject_finished.return_value = True
@@ -366,11 +366,11 @@ class TestExperiment(object):
         assert os.path.isdir(paths.OUTPUT_DIR)
         assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path')
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_run')
-    @patch('ExperimentRunner.Experiment.Experiment.stop_profiling')
-    @patch('ExperimentRunner.Experiment.Experiment.interaction')
-    @patch('ExperimentRunner.Experiment.Experiment.start_profiling')
-    @patch('ExperimentRunner.Experiment.Experiment.before_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_run')
+    @patch('AndroidRunner.Experiment.Experiment.stop_profiling')
+    @patch('AndroidRunner.Experiment.Experiment.interaction')
+    @patch('AndroidRunner.Experiment.Experiment.start_profiling')
+    @patch('AndroidRunner.Experiment.Experiment.before_run')
     def test_run(self, before_run, start_profiling, interaction, stop_profiling, after_run, default_experiment):
         mock_device = Mock()
         path = "test/path"
@@ -391,7 +391,7 @@ class TestExperiment(object):
                           call.after_run_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_before_experiment(self, run_script_mock, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -409,8 +409,8 @@ class TestExperiment(object):
 
         default_experiment.before_run_subject(mock_device, path, *args, **kwargs)
 
-    @patch('ExperimentRunner.Profilers.Profilers.set_output')
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Profilers.Profilers.set_output')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_before_run(self, script_run, set_output, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -428,7 +428,7 @@ class TestExperiment(object):
                           call.script_run_managed('before_run', mock_device, *args, **kwargs)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_after_launch(self, script_run, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -443,7 +443,7 @@ class TestExperiment(object):
 
         script_run.assert_called_once_with('after_launch', mock_device, 123, current_activity)
 
-    @patch('ExperimentRunner.Profilers.Profilers.start_profiling')
+    @patch('AndroidRunner.Profilers.Profilers.start_profiling')
     def test_start_profiling(self, start_profiling, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -455,7 +455,7 @@ class TestExperiment(object):
 
         start_profiling.assert_called_once_with(mock_device)
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_interaction(self, script_run, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -467,7 +467,7 @@ class TestExperiment(object):
 
         script_run.assert_called_once_with('interaction', mock_device, *args, **kwargs)
 
-    @patch('ExperimentRunner.Profilers.Profilers.stop_profiling')
+    @patch('AndroidRunner.Profilers.Profilers.stop_profiling')
     def test_stop_profiling(self, start_profiling, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -479,7 +479,7 @@ class TestExperiment(object):
 
         start_profiling.assert_called_once_with(mock_device)
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_before_close(self, script_run, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -495,8 +495,8 @@ class TestExperiment(object):
         script_run.assert_called_once_with('before_close', mock_device, 123, current_activity)
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Profilers.Profilers.collect_results')
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Profilers.Profilers.collect_results')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_after_run(self, script_run, collect_results, sleep, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -524,7 +524,7 @@ class TestExperiment(object):
 
         default_experiment.after_last_run(mock_device, path, *args, **kwargs)
 
-    @patch('ExperimentRunner.Scripts.Scripts.run')
+    @patch('AndroidRunner.Scripts.Scripts.run')
     def test_after_experiment(self, script_run, default_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -534,13 +534,13 @@ class TestExperiment(object):
 
         script_run.assert_called_once_with('after_experiment', mock_device, *args, **kwargs)
 
-    @patch('ExperimentRunner.Profilers.Profilers.aggregate_subject')
+    @patch('AndroidRunner.Profilers.Profilers.aggregate_subject')
     def test_aggregate_subject(self, aggregate_subject, default_experiment):
         default_experiment.aggregate_subject()
 
         aggregate_subject.assert_called_once()
 
-    @patch('ExperimentRunner.Profilers.Profilers.aggregate_end')
+    @patch('AndroidRunner.Profilers.Profilers.aggregate_end')
     def test_aggregate_end(self, aggregate_end, default_experiment, tmpdir):
         default_experiment.output_root = str(tmpdir)
 
@@ -548,9 +548,9 @@ class TestExperiment(object):
 
         aggregate_end.assert_called_once_with(default_experiment.output_root)
 
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
-    @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_end')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.check_result_files')
     def test_finish_experiment_regular_no_devices(self, check_result_files, cleanup, aggregate_end, default_experiment):
         fake_file_structure = 'test_structure'
         default_experiment.result_file_structure = fake_file_structure
@@ -566,9 +566,9 @@ class TestExperiment(object):
         assert mock_manager.mock_calls == expected_calls
         assert cleanup.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
-    @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_end')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.check_result_files')
     def test_finish_experiment_regular_multiple_devices(self, check_result_files, cleanup, aggregate_end,
                                                         default_experiment):
         fake_file_structure = 'test_structure'
@@ -588,9 +588,9 @@ class TestExperiment(object):
                           call.aggregate_end_managed()]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
-    @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_end')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.check_result_files')
     def test_finish_experiment_error(self, check_result_files, cleanup, aggregate_end, default_experiment):
         fake_file_structure = 'test_structure'
         default_experiment.devices = ['1']
@@ -601,9 +601,9 @@ class TestExperiment(object):
         cleanup.assert_called_once_with('1')
         assert aggregate_end.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
-    @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_end')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.check_result_files')
     def test_finish_experiment_interrupted(self, check_result_files, cleanup, aggregate_end, default_experiment):
         fake_file_structure = 'test_structure'
         default_experiment.devices = ['1']
@@ -615,9 +615,9 @@ class TestExperiment(object):
         cleanup.assert_called_once_with('1')
         assert aggregate_end.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.aggregate_end')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
-    @patch('ExperimentRunner.Experiment.Experiment.check_result_files')
+    @patch('AndroidRunner.Experiment.Experiment.aggregate_end')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.check_result_files')
     def test_finish_experiment_error_in_cleanup(self, check_result_files, cleanup, aggregate_end, default_experiment):
         fake_file_structure = 'test_structure'
         default_experiment.devices = ['1']
@@ -628,9 +628,9 @@ class TestExperiment(object):
         cleanup.assert_called_once_with('1')
         assert aggregate_end.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.finish_run')
-    @patch('ExperimentRunner.Experiment.Experiment.run_run')
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_run')
+    @patch('AndroidRunner.Experiment.Experiment.finish_run')
+    @patch('AndroidRunner.Experiment.Experiment.run_run')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_run')
     def test_run_experiment(self, prepare_run, run_run, finish_run, default_experiment):
         test_run = Mock()
         mock_manager = Mock()
@@ -645,9 +645,9 @@ class TestExperiment(object):
                           call.finish_run_managed(test_run)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.prepare_output_dir')
-    @patch('ExperimentRunner.Experiment.Experiment.first_run_device')
-    @patch('ExperimentRunner.Experiment.Experiment.before_every_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.prepare_output_dir')
+    @patch('AndroidRunner.Experiment.Experiment.first_run_device')
+    @patch('AndroidRunner.Experiment.Experiment.before_every_run_subject')
     def test_prepare_run(self, before_every_run_subject, first_run_device, prepare_output_dir, default_experiment):
         test_run = Mock()
         mock_manager = Mock()
@@ -662,7 +662,7 @@ class TestExperiment(object):
                           call.before_every_run_subject_managed(test_run)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.run')
+    @patch('AndroidRunner.Experiment.Experiment.run')
     def test_run_run_w_browser(self, run, default_experiment):
         mock_device = Mock()
         mock_devices = Mock()
@@ -673,7 +673,7 @@ class TestExperiment(object):
 
         run.assert_called_once_with(mock_device, test_run['path'], int(test_run['runCount']), test_run['browser'])
 
-    @patch('ExperimentRunner.Experiment.Experiment.run')
+    @patch('AndroidRunner.Experiment.Experiment.run')
     def test_run_run_wo_browser(self, run, default_experiment):
         mock_device = Mock()
         mock_devices = Mock()
@@ -684,8 +684,8 @@ class TestExperiment(object):
 
         run.assert_called_once_with(mock_device, test_run['path'], int(test_run['runCount']), None)
 
-    @patch('ExperimentRunner.Experiment.Experiment.last_run_device')
-    @patch('ExperimentRunner.Experiment.Experiment.last_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.last_run_device')
+    @patch('AndroidRunner.Experiment.Experiment.last_run_subject')
     def test_finish_run(self, last_run_subject, last_run_device, default_experiment):
         mock_progres = Mock()
         default_experiment.progress = mock_progres
@@ -719,7 +719,7 @@ class TestExperiment(object):
                           call.mock_threading_join_managed()]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.finish_experiment')
     def test_start_error(self, finish_experiment_mock, capsys, default_experiment):
         mock_logger = Mock()
         default_experiment.logger = mock_logger
@@ -731,8 +731,8 @@ class TestExperiment(object):
         finish_experiment_mock.assert_called_once_with(True, False)
         mock_logger.error.assert_called_once_with("TypeError: expected str, bytes or os.PathLike object, not NoneType")
 
-    @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
-    @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
+    @patch("AndroidRunner.Experiment.Experiment.walk_to_list")
+    @patch('AndroidRunner.Experiment.Experiment.finish_experiment')
     def test_start_interupt(self, finish_experiment_mock, walk_to_list_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
         walk_to_list_mock.side_effect = KeyboardInterrupt
@@ -740,12 +740,12 @@ class TestExperiment(object):
             default_experiment.start()
         finish_experiment_mock.assert_called_once_with(False, True)
 
-    @patch("ExperimentRunner.Experiment.walk")
-    @patch("ExperimentRunner.Experiment.Experiment.get_experiment")
-    @patch('ExperimentRunner.Experiment.Experiment.run_experiment')
-    @patch('ExperimentRunner.Experiment.Experiment.save_progress')
-    @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
-    @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
+    @patch("AndroidRunner.Experiment.walk")
+    @patch("AndroidRunner.Experiment.Experiment.get_experiment")
+    @patch('AndroidRunner.Experiment.Experiment.run_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.save_progress')
+    @patch("AndroidRunner.Experiment.Experiment.walk_to_list")
+    @patch('AndroidRunner.Experiment.Experiment.finish_experiment')
     def test_start_experiment_finished(self, finish_experiment_mock, walk_to_list_mock, save_progress_mock,
                                        run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
@@ -763,12 +763,12 @@ class TestExperiment(object):
         walk_to_list_mock.assert_called_once_with(mock_walk_result)
         finish_experiment_mock.assert_called_once_with(False, False)
 
-    @patch("ExperimentRunner.Experiment.walk")
-    @patch("ExperimentRunner.Experiment.Experiment.get_experiment")
-    @patch('ExperimentRunner.Experiment.Experiment.run_experiment')
-    @patch('ExperimentRunner.Experiment.Experiment.save_progress')
-    @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
-    @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
+    @patch("AndroidRunner.Experiment.walk")
+    @patch("AndroidRunner.Experiment.Experiment.get_experiment")
+    @patch('AndroidRunner.Experiment.Experiment.run_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.save_progress')
+    @patch("AndroidRunner.Experiment.Experiment.walk_to_list")
+    @patch('AndroidRunner.Experiment.Experiment.finish_experiment')
     def test_start_experiment_one_run(self, finish_experiment_mock, walk_to_list_mock, save_progress_mock,
                                       run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
@@ -801,12 +801,12 @@ class TestExperiment(object):
                           call.finish_experiment_managed(False, False)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch("ExperimentRunner.Experiment.walk")
-    @patch("ExperimentRunner.Experiment.Experiment.get_experiment")
-    @patch('ExperimentRunner.Experiment.Experiment.run_experiment')
-    @patch('ExperimentRunner.Experiment.Experiment.save_progress')
-    @patch("ExperimentRunner.Experiment.Experiment.walk_to_list")
-    @patch('ExperimentRunner.Experiment.Experiment.finish_experiment')
+    @patch("AndroidRunner.Experiment.walk")
+    @patch("AndroidRunner.Experiment.Experiment.get_experiment")
+    @patch('AndroidRunner.Experiment.Experiment.run_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.save_progress')
+    @patch("AndroidRunner.Experiment.Experiment.walk_to_list")
+    @patch('AndroidRunner.Experiment.Experiment.finish_experiment')
     def test_start_experiment_multiple_runs(self, finish_experiment_mock, walk_to_list_mock, save_progress_mock,
                                             run_experiment_mock, get_experiment_mock, walk_mock, default_experiment):
         paths.BASE_OUTPUT_DIR = "test"
@@ -827,17 +827,17 @@ class TestExperiment(object):
 
 class TestWebExperiment(object):
     @pytest.fixture()
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def web_experiment(self, device, check_dependencies):
         check_dependencies.return_value = None
         device.return_value = None
         device_config = {'devices': 'fake_device'}
         return WebExperiment(device_config, None, False)
 
-    @patch('ExperimentRunner.BrowserFactory.BrowserFactory.get_browser')
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.BrowserFactory.BrowserFactory.get_browser')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_empty_config(self, device, check_dependencies, get_browser):
         mock_browser = Mock()
         get_browser.return_value = mock_browser
@@ -851,9 +851,9 @@ class TestWebExperiment(object):
         get_browser.assert_called_once_with('chrome')
         mock_browser.assert_called_once_with(device_config)
 
-    @patch('ExperimentRunner.BrowserFactory.BrowserFactory.get_browser')
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.BrowserFactory.BrowserFactory.get_browser')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_nom_empty_config(self, device, check_dependencies, get_browser):
         device.return_value = None
         device_config = {'devices': 'fake_device', 'browsers': ['firefox', 'opera'], 'duration': 1000}
@@ -865,13 +865,13 @@ class TestWebExperiment(object):
         expected_calls = [call('firefox'), call()(device_config), call('opera'), call()(device_config)]
         assert get_browser.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.after_run')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.before_close')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.stop_profiling')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.interaction')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.start_profiling')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.after_launch')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.before_run')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.after_run')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.before_close')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.stop_profiling')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.interaction')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.start_profiling')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.after_launch')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.before_run')
     def test_run(self, before_run, after_launch, start_profiling, interaction, stop_profiling, before_close, after_run,
                  web_experiment):
         mock_device = Mock()
@@ -902,8 +902,8 @@ class TestWebExperiment(object):
                           call.after_run_managed(mock_device, path, run, mock_browser)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.after_last_run')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.aggregate_subject')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.after_last_run')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.aggregate_subject')
     def test_last_run_false(self, aggregate_subject, after_last_run, web_experiment):
         mock_progress = Mock()
         mock_progress.subject_finished.return_value = False
@@ -917,8 +917,8 @@ class TestWebExperiment(object):
         assert after_last_run.call_count == 0
         assert aggregate_subject.call_count == 0
 
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.after_last_run')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.aggregate_subject')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.after_last_run')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.aggregate_subject')
     def test_last_run_true(self, aggregate_subject, after_last_run, web_experiment):
         mock_progress = Mock()
         mock_progress.subject_finished.return_value = True
@@ -950,7 +950,7 @@ class TestWebExperiment(object):
         assert paths.OUTPUT_DIR == os.path.join(paths.BASE_OUTPUT_DIR, 'data', 'fake_device', 'fake_path',
                                                 'fake_browser')
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject(self, before_run_subject, web_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -962,7 +962,7 @@ class TestWebExperiment(object):
         before_run_subject.assert_called_once_with(mock_device, path)
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Experiment.Experiment.before_run')
+    @patch('AndroidRunner.Experiment.Experiment.before_run')
     def test_before_run(self, before_run, sleep, web_experiment):
         mock_browser = Mock()
         args = (mock_browser, 2, 3)
@@ -986,7 +986,7 @@ class TestWebExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Experiment.Experiment.interaction')
+    @patch('AndroidRunner.Experiment.Experiment.interaction')
     def test_interaction(self, interaction, sleep, web_experiment):
         mock_browser = Mock()
         args = (mock_browser, 2, 3)
@@ -1008,7 +1008,7 @@ class TestWebExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Experiment.Experiment.after_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_run')
     def test_after_run(self, after_run,  sleep, web_experiment):
         mock_browser = Mock()
         args = (mock_browser, 2, 3)
@@ -1031,7 +1031,7 @@ class TestWebExperiment(object):
                           call.after_run_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run(self, after_last_run, web_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1042,8 +1042,8 @@ class TestWebExperiment(object):
 
         after_last_run.assert_called_once_with(mock_device, path, *args, **kwargs)
 
-    @patch('ExperimentRunner.Browsers.Browser.Browser.stop')
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Browsers.Browser.Browser.stop')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
     def test_cleanup_empty_browsers(self, cleanup, stop, web_experiment):
         mock_device = Mock()
         web_experiment.browsers = []
@@ -1052,7 +1052,7 @@ class TestWebExperiment(object):
         cleanup.assert_called_once_with(mock_device)
         assert stop.call_count == 0
 
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
     def test_cleanup_non_empty_browsers(self, cleanup, web_experiment):
         mock_device = Mock()
         mock_browser = Mock()
@@ -1070,8 +1070,8 @@ class TestWebExperiment(object):
 
 class TestNativeExperiment(object):
     @pytest.fixture()
-    @patch('ExperimentRunner.Tests.check_dependencies')
-    @patch('ExperimentRunner.Devices.Devices.__init__')
+    @patch('AndroidRunner.Tests.check_dependencies')
+    @patch('AndroidRunner.Devices.Devices.__init__')
     def native_experiment(self, device, check_dependencies):
         check_dependencies.return_value = None
         device.return_value = None
@@ -1079,7 +1079,7 @@ class TestNativeExperiment(object):
         return NativeExperiment(device_config, None, False)
 
     @patch('os.path.isfile')
-    @patch('ExperimentRunner.Experiment.Experiment.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.__init__')
     def test_init_empty_config(self, experiment, isfile):
         native_experiment = NativeExperiment({}, None, False)
 
@@ -1088,7 +1088,7 @@ class TestNativeExperiment(object):
         assert isfile.call_count == 0
 
     @patch('os.path.isfile')
-    @patch('ExperimentRunner.Experiment.Experiment.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.__init__')
     def test_init_non_empty_config_all_files_found(self, experiment, isfile):
         test_paths = ['path1', 'path2', 'path3']
         config = {'paths': test_paths, 'duration': 1000}
@@ -1102,7 +1102,7 @@ class TestNativeExperiment(object):
         isfile.has_calls([call(test_paths[0]), call(test_paths[1]), call(test_paths[2])])
 
     @patch('os.path.isfile')
-    @patch('ExperimentRunner.Experiment.Experiment.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.__init__')
     def test_init_non_empty_config_file_not_found(self, experiment, isfile):
         test_paths = ['path1']
         config = {'paths': test_paths}
@@ -1113,7 +1113,7 @@ class TestNativeExperiment(object):
         experiment.assert_called_once_with(config, None, False)
         isfile.assert_called_once_with(test_paths[0])
 
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
     def test_cleanup_app_not_installed(self, cleanup, native_experiment):
         mock_device = Mock()
         mock_device.get_app_list.return_value = []
@@ -1125,7 +1125,7 @@ class TestNativeExperiment(object):
         assert mock_device.uninstall.call_count == 0
         mock_device.get_app_list.assert_called_once()
 
-    @patch('ExperimentRunner.Experiment.Experiment.cleanup')
+    @patch('AndroidRunner.Experiment.Experiment.cleanup')
     def test_cleanup_app_installed(self, cleanup, native_experiment):
         mock_device = Mock()
         mock_device.get_app_list.return_value = ['com.mock.package1', 'com.mock.package2', 'com.mock.package3']
@@ -1137,7 +1137,7 @@ class TestNativeExperiment(object):
         mock_device.uninstall.assert_called_once_with('com.mock.package2')
         mock_device.get_app_list.assert_called_once()
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.before_experiment')
     def test_before_experiment(self, before_experiment, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1148,7 +1148,7 @@ class TestNativeExperiment(object):
 
         before_experiment.assert_called_once_with(mock_device)
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject_pre_app_installed(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1165,7 +1165,7 @@ class TestNativeExperiment(object):
         assert mock_device.get_app_list.call_count == 0
         assert native_experiment.package == 'com.test.app'
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject_in_app_list(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1181,7 +1181,7 @@ class TestNativeExperiment(object):
         assert mock_device.install.call_count == 0
         assert native_experiment.package == 'com.test.app'
 
-    @patch('ExperimentRunner.Experiment.Experiment.before_run_subject')
+    @patch('AndroidRunner.Experiment.Experiment.before_run_subject')
     def test_before_run_subject_app_not_installed(self, before_run_subject, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1197,8 +1197,8 @@ class TestNativeExperiment(object):
         mock_device.install.assert_called_once_with(path)
         assert native_experiment.package == 'com.test.app'
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_launch')
-    @patch('ExperimentRunner.Experiment.Experiment.before_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_launch')
+    @patch('AndroidRunner.Experiment.Experiment.before_run')
     def test_before_run(self, before_run, after_launch, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1222,7 +1222,7 @@ class TestNativeExperiment(object):
         assert mock_manager.mock_calls == expected_calls
 
     @patch('time.sleep')
-    @patch('ExperimentRunner.Profilers.Profilers.start_profiling')
+    @patch('AndroidRunner.Profilers.Profilers.start_profiling')
     def test_start_profiling(self, start_profiling, sleep, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1240,7 +1240,7 @@ class TestNativeExperiment(object):
                           call.sleep_managed(native_experiment.duration)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_run')
     def test_after_run(self, after_run, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1262,7 +1262,7 @@ class TestNativeExperiment(object):
                           call.after_run_managed(mock_device, path, run)]
         assert mock_manager.mock_calls == expected_calls
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run_pre_installed(self, after_last_run, native_experiment):
         after_last_run.return_value = None
         args = (1, 2, 3)
@@ -1278,7 +1278,7 @@ class TestNativeExperiment(object):
         assert mock_device.uninstall.call_count == 0
         assert native_experiment.package is None
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run_not_installed(self, after_last_run, native_experiment):
         after_last_run.return_value = None
         args = (1, 2, 3)
@@ -1294,7 +1294,7 @@ class TestNativeExperiment(object):
         assert mock_device.uninstall.call_count == 0
         assert native_experiment.package is None
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_last_run')
+    @patch('AndroidRunner.Experiment.Experiment.after_last_run')
     def test_after_last_run_not_pre_installed(self, after_last_run, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1315,7 +1315,7 @@ class TestNativeExperiment(object):
         assert mock_manager.mock_calls == expected_calls
         assert native_experiment.package is None
 
-    @patch('ExperimentRunner.Experiment.Experiment.after_experiment')
+    @patch('AndroidRunner.Experiment.Experiment.after_experiment')
     def test_after_experiment(self, after_experiment, native_experiment):
         args = (1, 2, 3)
         kwargs = {'arg1': 1, 'arg2': 2}
@@ -1330,8 +1330,8 @@ class TestExperimentFactory(object):
     def test_init(self):
         ExperimentFactory()
 
-    @patch('ExperimentRunner.Progress.Progress.__init__')
-    @patch('ExperimentRunner.NativeExperiment.NativeExperiment.__init__')
+    @patch('AndroidRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.NativeExperiment.NativeExperiment.__init__')
     def test_from_json_native_progress(self, native_experiment, progress_init, tmpdir):
         native_experiment.return_value = None
         paths.OUTPUT_DIR = os.path.join(str(tmpdir), 'output')
@@ -1348,8 +1348,8 @@ class TestExperimentFactory(object):
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
 
-    @patch('ExperimentRunner.Progress.Progress.__init__')
-    @patch('ExperimentRunner.WebExperiment.WebExperiment.__init__')
+    @patch('AndroidRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.WebExperiment.WebExperiment.__init__')
     def test_from_json_web_progress(self, web_experiment, progress_init, tmpdir):
         web_experiment.return_value = None
         paths.OUTPUT_DIR = os.path.join(str(tmpdir), 'output')
@@ -1366,8 +1366,8 @@ class TestExperimentFactory(object):
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
 
-    @patch('ExperimentRunner.Progress.Progress.__init__')
-    @patch('ExperimentRunner.Experiment.Experiment.__init__')
+    @patch('AndroidRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.__init__')
     def test_from_json_experiment_progress(self, mock_experiment, progress_init, tmpdir):
         mock_experiment.return_value = None
         paths.OUTPUT_DIR = os.path.join(str(tmpdir), 'output')
@@ -1384,8 +1384,8 @@ class TestExperimentFactory(object):
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
 
-    @patch('ExperimentRunner.Progress.Progress.__init__')
-    @patch('ExperimentRunner.Experiment.Experiment.__init__')
+    @patch('AndroidRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.Experiment.Experiment.__init__')
     def test_from_json_experiment_no_progres(self, mock_experiment, mock_progress, tmpdir):
         mock_experiment.return_value = None
         mock_progress.return_value = None
@@ -1404,7 +1404,7 @@ class TestExperimentFactory(object):
         assert os.path.isfile(os.path.join(paths.OUTPUT_DIR, 'config.json'))
         assert filecmp.cmp(str(tmp_file), os.path.join(paths.OUTPUT_DIR, 'config.json'), False)
 
-    @patch('ExperimentRunner.Progress.Progress.__init__')
+    @patch('AndroidRunner.Progress.Progress.__init__')
     @patch('tests.PluginTests.PluginTests.__init__')
     def test_from_json_plugintester_no_progres(self, mock_experiment, mock_progress, tmpdir):
         mock_experiment.return_value = None
