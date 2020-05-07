@@ -142,7 +142,7 @@ def parse_batterystats(app, batterystats_file, power_profile):
                 if screen_state == '-':
                     screen_activation = 0
                     if screen_start_time < app_start_time:
-                        screen_start_time = app_start_time - app_start_time
+                        screen_start_time = 0
                     screen_end_time = current_time - app_start_time
                     duration = screen_end_time - screen_start_time
                     intensity = get_screen_intensity(brightness, power_profile)
@@ -428,7 +428,7 @@ def parse_systrace(app, systrace_file, logcat, batterystats, power_profile, core
                     cpu_intensity = get_amp_value(power_profile, 'cpu.idle')
                     energy_consumption = calculate_energy_usage(cpu_intensity, voltage, duration)
                     results.append('{},{},{},core {} {},{}'.format
-                                   (start_time - start_time, end_time - start_time,
+                                   (0, end_time - start_time,
                                     duration, cpu_id, activity, energy_consumption))
                     break
     return results
