@@ -83,4 +83,4 @@ def main(dummy, data_dir, result_file):
 if __name__ == '__main__':
     if len(sys.argv) == 3:
         # noinspection PyArgumentList
-        main(sys.argv[1], sys.argv[2])
+        main(None, sys.argv[1], sys.argv[2])
