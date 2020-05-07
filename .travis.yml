@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.6"
+before_script:
+install:
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install coveralls
+  - pip install lxml
+  - pip install pluginbase
+  - pip install python-slugify
+  - pip install mock
+script:
+  - coverage run -m py.test --verbose tests/unit
+after_success:
+  - coveralls --rcfile=.coveragerc
