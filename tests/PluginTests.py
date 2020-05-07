@@ -119,7 +119,6 @@ class PluginTests(object):
                 self.errors.append('Profiler {}: plugin not further tested, '
                                    'no device available that meets the dependencies. '
                                    'Check devices and dependencies'.format(profiler_name))
-            return device
 
     def check_dependencies(self, dependencies, profiler_name):
         if isinstance(dependencies, list):
