@@ -2,6 +2,10 @@
 [![Build Status](https://travis-ci.org/S2-group/android-runner.svg?branch=master)](https://travis-ci.org/S2-group/android-runner)
 [![Coverage Status](https://coveralls.io/repos/github/S2-group/android-runner/badge.svg?branch=master)](https://coveralls.io/github/S2-group/android-runner?branch=master&service=github)
 
+## :warning: This repository is no longer maintained :warning:
+## The official Android Runner repository is [HERE](https://github.com/S2-group/android-runner/) is 
+
+<!--
 # Android Runner
 Automated experiment execution on Android devices
 
@@ -264,3 +268,5 @@ Check whether the device is able to report on both categories `freq` and `idle` 
 If the categories are not listed, use a different device.
 #### References
 https://developer.android.com/studio/command-line/systrace
+
+-->
