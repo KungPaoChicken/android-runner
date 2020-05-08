@@ -3,7 +3,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/S2-group/android-runner/badge.svg?branch=master)](https://coveralls.io/github/S2-group/android-runner?branch=master&service=github)
 
 ## :warning: This repository is no longer maintained :warning:
-## The official Android Runner repository is [HERE](https://github.com/S2-group/android-runner/) is 
+## The official Android Runner repository is [HERE](https://github.com/S2-group/android-runner/)
 
 <!--
 # Android Runner
